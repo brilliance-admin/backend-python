@@ -1,7 +1,7 @@
 [project]
-name = "admin-panel"
+name = "brilliance-admin"
 version = "0.39.0"
-description = 'Admin panel backend for FastAPI and SQLAlchemy'
+description = 'General-purpose admin panel backend'
 readme = "README.md"
 requires-python = ">=3.10"
 license = 'AGPL-3.0'

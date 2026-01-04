@@ -1,5 +1,10 @@
 # Brilliance Admin Backend
 
+[![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin-backend/)
+[![License](https://img.shields.io/pypi/l/brilliance-admin-backend)](https://github.com/brilliance-admin/backend-python/blob/main/LICENSE)
+[![CI](https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg)](https://github.com/brilliance-admin/backend-python/actions)
+
+
 Brilliance Admin Backend is a backend framework for building admin panels with Python and FastAPI.
 
 - Serves a prebuilt SPA frontend as static files
@@ -9,7 +14,15 @@ Brilliance Admin Backend is a backend framework for building admin panels with P
 - Inspired by Django Admin and Django REST Framework
 - Focused on minimal boilerplate and simplified backend-controlled configuration
 
-[Live Demo](https://brilliance-admin.com/)
+## [Live Demo](https://brilliance-admin.com/)
+
+Features:
+
+* Tables with full CRUD support, including filtering, sorting, and pagination.
+* Ability to define custom table actions with forms, response messages, and file uploads.
+* SQLAlchemy integration with automatic field generation from models.
+* Authorization via any account provider.
+* Localization support with language selection in the interface.
 
 
 ## Development
@@ -19,15 +32,15 @@ uv sync --all-groups --all-extras
 uv run uvicorn example.main:app --host 0.0.0.0 --port 8082 --reload
 ```
 
-Docs:
-- `http://0.0.0.0:8082/docs`
-- `http://0.0.0.0:8082/redoc`
-- `http://0.0.0.0:8082/scalar`
-
 Tests:
 ``` shell
 uv run pytest
 ```
+
+Docs:
+- `http://0.0.0.0:8082/docs`
+- `http://0.0.0.0:8082/redoc`
+- `http://0.0.0.0:8082/scalar`
 
 ## Docker
 

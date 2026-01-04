@@ -1,0 +1,27 @@
+name: Setup HTTPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-https:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup HTTPS with certbot
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: deploy
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            if ! command -v certbot >/dev/null 2>&1; then
+              sudo apt update
+              sudo apt install -y certbot python3-certbot-nginx
+            fi
+            sudo certbot --nginx \
+              -d brilliance-admin.com \
+              -d www.brilliance-admin.com \
+              --non-interactive \
+              --agree-tos \
+              -m admin@brilliance-admin.com \
+              --redirect

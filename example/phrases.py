@@ -1,12 +1,12 @@
 RU_ADMIN_DESCRIPTION = '''
-Используется для демонстрации возможностей управления, настройки и контроля системы.<br>
+Используется для демонстрации возможностей админ панели.<br>
 <br>
-Данные и действия в этом режиме не влияют на рабочее окружение.
+Данные и действия в этом режиме не влияют на рабочее окружение и периодически сбрасываются.
 '''
 EN_ADMIN_DESCRIPTION = '''
-Used to demonstrate system management, configuration, and monitoring capabilities.
-<br><br>
-Data and actions in this mode do not affect the production environment.
+Used to demonstrate the capabilities of the admin panel.<br>
+<br>
+Data and actions in this mode do not affect the production environment and are periodically reset.
 '''
 
 RU_LOGIN_GREETINGS_MESSAGE = '''
@@ -46,7 +46,7 @@ redirect_url: <a href="%(redirect_url)s" target="_blank"/>%(redirect_url)s</a>
 '''
 LANGUAGES_PHRASES = {
     'ru': {
-        'admin_title': 'Admin Panel Демо',
+        'admin_title': 'Brilliance Admin Демо',
         'admin_description': RU_ADMIN_DESCRIPTION,
         'login_greetings_message': RU_LOGIN_GREETINGS_MESSAGE,
         'created_at': 'Время создания',
@@ -78,7 +78,7 @@ LANGUAGES_PHRASES = {
         'related_not_found': 'Ошибка при обновлении связей поля {field_slug}: запись {model} с ключем pk={pk} не найдена. Возможно запись более недоступна.',
     },
     'en': {
-        'admin_title': 'Admin Panel Demo',
+        'admin_title': 'Brilliance Admin Demo',
         'admin_description': EN_ADMIN_DESCRIPTION,
         'login_greetings_message': EN_LOGIN_GREETINGS_MESSAGE,
         'created_at': 'Created time',

@@ -18,7 +18,7 @@ services:
       - /tmp
     ports:
       - 8082:8082
-    command: uv run uvicorn example.main:app --host 0.0.0.0 --port 8082 --reload
+    command: uv run uvicorn example.main:app --host 0.0.0.0 --port 8082 --reload --proxy-headers --forwarded-allow-ips='*'
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://127.0.0.1:8082']
       interval: 5s

@@ -8,7 +8,6 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic.dataclasses import dataclass
-from starlette.middleware.proxy_headers import ProxyHeadersMiddleware
 
 from admin_panel.auth import UserABC
 from admin_panel.docs import build_redoc_docs, build_scalar_docs
@@ -119,7 +118,6 @@ class AdminSchema:
             debug=False,
             allow_cors=True,
 
-            trusted_hosts='*',
             include_scalar=False,
             include_docs=False,
             include_redoc=False,
@@ -148,9 +146,6 @@ class AdminSchema:
         app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
         app.state.schema = self
-
-        if trusted_hosts:
-            app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=trusted_hosts)
 
         if include_scalar:
             app.include_router(build_scalar_docs(app))

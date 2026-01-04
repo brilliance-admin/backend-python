@@ -1,0 +1,30 @@
+name: brilliance
+
+volumes:
+  db_data:
+
+services:
+  backend:
+    build:
+      context: ./../..
+      dockerfile: .configs/docker/Dockerfile
+    volumes:
+      - ./../../:/app
+      - ~/.ssh/id_rsa:/root/.ssh/id_rsa:delegated
+      - ~/.ssh/known_hosts:/root/.ssh/known_hosts:delegated
+    env_file:
+      - ./../../.env
+    tmpfs:
+      - /tmp
+    ports:
+      - 8082:8082
+    command: uv run uvicorn example.main:app --host 0.0.0.0 --port 8082 --reload
+
+  postgres:
+    image: postgres:alpine
+    env_file:
+      - ./../../.env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432

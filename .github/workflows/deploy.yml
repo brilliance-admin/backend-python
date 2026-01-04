@@ -11,27 +11,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Install uv
-        uses: astral-sh/setup-uv@v7
-
-      - name: Install dependencies
-        run: uv sync --all-groups --all-extras
+      - name: Build containers
+        run: docker compose -f .configs/docker/docker-compose.yml build
 
       - name: Run tests
-        run: uv run pytest
+        run: docker compose -f .configs/docker/docker-compose.yml run --rm backend sh -c 'uv sync --all-groups --all-extras && uv run pytest'
+
 
   deploy:
     needs: build-test
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
-      - name: Debug vars
-        run: |
-          echo "HOST=${{ vars.SERVER_HOST }}"
-          echo "USER=${{ vars.SERVER_USER }}"
-
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
+
+      -
+        name: Set up Docker Compose
+        uses: docker/setup-compose-action@v1
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
@@ -40,4 +37,7 @@ jobs:
           username: ${{ vars.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            rsync -avz --delete ./build/ ${{ vars.SERVER_USER }}@${{ vars.SERVER_HOST }}:/var/www/html
+            cd /var/www/example
+            git pull
+            docker compose -f .configs/docker/docker-compose.yml pull
+            docker compose -f .configs/docker/docker-compose.yml up -d --build

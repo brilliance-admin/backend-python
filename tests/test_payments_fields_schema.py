@@ -9,6 +9,7 @@ from example.sections.payments import PaymentsAdmin
 category_schema_data = {
     'graph_info': None,
     'icon': 'mdi-credit-card-outline',
+    'description': 'Статичные данные',
     'table_info': {
         'actions': {
             'action_with_exception': {

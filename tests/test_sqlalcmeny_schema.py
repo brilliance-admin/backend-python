@@ -10,6 +10,7 @@ from example.sections.models import Terminal
 category_schema_data = {
     'graph_info': None,
     'icon': None,
+    'description': None,
     'table_info': {
         'actions': {
             'delete': {
@@ -46,6 +47,7 @@ category_schema_data = {
                     'include_time': True,
                 },
                 'currency_id': {
+                    'dual_list': False,
                     'header': {},
                     'label': 'Currency',
                     'many': False,
@@ -77,6 +79,7 @@ category_schema_data = {
                     'type': 'boolean',
                 },
                 'merchant_id': {
+                    'dual_list': False,
                     'header': {},
                     'label': 'Merchant',
                     'many': False,

@@ -25,6 +25,11 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
+      - name: Debug secrets
+        run: |
+          echo "HOST=${{ secrets.SERVER_HOST }}"
+          echo "USER=${{ secrets.SERVER_USER }}"
+
       - name: Checkout code
         uses: actions/checkout@v3
 

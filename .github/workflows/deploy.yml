@@ -22,25 +22,23 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - name: Clone repo via GitHub App
+        uses: actions/clone-github-repo-action@v2
+        with:
+          owner: brilliance-admin
+          repository: backend-python
+          app_id: ${{ secrets.GH_APP_ID }}
+          installation_id: ${{ secrets.GH_APP_INSTALLATION_ID }}
+          private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.SERVER_HOST }}
-          username: ${{ vars.SERVER_USER }}
+          username: deploy
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            mkdir -p /home/deploy/apps
-            cd /home/deploy/apps
-
-            if [ ! -d backend-python ]; then
-              ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-              git clone git@github.com:brilliance-admin/backend-python.git
-            fi
-
-            cd backend-python
-            git pull
-            docker compose -f .configs/docker/docker-compose.yml pull
+            cd /home/deploy/apps/backend-python
+            git fetch
+            git reset --hard origin/main
             docker compose -f .configs/docker/docker-compose.yml up -d --build

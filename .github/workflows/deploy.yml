@@ -55,6 +55,7 @@ jobs:
           remote_host: ${{ vars.SERVER_HOST }}
           remote_user: deploy
           remote_key: ${{ secrets.SERVER_SSH_KEY }}
+          rsync_path: 'sudo rsync'
 
       - name: Run Docker on server
         uses: appleboy/ssh-action@master

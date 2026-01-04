@@ -34,6 +34,18 @@ jobs:
           installation_id: ${{ secrets.GH_APP_INSTALLATION_ID }}
           private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
+      - name: Ensure rsync installed on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: deploy
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            if ! command -v rsync >/dev/null 2>&1; then
+              sudo apt update
+              sudo apt install -y rsync
+            fi
+
       - name: Copy files to server
         uses: burnett01/rsync-deployments@v8
         with:
@@ -43,7 +55,6 @@ jobs:
           remote_host: ${{ vars.SERVER_HOST }}
           remote_user: deploy
           remote_key: ${{ secrets.SERVER_SSH_KEY }}
-          rsh: ssh
 
       - name: Run Docker on server
         uses: appleboy/ssh-action@master

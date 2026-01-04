@@ -1,9 +1,9 @@
-import asyncio
 import logging
 import logging.config
 
 import structlog
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from structlog.dev import RichTracebackFormatter
 
 from admin_panel import schema
@@ -135,3 +135,8 @@ admin_app = admin_schema.generate_app(
     include_scalar=True, include_docs=True, include_redoc=True, debug=True,
 )
 app.mount('/admin', admin_app)
+
+
+@app.get('/')
+async def root():
+    return RedirectResponse(url='/admin/')

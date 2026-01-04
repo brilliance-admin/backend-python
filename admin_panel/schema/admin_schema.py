@@ -174,7 +174,7 @@ class AdminSchema:
         settings_json = {
             'backend_prefix': backend_prefix,
             'static_prefix': static_prefix,
-            'version': importlib.metadata.version('admin-panel'),
+            'version': importlib.metadata.version('brilliance-admin'),
             'api_timeout_ms': 1000 * 5,
         }
         data = AdminIndexContextData(

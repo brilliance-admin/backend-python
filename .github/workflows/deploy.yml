@@ -25,10 +25,10 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
-      - name: Debug secrets
+      - name: Debug vars
         run: |
-          echo "HOST=${{ secrets.SERVER_HOST }}"
-          echo "USER=${{ secrets.SERVER_USER }}"
+          echo "HOST=${{ vars.SERVER_HOST }}"
+          echo "USER=${{ vars.SERVER_USER }}"
 
       - name: Checkout code
         uses: actions/checkout@v3
@@ -36,8 +36,8 @@ jobs:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
+          host: ${{ vars.SERVER_HOST }}
+          username: ${{ vars.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            rsync -avz --delete ./build/ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_HOST }}:/var/www/html
+            rsync -avz --delete ./build/ ${{ vars.SERVER_USER }}@${{ vars.SERVER_HOST }}:/var/www/html

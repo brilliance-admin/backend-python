@@ -22,6 +22,9 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ success() }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
       - name: Clone repo via GitHub App
         uses: GuillaumeFalourd/clone-github-repo-action@v2
         with:
@@ -31,7 +34,17 @@ jobs:
           installation_id: ${{ secrets.GH_APP_INSTALLATION_ID }}
           private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
-      - name: Deploy via SSH
+      - name: Copy files to server
+        uses: burnett01/rsync-deployments@v7.0.2
+        with:
+          switches: -az --delete
+          path: .
+          remote_path: /home/deploy/apps/backend-python
+          remote_host: ${{ vars.SERVER_HOST }}
+          remote_user: deploy
+          remote_key: ${{ secrets.SERVER_SSH_KEY }}
+
+      - name: Run Docker on server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.SERVER_HOST }}
@@ -39,6 +52,4 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /home/deploy/apps/backend-python
-            git fetch
-            git reset --hard origin/main
             docker compose -f .configs/docker/docker-compose.yml up -d --build

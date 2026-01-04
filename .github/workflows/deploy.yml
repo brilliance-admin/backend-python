@@ -49,7 +49,7 @@ jobs:
       - name: Copy files to server
         uses: burnett01/rsync-deployments@v8
         with:
-          switches: -avzr --delete
+          switches: -avzr --delete --chown=deploy:deploy
           path: .
           remote_path: /home/deploy/apps/backend-python
           remote_host: ${{ vars.SERVER_HOST }}

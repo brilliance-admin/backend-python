@@ -17,7 +17,6 @@ jobs:
       - name: Run tests
         run: docker compose -f .configs/docker/docker-compose.yml run --rm backend sh -c 'uv sync --all-groups --all-extras && uv run pytest'
 
-
   deploy:
     needs: build-test
     runs-on: ubuntu-latest
@@ -37,7 +36,12 @@ jobs:
           username: ${{ vars.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            cd /var/www/example
+            if [ ! -d /var/www/backend-python ]; then
+              mkdir -p /var/www
+              cd /var/www
+              git clone git@github.com:brilliance-admin/backend-python.git backend-python
+            fi
+            cd /var/www/backend-python
             git pull
             docker compose -f .configs/docker/docker-compose.yml pull
             docker compose -f .configs/docker/docker-compose.yml up -d --build

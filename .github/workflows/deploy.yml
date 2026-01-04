@@ -35,7 +35,7 @@ jobs:
           private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Copy files to server
-        uses: burnett01/rsync-deployments@8
+        uses: burnett01/rsync-deployments@v7.0.1
         with:
           switches: -az --delete
           path: .

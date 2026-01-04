@@ -23,7 +23,7 @@ jobs:
     if: ${{ success() }}
     steps:
       - name: Clone repo via GitHub App
-        uses: actions/clone-github-repo-action@v2
+        uses: GuillaumeFalourd/clone-github-repo-action@v2
         with:
           owner: brilliance-admin
           repository: backend-python

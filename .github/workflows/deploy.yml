@@ -35,9 +35,9 @@ jobs:
           private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
       - name: Copy files to server
-        uses: burnett01/rsync-deployments@v8.0.3
+        uses: burnett01/rsync-deployments@v8
         with:
-          switches: -az --delete
+          switches: -avzr --delete
           path: .
           remote_path: /home/deploy/apps/backend-python
           remote_host: ${{ vars.SERVER_HOST }}

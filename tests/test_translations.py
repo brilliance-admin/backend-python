@@ -31,7 +31,7 @@ async def test_translate_exception(mocker):
                     'message': 'Пример ошибки валидации поля.',
                 },
             },
-            'message': 'Admin Panel Демо',
+            'message': 'Brilliance Admin Демо',
         },
         'error_code': 'test',
         'status_code': 400,

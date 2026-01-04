@@ -7,59 +7,6 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "admin-panel"
-version = "0.39.0"
-source = { editable = "." }
-dependencies = [
-    { name = "asgiref" },
-    { name = "fastapi" },
-    { name = "jinja2" },
-]
-
-[package.optional-dependencies]
-example = [
-    { name = "faker" },
-    { name = "pyjwt" },
-    { name = "rich" },
-    { name = "structlog" },
-    { name = "uvicorn" },
-]
-scalar = [
-    { name = "scalar-fastapi" },
-]
-tests = [
-    { name = "aiosqlite" },
-    { name = "factory-boy" },
-    { name = "httpx" },
-    { name = "pyjwt" },
-    { name = "pytest" },
-    { name = "pytest-asyncio" },
-    { name = "pytest-mock" },
-    { name = "sqlalchemy" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "aiosqlite", marker = "extra == 'tests'", specifier = ">=0.22.1" },
-    { name = "asgiref", specifier = ">=3.11.0" },
-    { name = "factory-boy", marker = "extra == 'tests'", specifier = ">=3.3.3" },
-    { name = "faker", marker = "extra == 'example'", specifier = ">=38.2.0" },
-    { name = "fastapi", specifier = ">=0.115.8" },
-    { name = "httpx", marker = "extra == 'tests'", specifier = ">=0.28.1" },
-    { name = "jinja2", specifier = ">=3.1.6" },
-    { name = "pyjwt", marker = "extra == 'example'", specifier = ">=2.10.1" },
-    { name = "pyjwt", marker = "extra == 'tests'", specifier = ">=2.10.1" },
-    { name = "pytest", marker = "extra == 'tests'", specifier = ">=8.4.2" },
-    { name = "pytest-asyncio", marker = "extra == 'tests'", specifier = ">=1.2.0" },
-    { name = "pytest-mock", marker = "extra == 'tests'", specifier = ">=3.15.1" },
-    { name = "rich", marker = "extra == 'example'", specifier = ">=14.2.0" },
-    { name = "scalar-fastapi", marker = "extra == 'scalar'", specifier = ">=1.5.0" },
-    { name = "sqlalchemy", marker = "extra == 'tests'", specifier = ">=2.0.41" },
-    { name = "structlog", marker = "extra == 'example'", specifier = ">=25.5.0" },
-    { name = "uvicorn", marker = "extra == 'example'", specifier = ">=0.34.0" },
-]
-
-[[package]]
 name = "aiosqlite"
 version = "0.22.1"
 source = { registry = "https://pypi.org/simple" }
@@ -111,6 +58,59 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/8e/ff/70dca7d7cb1cbc0edb2c6cc0c38b65cba36cccc491eca64cabd5fe7f8670/backports_asyncio_runner-1.2.0.tar.gz", hash = "sha256:a5aa7b2b7d8f8bfcaa2b57313f70792df84e32a2a746f585213373f900b42162", size = 69893 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a0/59/76ab57e3fe74484f48a53f8e337171b4a2349e506eabe136d7e01d059086/backports_asyncio_runner-1.2.0-py3-none-any.whl", hash = "sha256:0da0a936a8aeb554eccb426dc55af3ba63bcdc69fa1a600b5bb305413a4477b5", size = 12313 },
+]
+
+[[package]]
+name = "brilliance-admin"
+version = "0.40.0"
+source = { editable = "." }
+dependencies = [
+    { name = "asgiref" },
+    { name = "fastapi" },
+    { name = "jinja2" },
+]
+
+[package.optional-dependencies]
+example = [
+    { name = "faker" },
+    { name = "pyjwt" },
+    { name = "rich" },
+    { name = "structlog" },
+    { name = "uvicorn" },
+]
+scalar = [
+    { name = "scalar-fastapi" },
+]
+tests = [
+    { name = "aiosqlite" },
+    { name = "factory-boy" },
+    { name = "httpx" },
+    { name = "pyjwt" },
+    { name = "pytest" },
+    { name = "pytest-asyncio" },
+    { name = "pytest-mock" },
+    { name = "sqlalchemy" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "aiosqlite", marker = "extra == 'tests'", specifier = ">=0.22.1" },
+    { name = "asgiref", specifier = ">=3.11.0" },
+    { name = "factory-boy", marker = "extra == 'tests'", specifier = ">=3.3.3" },
+    { name = "faker", marker = "extra == 'example'", specifier = ">=38.2.0" },
+    { name = "fastapi", specifier = ">=0.115.8" },
+    { name = "httpx", marker = "extra == 'tests'", specifier = ">=0.28.1" },
+    { name = "jinja2", specifier = ">=3.1.6" },
+    { name = "pyjwt", marker = "extra == 'example'", specifier = ">=2.10.1" },
+    { name = "pyjwt", marker = "extra == 'tests'", specifier = ">=2.10.1" },
+    { name = "pytest", marker = "extra == 'tests'", specifier = ">=8.4.2" },
+    { name = "pytest-asyncio", marker = "extra == 'tests'", specifier = ">=1.2.0" },
+    { name = "pytest-mock", marker = "extra == 'tests'", specifier = ">=3.15.1" },
+    { name = "rich", marker = "extra == 'example'", specifier = ">=14.2.0" },
+    { name = "scalar-fastapi", marker = "extra == 'scalar'", specifier = ">=1.5.0" },
+    { name = "sqlalchemy", marker = "extra == 'tests'", specifier = ">=2.0.41" },
+    { name = "structlog", marker = "extra == 'example'", specifier = ">=25.5.0" },
+    { name = "uvicorn", marker = "extra == 'example'", specifier = ">=0.34.0" },
 ]
 
 [[package]]

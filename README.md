@@ -1,7 +1,7 @@
 # Brilliance Admin Backend
 
 [![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin-backend/)
-[![License](https://img.shields.io/pypi/l/brilliance-admin-backend)](https://github.com/brilliance-admin/backend-python/blob/main/LICENSE)
+[![License](https://img.shields.io/pypi/l/brilliance-admin)](https://github.com/brilliance-admin/backend-python/blob/main/LICENSE)
 [![CI](https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg)](https://github.com/brilliance-admin/backend-python/actions)
 
 

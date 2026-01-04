@@ -73,6 +73,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd /home/deploy/apps/backend-python
+            docker compose -f .configs/docker/docker-compose.yml run --rm backend /bin/bash -c "uv sync --all-groups --all-extras"
             docker compose -f .configs/docker/docker-compose.yml up -d --build
 
   update-nginx:

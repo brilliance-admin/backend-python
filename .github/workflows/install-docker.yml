@@ -24,7 +24,3 @@ jobs:
               sudo apt update
               sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
             fi
-
-            if ! groups deploy | grep -q docker; then
-              sudo usermod -aG docker deploy
-            fi

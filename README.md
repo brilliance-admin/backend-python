@@ -8,10 +8,10 @@ uv run uvicorn example.main:app --host 0.0.0.0 --port 8082 --reload
 ## Docker
 
 ``` shell
-docker-compose -f .configs/docker/docker-compose.yml build
+docker compose -f .configs/docker/docker-compose.yml build
     docker-compose -f .configs/docker/docker-compose.yml up
-docker-compose -f .configs/docker/docker-compose.yml run --rm backend /bin/bash -c "uv sync --all-groups --all-extras"
-docker-compose -f .configs/docker/docker-compose.yml run --rm backend /bin/bash -c "uv run pytest"
+docker compose -f .configs/docker/docker-compose.yml run --rm backend /bin/bash -c "uv sync --all-groups --all-extras"
+docker compose -f .configs/docker/docker-compose.yml run --rm backend /bin/bash -c "uv run pytest"
 ```
 
 ``` shell

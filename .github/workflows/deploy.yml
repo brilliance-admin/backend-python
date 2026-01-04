@@ -46,6 +46,15 @@ jobs:
               sudo apt install -y rsync
             fi
 
+      - name: Fix folder permissions
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: root
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            chown -R deploy:deploy /home/deploy/apps/backend-python
+
       - name: Copy files to server
         uses: burnett01/rsync-deployments@v8
         with:
@@ -55,7 +64,6 @@ jobs:
           remote_host: ${{ vars.SERVER_HOST }}
           remote_user: deploy
           remote_key: ${{ secrets.SERVER_SSH_KEY }}
-          rsync_path: 'sudo rsync'
 
       - name: Run Docker on server
         uses: appleboy/ssh-action@master

@@ -50,10 +50,10 @@ jobs:
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.SERVER_HOST }}
-          username: root
+          username: deploy
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            chown -R deploy:deploy /home/deploy/apps/backend-python
+            sudo chown -R deploy:deploy /home/deploy/apps/backend-python
 
       - name: Copy files to server
         uses: burnett01/rsync-deployments@v8

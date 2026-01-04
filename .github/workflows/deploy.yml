@@ -75,6 +75,24 @@ jobs:
             cd /home/deploy/apps/backend-python
             docker compose -f .configs/docker/docker-compose.yml up -d --build
 
+  update-nginx:
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: ${{ success() }}
+    steps:
+
+      - name: Ensure nginx is running
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: deploy
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            if ! systemctl is-active --quiet nginx; then
+              sudo systemctl start nginx
+            fi
+            sudo systemctl status nginx --no-pager
+
       - name: Ensure nginx and update config
         uses: appleboy/ssh-action@master
         with:

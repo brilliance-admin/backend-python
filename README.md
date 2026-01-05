@@ -14,23 +14,31 @@
 
 General-purpose admin panel framework powered by FastAPI. Some call it heavenly in its brilliance.
 
-- Serves a prebuilt SPA frontend as static files
-- Generates schemas for frontend sections on the backend
-- Provides a backend-driven API for admin interfaces
-- Designed for fast data management and data viewing from any sources
-- Inspired by Django Admin and Django REST Framework
-- Focused on minimal boilerplate and simplified backend-controlled configuration
+**Key ideas:**
+- Providing rich ways to display and manage data (tables, charts etc) from any data sources
+- Automatic schema generation from ORM (SQLAlchemy models implemented)
+- Focused on minimal boilerplate and simplified, but rich configuration
+
+**How it works:**
+- Works entirely on FastAPI and provides a prebuilt SPA via static files (Vue3 + Vuetify)
+- After authentication, the user receives the admin panel schema, and the frontend renders it
+- The frontend communicates with the backend via API to fetch and modify data
+
 
 ### [Live Demo](https://brilliance-admin.com/) | [Example App](https://github.com/brilliance-admin/backend-python/tree/main/example) | Documentation (todo)
-
 
 ### Features:
 
 * Tables with full CRUD support, including filtering, sorting, and pagination.
-* Ability to define custom table actions with forms, response messages, and file uploads.
+* Ability to define custom table actions with forms, response messages, and file downloads.
 * SQLAlchemy integration with automatic field generation from models.
 * Authorization via any account data source.
 * Localization support with language selection in the interface.
+* Adapted for different screen sizes and mobile devices.
+
+**Planned:**
+* Role-based access control system
+* Nested data support for creation and detail views
 
 ## How to use it
 

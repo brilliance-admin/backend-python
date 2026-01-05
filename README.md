@@ -26,6 +26,11 @@ General-purpose admin panel framework powered by FastAPI. Some call it heavenly 
 
 ## How to use it
 
+Installation:
+``` shell
+pip install brilliance-admin
+```
+
 You need to generate `AdminSchema` instance:
 ``` python
 from admin_panel import schema

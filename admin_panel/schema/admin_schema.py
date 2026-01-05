@@ -33,7 +33,6 @@ class AdminSettingsData(DataclassBase):
     description: str | TranslateText | None
     login_greetings_message: str | TranslateText | None
     navbar_density: str
-    logo_image: str | None
     languages: Dict[str, str] | None
 
 
@@ -52,9 +51,12 @@ class AdminSchema:
     title: str | TranslateText | None = 'Admin'
     description: str | TranslateText | None = None
     login_greetings_message: str | TranslateText | None = None
+
+    logo_image: str | None = None
+    favicon_image: str = '/admin/static/favicon.ico'
+
     navbar_density: str = 'default'
 
-    favicon_image: str = '/admin/static/favicon.ico'
     backend_prefix = None
     static_prefix = None
 
@@ -107,7 +109,6 @@ class AdminSchema:
             description=self.description,
             login_greetings_message=self.login_greetings_message,
             navbar_density=self.navbar_density,
-            logo_image=None,
             languages=languages,
         )
 
@@ -171,11 +172,16 @@ class AdminSchema:
         if not static_prefix:
             static_prefix = urljoin(str(request.base_url), '/admin/static/')
 
+        logo_image = self.logo_image
+        if logo_image and logo_image.startswith('/'):
+            logo_image = urljoin(str(request.base_url), logo_image)
+
         settings_json = {
             'backend_prefix': backend_prefix,
             'static_prefix': static_prefix,
             'version': importlib.metadata.version('brilliance-admin'),
             'api_timeout_ms': 1000 * 5,
+            'logo_image': logo_image,
         }
         data = AdminIndexContextData(
             title=str(self.title),

@@ -1,4 +1,5 @@
 import logging
+from fastapi.staticfiles import StaticFiles
 import logging.config
 
 import structlog
@@ -79,6 +80,7 @@ admin_schema = schema.AdminSchema(
     title=_('admin_title'),
     description=_('admin_description'),
     login_greetings_message=_('login_greetings_message'),
+    logo_image='/static/logo-3.png',
 
     auth=FakeAdminAuthentication(),
     language_manager_class=CustomLanguageManager,
@@ -130,6 +132,7 @@ admin_schema = schema.AdminSchema(
 
 
 app = FastAPI(debug=True, lifespan=lifespan)
+app.mount('/static', StaticFiles(directory='example/static'), name='static')
 
 admin_app = admin_schema.generate_app(
     include_scalar=True, include_docs=True, include_redoc=True, debug=True,

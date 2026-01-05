@@ -1,7 +1,7 @@
 [project]
 name = "brilliance-admin"
-version = "0.40.0"
-description = 'General-purpose admin panel backend'
+version = "0.41.0"
+description = 'General-purpose admin panel framework powered by FastAPI. Some call it heavenly in its brilliance.'
 readme = "README.md"
 requires-python = ">=3.10"
 license = 'AGPL-3.0'

@@ -4,8 +4,7 @@
 [![License](https://img.shields.io/pypi/l/brilliance-admin)](https://github.com/brilliance-admin/backend-python/blob/main/LICENSE)
 [![CI](https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg)](https://github.com/brilliance-admin/backend-python/actions)
 
-
-Brilliance Admin Backend is a backend framework for building admin panels with Python and FastAPI.
+General-purpose admin panel framework powered by FastAPI. Some call it heavenly in its brilliance.
 
 - Serves a prebuilt SPA frontend as static files
 - Generates schemas for frontend sections on the backend
@@ -14,44 +13,101 @@ Brilliance Admin Backend is a backend framework for building admin panels with P
 - Inspired by Django Admin and Django REST Framework
 - Focused on minimal boilerplate and simplified backend-controlled configuration
 
-## [Live Demo](https://brilliance-admin.com/)
+### [Live Demo](https://brilliance-admin.com/) | [Example App](https://github.com/brilliance-admin/backend-python/tree/main/example) | Documentation (todo)
 
-Features:
+
+### Features:
 
 * Tables with full CRUD support, including filtering, sorting, and pagination.
 * Ability to define custom table actions with forms, response messages, and file uploads.
 * SQLAlchemy integration with automatic field generation from models.
-* Authorization via any account provider.
+* Authorization via any account data source.
 * Localization support with language selection in the interface.
 
+## How to use it
 
-## Development
+You need to generate `AdminSchema` instance:
+``` python
+from admin_panel import schema
 
-``` shell
-uv sync --all-groups --all-extras
-uv run uvicorn example.main:app --host 0.0.0.0 --port 8082 --reload
+admin_schema = schema.AdminSchema(
+    title='Admin Panel',
+    auth=YourAdminAuthentication(),
+    groups=[
+        schema.Group(
+            slug='example',
+            title='Example',
+            icon='mdi-star',
+            categories=[
+                CategoryExample(),
+            ]
+        ),
+    ],
+)
+
+admin_app = admin_schema.generate_app()
+
+# Your FastAPI app
+app = FastAPI()
+app.mount('/admin', admin_app)
 ```
 
-Tests:
-``` shell
-uv run pytest
+### SQLAlchemy integration
+Brilliance Admin supports automatic schema generation from SQLAlchemy and provides a ready-made CRUD implementation for tables.
+
+``` python
+from admin_panel import sqlalchemy
+from admin_panel.translations import TranslateText as _
+
+from your_project.models import Terminal
+
+
+class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
+    db_async_session = async_sessionmaker
+    model = Terminal
+    title = _('terminals')
+    icon = 'mdi-console-network-outline'
+    
+    ordering_fields = ['id']
+    search_fields = ['id', 'title']
+
+    table_schema = sqlalchemy.SQLAlchemyFieldsSchema(
+        model=Terminal, 
+        list_display=['id', 'merchant_id'],
+    )
+    table_filters = sqlalchemy.SQLAlchemyFieldsSchema(
+        model=Terminal, 
+        fields=['id', 'created_at'],
+        created_at=schema.DateTimeField(range=True),
+    )
+
+
+category = TerminalAdmin()
 ```
 
-Docs:
-- `http://0.0.0.0:8082/docs`
-- `http://0.0.0.0:8082/redoc`
-- `http://0.0.0.0:8082/scalar`
+Now, the `TerminalAdmin` instance can be passed to `categories`.
 
-## Docker
+### Can be used both via inheritance and instancing
 
-``` shell
-docker compose -f .configs/docker/docker-compose.yml build
-docker compose -f .configs/docker/docker-compose.yml up
-docker compose -f .configs/docker/docker-compose.yml run --rm backend /bin/bash -c "uv sync --all-groups --all-extras"
-docker compose -f .configs/docker/docker-compose.yml run --rm backend /bin/bash -c "uv run pytest"
+For `SQLAlchemyFieldsSchema`
+
+``` python
+class TerminalTableSchema(sqlalchemy.SQLAlchemyFieldsSchema):
+    model = Terminal
+    fields = ['id', 'created_at']
+
+    created_at=schema.DateTimeField(range=True)
+
+
+class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
+    table_schema = TerminalTableSchema()
 ```
 
-``` shell
-docker exec -it rollyum-backend-1 git config --global --add safe.directory '*'
-docker exec -it rollyum-backend-1 uv run pre-commit run --all-files
+And `SQLAlchemyAdmin` category schema itself
+
+> If `table_schema` is not specified, it will be generated automatically and will include all discovered fields and relationships of the table in the output.
+
+``` python
+category = sqlalchemy.SQLAlchemyAdmin(db_async_session=async_sessionmaker, model=Terminal)
 ```
+

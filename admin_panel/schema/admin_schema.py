@@ -53,7 +53,7 @@ class AdminSchema:
     login_greetings_message: str | TranslateText | None = None
 
     logo_image: str | None = None
-    favicon_image: str = '/admin/static/favicon.ico'
+    favicon_image: str = '/admin/static/favicon.jpg'
 
     navbar_density: str = 'default'
 

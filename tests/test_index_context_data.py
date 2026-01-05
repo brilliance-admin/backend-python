@@ -26,7 +26,7 @@ async def test_index_context_data():
     request = Request(scope=SCOPE)
     result = await admin_schema.get_index_context_data(request)
     assert result == {
-        'favicon_image': '/admin/static/favicon.ico',
+        'favicon_image': '/admin/static/favicon.jpg',
         'settings_json': mock.ANY,
         'title': 'Brilliance Admin Демо',
     }

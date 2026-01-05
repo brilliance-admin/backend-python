@@ -1,8 +1,16 @@
-# Brilliance Admin Backend
+<p align="center"><img src="https://github.com/brilliance-admin/backend-python/blob/main/example/static/logo.png?raw=true" width="600"></p>
 
-[![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin/)
-[![License](https://img.shields.io/pypi/l/brilliance-admin)](https://github.com/brilliance-admin/backend-python/blob/main/LICENSE)
-[![CI](https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg)](https://github.com/brilliance-admin/backend-python/actions)
+<p align="center">
+  <a href="https://pypi.org/project/brilliance-admin/">
+    <img src="https://img.shields.io/pypi/v/brilliance-admin" alt="PyPI">
+  </a>
+  <a href="https://github.com/brilliance-admin/backend-python/blob/main/LICENSE">
+    <img src="https://img.shields.io/pypi/l/brilliance-admin" alt="License">
+  </a>
+  <a href="https://github.com/brilliance-admin/backend-python/actions">
+    <img src="https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg" alt="CI">
+  </a>
+</p>
 
 General-purpose admin panel framework powered by FastAPI. Some call it heavenly in its brilliance.
 
@@ -115,4 +123,3 @@ And `SQLAlchemyAdmin` category schema itself
 ``` python
 category = sqlalchemy.SQLAlchemyAdmin(db_async_session=async_sessionmaker, model=Terminal)
 ```
-

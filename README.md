@@ -7,7 +7,11 @@
 [![License](https://img.shields.io/pypi/l/brilliance-admin)](https://github.com/brilliance-admin/backend-python/blob/main/LICENSE)
 [![CI](https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg)](https://github.com/brilliance-admin/backend-python/actions)
 
-General-purpose admin panel framework powered by FastAPI. Some call it heavenly in its brilliance.
+Simple and lightweight admin panel framework powered by `FastAPI` and `Vue3` `Vuetify` together. \
+Integrated with SQLAlchemy. Inspaired by Django Admin and DRF.\
+Some call it heavenly in its brilliance.
+
+### [Live Demo](https://brilliance-admin.com/) | [Example App](https://github.com/brilliance-admin/backend-python/tree/main/example) | Documentation (todo)
 
   <img src="https://github.com/brilliance-admin/backend-python/blob/main/screenshots/websitemockupgenerator.png?raw=true"
        alt="Preview">
@@ -16,9 +20,9 @@ General-purpose admin panel framework powered by FastAPI. Some call it heavenly 
 
 **Key ideas:**
 - **API oriented**\
-Works entirely on FastAPI and provides a prebuilt SPA [frontend](https://github.com/brilliance-admin/frontend) via static files (Vue3 + Vuetify).\
+Works entirely on FastAPI and provides a prebuilt SPA [frontend](https://github.com/brilliance-admin/frontend) via static files (Vue3 + Vuetify). No separate startup is required.\
 Data generation/updating API separated from rendering fontend with zero hardcode, this makes it possible to have a single frontend with multiple backend implementations in different languages and makes test coverage easier.
-- **Data Display**\
+- **Rich visualization**\
 Providing rich and convenient ways to display and manage data (tables, charts, etc) from any data source.
 - **ORM**\
 Automatic schema generation and methods for CRUD operations.
@@ -28,8 +32,6 @@ Focused on simplified, but rich configuration.
 **How it works:**
 - After authentication, the user receives the admin panel schema, and the frontend renders it
 - The frontend communicates with the backend via API to fetch and modify data
-
-### [Live Demo](https://brilliance-admin.com/) | [Example App](https://github.com/brilliance-admin/backend-python/tree/main/example) | Documentation (todo)
 
 ### Features:
 
@@ -111,7 +113,6 @@ from your_project.models import Terminal
 class TerminalFiltersSchema(sqlalchemy.SQLAlchemyFieldsSchema):
     model = Terminal
     fields = ['id', 'created_at']
-
     created_at = schema.DateTimeField(range=True)
 
 

@@ -3,6 +3,13 @@
        alt="Brilliance Admin"
        width="600">
 </div>
+
+<div align="center">
+  <img src="https://github.com/brilliance-admin/backend-python/blob/main/screenshots/websitemockupgenerator.png?raw=true"
+       alt="Brilliance Admin"
+       width="600">
+</div>
+
 <div align="center">
 
 [![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin/)
@@ -11,13 +18,7 @@
 
 </div>
 
-General-purpose admin panel framework powered by FastAPI and Vuetify. Some call it heavenly in its brilliance.
-
-
-<div align="center">
-  <img src="https://github.com/brilliance-admin/backend-python/blob/main/screenshots/websitemockupgenerator.png?raw=true"
-       alt="Preview">
-</div>
+General-purpose admin panel framework powered by FastAPI. Some call it heavenly in its brilliance.
 
 **Key ideas:**
 - Providing rich ways to display and manage data (tables, charts etc) from any data sources
@@ -57,8 +58,9 @@ You need to generate `AdminSchema` instance:
 ``` python
 from admin_panel import schema
 
+
 class CategoryExample(schema.CategoryTable):
-    "get_list retrieve implementation"
+    "Implementation of get_list and retrieve, update and create are optional"
 
 
 admin_schema = schema.AdminSchema(
@@ -84,7 +86,17 @@ app.mount('/admin', admin_app)
 ```
 
 ### SQLAlchemy integration
-Supports automatic schema generation from SQLAlchemy for CRUD tables.
+
+Brilliance Admin supports automatic schema generation from SQLAlchemy and provides a ready-made CRUD implementation for tables.
+
+``` python
+category = sqlalchemy.SQLAlchemyAdmin(db_async_session=async_sessionmaker, model=Terminal)
+```
+
+> [!NOTE]
+> If `table_schema` is not specified, it will be generated automatically with all discovered fields and relationships
+
+Now, the `category` instance can be passed to `categories`.
 
 Django Rest Framework class style:
 
@@ -123,16 +135,14 @@ class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
 category = TerminalAdmin()
 ```
 
-Now, the `TerminalAdmin` instance can be passed to `categories`.
-
 ### Can be used both via inheritance and instancing
 
-For `SQLAlchemyFieldsSchema`
+Optionally, functional-style generation can be used to reduce boilerplate code
 
 ``` python
-class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
-    ...
-
+category = sqlalchemy.SQLAlchemyAdmin(
+    db_async_session=async_sessionmaker,
+    model=Terminal,
     table_schema = sqlalchemy.SQLAlchemyFieldsSchema(
         model=Terminal, 
         list_display=['id', 'merchant_id'],
@@ -143,8 +153,6 @@ class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
         created_at=schema.DateTimeField(range=True),
     )
 ```
-
-And `SQLAlchemyAdmin` category schema itself
 
 ## Comparison of Similar Projects
 

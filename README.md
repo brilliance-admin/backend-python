@@ -3,7 +3,6 @@
        alt="Brilliance Admin"
        width="600">
 </div>
-
 <div align="center">
 
 [![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin/)
@@ -12,7 +11,13 @@
 
 </div>
 
-General-purpose admin panel framework powered by FastAPI. Some call it heavenly in its brilliance.
+General-purpose admin panel framework powered by FastAPI and Vuetify. Some call it heavenly in its brilliance.
+
+
+<div align="center">
+  <img src="https://github.com/brilliance-admin/backend-python/blob/main/screenshots/websitemockupgenerator.png?raw=true"
+       alt="Preview">
+</div>
 
 **Key ideas:**
 - Providing rich ways to display and manage data (tables, charts etc) from any data sources
@@ -53,23 +58,7 @@ You need to generate `AdminSchema` instance:
 from admin_panel import schema
 
 class CategoryExample(schema.CategoryTable):
-    async def get_list(
-            self,
-            list_data: schema.ListData,
-            user: auth.UserABC,
-            language_manager: LanguageManager,
-    ) -> schema.TableListResult:
-        ...
-        return schema.TableListResult(data=data, total_count=total_count)
-
-    async def retrieve(
-            self,
-            pk: Any,
-            user: auth.UserABC,
-            language_manager: LanguageManager,
-    ) -> schema.RetrieveResult:
-        ...
-        return schema.RetrieveResult(data=line)
+    "get_list retrieve implementation"
 
 
 admin_schema = schema.AdminSchema(
@@ -95,7 +84,9 @@ app.mount('/admin', admin_app)
 ```
 
 ### SQLAlchemy integration
-Brilliance Admin supports automatic schema generation from SQLAlchemy and provides a ready-made CRUD implementation for tables.
+Supports automatic schema generation from SQLAlchemy for CRUD tables.
+
+Django Rest Framework class style:
 
 ``` python
 from admin_panel import sqlalchemy
@@ -155,8 +146,14 @@ class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
 
 And `SQLAlchemyAdmin` category schema itself
 
-> If `table_schema` is not specified, it will be generated automatically and will include all discovered fields and relationships of the table in the output.
+## Comparison of Similar Projects
 
-``` python
-category = sqlalchemy.SQLAlchemyAdmin(db_async_session=async_sessionmaker, model=Terminal)
-```
+| Criterion | Brilliance Admin | Django Unfold | FastAPI Admin |
+|---------|------------------|---------------|---------------|
+| Base framework | FastAPI | Django | FastAPI |
+| Rendering model | Prebuilt Vuetify Vue3 SPA + Jinja2 | Server-side Django templates | Server-side templates Jinja2 + Tabler UI |
+| Frontend architecture | Separate frontend (SPA) | Classic server-rendered UI | Server-rendered UI with JS interactivity |
+| Data Source | Any source + SQLAlchemy | Django ORM | Tortoise ORM |
+| Schema generation | Dynamic, schema-first | From Django models | From ORM models |
+| Async support | Yes | No | Yes |
+| API-first approach | Yes | No | Partially |

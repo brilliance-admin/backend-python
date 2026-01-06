@@ -17,6 +17,7 @@ General-purpose admin panel framework powered by FastAPI. Some call it heavenly 
 **Key ideas:**
 - Providing rich ways to display and manage data (tables, charts etc) from any data sources
 - Automatic schema generation from ORM (SQLAlchemy models implemented)
+- The backend is separated from the frontend, with no hardcoding, but the frontend is embedded via static files and does not require a separate runtime.
 - Focused on minimal boilerplate and simplified, but rich configuration
 
 **How it works:**
@@ -51,6 +52,26 @@ You need to generate `AdminSchema` instance:
 ``` python
 from admin_panel import schema
 
+class CategoryExample(schema.CategoryTable):
+    async def get_list(
+            self,
+            list_data: schema.ListData,
+            user: auth.UserABC,
+            language_manager: LanguageManager,
+    ) -> schema.TableListResult:
+        ...
+        return schema.TableListResult(data=data, total_count=total_count)
+
+    async def retrieve(
+            self,
+            pk: Any,
+            user: auth.UserABC,
+            language_manager: LanguageManager,
+    ) -> schema.RetrieveResult:
+        ...
+        return schema.RetrieveResult(data=line)
+
+
 admin_schema = schema.AdminSchema(
     title='Admin Panel',
     auth=YourAdminAuthentication(),
@@ -83,6 +104,18 @@ from admin_panel.translations import TranslateText as _
 from your_project.models import Terminal
 
 
+class TerminalFiltersSchema(sqlalchemy.SQLAlchemyFieldsSchema):
+    model = Terminal
+    fields = ['id', 'created_at']
+
+    created_at = schema.DateTimeField(range=True)
+
+
+class TerminalSchema(sqlalchemy.SQLAlchemyFieldsSchema):
+    model = Terminal
+    list_display = ['id', 'merchant_id']
+
+
 class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
     db_async_session = async_sessionmaker
     model = Terminal
@@ -92,15 +125,8 @@ class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
     ordering_fields = ['id']
     search_fields = ['id', 'title']
 
-    table_schema = sqlalchemy.SQLAlchemyFieldsSchema(
-        model=Terminal, 
-        list_display=['id', 'merchant_id'],
-    )
-    table_filters = sqlalchemy.SQLAlchemyFieldsSchema(
-        model=Terminal, 
-        fields=['id', 'created_at'],
-        created_at=schema.DateTimeField(range=True),
-    )
+    table_schema = TerminalSchema()
+    table_filters = TerminalFiltersSchema()
 
 
 category = TerminalAdmin()
@@ -113,15 +139,18 @@ Now, the `TerminalAdmin` instance can be passed to `categories`.
 For `SQLAlchemyFieldsSchema`
 
 ``` python
-class TerminalTableSchema(sqlalchemy.SQLAlchemyFieldsSchema):
-    model = Terminal
-    fields = ['id', 'created_at']
-
-    created_at=schema.DateTimeField(range=True)
-
-
 class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
-    table_schema = TerminalTableSchema()
+    ...
+
+    table_schema = sqlalchemy.SQLAlchemyFieldsSchema(
+        model=Terminal, 
+        list_display=['id', 'merchant_id'],
+    )
+    table_filters = sqlalchemy.SQLAlchemyFieldsSchema(
+        model=Terminal, 
+        fields=['id', 'created_at'],
+        created_at=schema.DateTimeField(range=True),
+    )
 ```
 
 And `SQLAlchemyAdmin` category schema itself

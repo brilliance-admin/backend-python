@@ -143,15 +143,27 @@ Optionally, functional-style generation can be used to reduce boilerplate code
 category = sqlalchemy.SQLAlchemyAdmin(
     db_async_session=async_sessionmaker,
     model=Terminal,
+
     table_schema = sqlalchemy.SQLAlchemyFieldsSchema(
         model=Terminal, 
         list_display=['id', 'merchant_id'],
-    )
+    ),
     table_filters = sqlalchemy.SQLAlchemyFieldsSchema(
         model=Terminal, 
         fields=['id', 'created_at'],
         created_at=schema.DateTimeField(range=True),
-    )
+    ),
+)
+```
+
+### SQLAlchemy authentication
+
+``` python
+auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
+    secret='auth_secret',
+    db_async_session=async_session,
+    user_model=User,
+)
 ```
 
 ## Comparison of Similar Projects

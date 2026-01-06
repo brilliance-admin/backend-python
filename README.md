@@ -16,7 +16,7 @@ General-purpose admin panel framework powered by FastAPI. Some call it heavenly 
 
 **Key ideas:**
 - **API oriented**\
-Works entirely on FastAPI and provides a prebuilt SPA via static files (Vue3 + Vuetify).\
+Works entirely on FastAPI and provides a prebuilt SPA [frontend](https://github.com/brilliance-admin/frontend) via static files (Vue3 + Vuetify).\
 Data generation/updating API separated from rendering fontend with zero hardcode, this makes it possible to have a single frontend with multiple backend implementations in different languages and makes test coverage easier.
 - **Data Display**\
 Providing rich and convenient ways to display and manage data (tables, charts, etc) from any data source.
@@ -61,7 +61,7 @@ from admin_panel import schema
 
 
 class CategoryExample(schema.CategoryTable):
-    "Implementation of get_list and retrieve, update and create are optional"
+    "Implementation of get_list and retrieve; update and create are optional"
 
 
 admin_schema = schema.AdminSchema(
@@ -99,7 +99,7 @@ category = sqlalchemy.SQLAlchemyAdmin(db_async_session=async_sessionmaker, model
 
 Now, the `category` instance can be passed to `categories`.
 
-### Django Rest Framework class style schema
+### DRF class style schema
 
 ``` python
 from admin_panel import sqlalchemy

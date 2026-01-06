@@ -5,20 +5,17 @@
 </div>
 
 <div align="center">
-  <img src="https://github.com/brilliance-admin/backend-python/blob/main/screenshots/websitemockupgenerator.png?raw=true"
-       alt="Brilliance Admin"
-       width="600">
-</div>
-
-<div align="center">
 
 [![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin/)
 [![License](https://img.shields.io/pypi/l/brilliance-admin)](https://github.com/brilliance-admin/backend-python/blob/main/LICENSE)
 [![CI](https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg)](https://github.com/brilliance-admin/backend-python/actions)
 
-</div>
-
 General-purpose admin panel framework powered by FastAPI. Some call it heavenly in its brilliance.
+
+  <img src="https://github.com/brilliance-admin/backend-python/blob/main/screenshots/websitemockupgenerator.png?raw=true"
+       alt="Preview">
+
+</div>
 
 **Key ideas:**
 - Providing rich ways to display and manage data (tables, charts etc) from any data sources
@@ -40,7 +37,7 @@ General-purpose admin panel framework powered by FastAPI. Some call it heavenly 
 * Ability to define custom table actions with forms, response messages, and file downloads.
 * SQLAlchemy integration with automatic field generation from models.
 * Authorization via any account data source.
-* Localization support with language selection in the interface.
+* Localization support.
 * Adapted for different screen sizes and mobile devices.
 
 **Planned:**
@@ -85,9 +82,9 @@ app = FastAPI()
 app.mount('/admin', admin_app)
 ```
 
-### SQLAlchemy integration
+## SQLAlchemy integration
 
-Brilliance Admin supports automatic schema generation from SQLAlchemy and provides a ready-made CRUD implementation for tables.
+Supports automatic schema generation for CRUD tables:
 
 ``` python
 category = sqlalchemy.SQLAlchemyAdmin(db_async_session=async_sessionmaker, model=Terminal)
@@ -98,7 +95,7 @@ category = sqlalchemy.SQLAlchemyAdmin(db_async_session=async_sessionmaker, model
 
 Now, the `category` instance can be passed to `categories`.
 
-Django Rest Framework class style:
+### Django Rest Framework class style schema
 
 ``` python
 from admin_panel import sqlalchemy
@@ -139,6 +136,8 @@ category = TerminalAdmin()
 
 Optionally, functional-style generation can be used to reduce boilerplate code
 
+Availiable for `SQLAlchemyAdmin` and `SQLAlchemyFieldsSchema`
+
 ``` python
 category = sqlalchemy.SQLAlchemyAdmin(
     db_async_session=async_sessionmaker,
@@ -156,7 +155,7 @@ category = sqlalchemy.SQLAlchemyAdmin(
 )
 ```
 
-### SQLAlchemy authentication
+### SQLAlchemy JWT Authentication
 
 ``` python
 auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(

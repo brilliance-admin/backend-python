@@ -2,9 +2,6 @@
   <img src="https://github.com/brilliance-admin/backend-python/blob/main/example/static/logo-outline.png?raw=true"
        alt="Brilliance Admin"
        width="600">
-</div>
-
-<div align="center">
 
 [![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin/)
 [![License](https://img.shields.io/pypi/l/brilliance-admin)](https://github.com/brilliance-admin/backend-python/blob/main/LICENSE)
@@ -18,16 +15,19 @@ General-purpose admin panel framework powered by FastAPI. Some call it heavenly 
 </div>
 
 **Key ideas:**
-- Providing rich ways to display and manage data (tables, charts etc) from any data sources
-- Automatic schema generation from ORM (SQLAlchemy models implemented)
-- The backend is separated from the frontend, with no hardcoding, but the frontend is embedded via static files and does not require a separate runtime.
-- Focused on minimal boilerplate and simplified, but rich configuration
+- **API oriented**\
+Works entirely on FastAPI and provides a prebuilt SPA via static files (Vue3 + Vuetify).\
+Data generation/updating API separated from rendering fontend with zero hardcode, this makes it possible to have a single frontend with multiple backend implementations in different languages and makes test coverage easier.
+- **Data Display**\
+Providing rich and convenient ways to display and manage data (tables, charts, etc) from any data source.
+- **ORM**\
+Automatic schema generation and methods for CRUD operations.
+- **Minimal boilerplate**\
+Focused on simplified, but rich configuration.
 
 **How it works:**
-- Works entirely on FastAPI and provides a prebuilt SPA via static files (Vue3 + Vuetify)
 - After authentication, the user receives the admin panel schema, and the frontend renders it
 - The frontend communicates with the backend via API to fetch and modify data
-
 
 ### [Live Demo](https://brilliance-admin.com/) | [Example App](https://github.com/brilliance-admin/backend-python/tree/main/example) | Documentation (todo)
 
@@ -35,14 +35,18 @@ General-purpose admin panel framework powered by FastAPI. Some call it heavenly 
 
 * Tables with full CRUD support, including filtering, sorting, and pagination.
 * Ability to define custom table actions with forms, response messages, and file downloads.
-* SQLAlchemy integration with automatic field generation from models.
-* Authorization via any account data source.
-* Localization support.
-* Adapted for different screen sizes and mobile devices.
+* Graphs via ChartJS
+* Localization support
+* Adapted for different screen sizes and mobile devices
+* Authorization via any account data source
+
+**Integrations:**
+* **SQLAlchemy** - schema autogeneration for tables + CRUD operations + authorization
 
 **Planned:**
 * Role-based access control system
 * Nested data support for creation and detail views
+* Django ORM inegration
 
 ## How to use it
 

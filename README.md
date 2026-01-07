@@ -4,14 +4,13 @@
        width="600">
 
 [![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin/)
-[![License](https://img.shields.io/pypi/l/brilliance-admin)](https://github.com/brilliance-admin/backend-python/blob/main/LICENSE)
 [![CI](https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg)](https://github.com/brilliance-admin/backend-python/actions)
 
 Simple and lightweight admin panel framework powered by `FastAPI` and `Vue3` `Vuetify` together. \
-Integrated with SQLAlchemy. Inspaired by Django Admin and DRF.\
+Integrated with `SQLAlchemy`. Inspaired by Django Admin and DRF.\
 Some call it heavenly in its brilliance.
 
-### [Live Demo](https://brilliance-admin.com/) | [Example App](https://github.com/brilliance-admin/backend-python/tree/main/example) | Documentation (todo)
+### [Live Demo](https://brilliance-admin.com/) | [Demo Sources](https://github.com/brilliance-admin/backend-python/tree/main/example) | Documentation (todo)
 
   <img src="https://github.com/brilliance-admin/backend-python/blob/main/screenshots/websitemockupgenerator.png?raw=true"
        alt="Preview">
@@ -172,12 +171,12 @@ auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
 
 ## Comparison of Similar Projects
 
-| Criterion | Brilliance Admin | Django Unfold | FastAPI Admin |
-|---------|------------------|---------------|---------------|
-| Base framework | FastAPI | Django | FastAPI |
-| Rendering model | Prebuilt Vuetify Vue3 SPA + Jinja2 | Server-side Django templates | Server-side templates Jinja2 + Tabler UI |
-| Frontend architecture | Separate frontend (SPA) | Classic server-rendered UI | Server-rendered UI with JS interactivity |
-| Data Source | Any source + SQLAlchemy | Django ORM | Tortoise ORM |
-| Schema generation | Dynamic, schema-first | From Django models | From ORM models |
-| Async support | Yes | No | Yes |
-| API-first approach | Yes | No | Partially |
+| Criterion | Brilliance Admin | Django Admin/Unfold | FastAPI Admin | Starlette Admin |
+|---------|------------------|---------------|---------------|-----------------|
+| Base framework | FastAPI | Django | FastAPI | Starlette / FastAPI |
+| Rendering model | Prebuilt Vue 3 + Vuetify SPA + Jinja2 | Server-side Django templates | Server-side Jinja2 templates + Tabler UI | Server-side Jinja2 templates + Tabler UI |
+| Frontend architecture | Separate frontend (SPA) | Classic server-rendered UI | Server-rendered UI with JS interactivity | Server-rendered UI with JS interactivity |
+| Data source | Any source + SQLAlchemy | Django ORM | Tortoise ORM | Any source + SQLAlchemy, MongoDB |
+| Schema generation | User-defined format | From Django models | From ORM models | User-defined format |
+| Async support | Yes | No | Yes | Yes |
+| API-first approach | Yes | No | Partially | Partially |

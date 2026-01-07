@@ -8,7 +8,7 @@
 
 Simple and lightweight admin panel framework powered by `FastAPI` and `Vue3` `Vuetify` together. \
 Integrated with `SQLAlchemy`. Inspaired by Django Admin and DRF.\
-Some call it heavenly in its brilliance.
+_Some call it heavenly in its brilliance._
 
 ### [Live Demo](https://brilliance-admin.com/) | [Demo Sources](https://github.com/brilliance-admin/backend-python/tree/main/example) | Documentation (todo)
 
@@ -19,8 +19,8 @@ Some call it heavenly in its brilliance.
 
 **Key ideas:**
 - **API oriented**\
-Works entirely on FastAPI and provides a prebuilt SPA [frontend](https://github.com/brilliance-admin/frontend) via static files (Vue3 + Vuetify). No separate startup is required.\
-Data generation/updating API separated from rendering fontend with zero hardcode, this makes it possible to have a single frontend with multiple backend implementations in different languages and makes test coverage easier.
+Works entirely on FastAPI and provides a prebuilt SPA [frontend](https://github.com/brilliance-admin/frontend) via static files (Vue3 + Vuetify). No separate startup is required.
+> Data generation/updating API separated from rendering fontend with zero hardcode, this makes it possible to have a single frontend with multiple backend implementations in different languages and makes test coverage easier.
 - **Rich visualization**\
 Providing rich and convenient ways to display and manage data (tables, charts, etc) from any data source.
 - **ORM**\
@@ -177,6 +177,7 @@ auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
 | Rendering model | Prebuilt Vue 3 + Vuetify SPA + Jinja2 | Server-side Django templates | Server-side Jinja2 templates + Tabler UI | Server-side Jinja2 templates + Tabler UI |
 | Frontend architecture | Separate frontend (SPA) | Classic server-rendered UI | Server-rendered UI with JS interactivity | Server-rendered UI with JS interactivity |
 | Data source | Any source + SQLAlchemy | Django ORM | Tortoise ORM | Any source + SQLAlchemy, MongoDB |
+| Multiple databases per model | Yes | Database routers | No (global engine) | Yes (session per ModelView) |
 | Schema generation | User-defined format | From Django models | From ORM models | User-defined format |
 | Async support | Yes | No | Yes | Yes |
 | API-first approach | Yes | No | Partially | Partially |

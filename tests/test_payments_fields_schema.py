@@ -3,7 +3,6 @@ from unittest import mock
 import pytest
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.translations import LanguageContext
 from example.sections.payments import PaymentsAdmin
 
 category_schema_data = {

@@ -2,7 +2,7 @@ from unittest import mock
 
 import pytest
 
-from admin_panel.auth import UserABC
+from brilliance_admin.auth import UserABC
 from example.main import CustomLanguageManager
 from example.sections.payments import PaymentsAdmin
 

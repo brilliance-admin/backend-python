@@ -1,9 +1,9 @@
 import pytest
 
-from admin_panel.auth import AuthData
-from admin_panel.exceptions import AdminAPIException
-from admin_panel import sqlalchemy
-from admin_panel.schema.admin_schema import AdminSchemaData
+from brilliance_admin.auth import AuthData
+from brilliance_admin.exceptions import AdminAPIException
+from brilliance_admin import sqlalchemy
+from brilliance_admin.schema.admin_schema import AdminSchemaData
 from example.sections.models import User, UserFactory
 
 

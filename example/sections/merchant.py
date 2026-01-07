@@ -1,5 +1,5 @@
-from admin_panel import schema, sqlalchemy
-from admin_panel.translations import TranslateText as _
+from brilliance_admin import schema, sqlalchemy
+from brilliance_admin.translations import TranslateText as _
 from example.sections.models import Merchant
 
 

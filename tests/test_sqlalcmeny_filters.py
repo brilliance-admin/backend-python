@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from admin_panel import auth, schema, sqlalchemy
+from brilliance_admin import auth, schema, sqlalchemy
 from example.main import CustomLanguageManager
 from example.sections.models import Currency, CurrencyFactory, MerchantFactory, Terminal, TerminalFactory
 

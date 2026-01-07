@@ -1,9 +1,8 @@
 import pytest
 
-from admin_panel.exceptions import AdminAPIException, APIError, FieldError
-from admin_panel.translations import DEFAULT_PHRASES
-from admin_panel.translations import TranslateText as _
-from admin_panel.translations import merge_phrases
+from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
+from brilliance_admin.translations import TranslateText as _
+from brilliance_admin.translations import merge_phrases
 from example.main import CustomLanguageManager
 
 

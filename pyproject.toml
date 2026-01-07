@@ -16,12 +16,15 @@ requires = ["setuptools", "setuptools-scm"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["admin_panel*"]
+include = ["brilliance_admin*"]
 
 [tool.setuptools.package-data]
-admin_panel = ["static/**/*", "templates/**/*"]
+brilliance_admin = ["static/**/*", "templates/**/*"]
 
 [project.optional-dependencies]
+i18n = [
+    "python-i18n",
+]
 example = [
     "uvicorn>=0.34.0",
     "faker>=38.2.0",

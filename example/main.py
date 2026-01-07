@@ -1,17 +1,17 @@
 import logging
-from fastapi.staticfiles import StaticFiles
 import logging.config
 
 import structlog
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from structlog.dev import RichTracebackFormatter
 
-from admin_panel import schema
-from admin_panel.auth import AdminAuthentication, AuthData, AuthResult, UserABC, UserResult
-from admin_panel.exceptions import AdminAPIException, APIError
-from admin_panel.translations import LanguageManager
-from admin_panel.translations import TranslateText as _
+from brilliance_admin import schema
+from brilliance_admin.auth import AdminAuthentication, AuthData, AuthResult, UserABC, UserResult
+from brilliance_admin.exceptions import AdminAPIException, APIError
+from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import TranslateText as _
 from example.phrases import LANGUAGES_PHRASES
 from example.sections.currency import CurrencyAdmin
 from example.sections.graphs import GraphsExample

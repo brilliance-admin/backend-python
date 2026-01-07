@@ -78,6 +78,9 @@ example = [
     { name = "structlog" },
     { name = "uvicorn" },
 ]
+i18n = [
+    { name = "python-i18n" },
+]
 scalar = [
     { name = "scalar-fastapi" },
 ]
@@ -106,6 +109,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'tests'", specifier = ">=8.4.2" },
     { name = "pytest-asyncio", marker = "extra == 'tests'", specifier = ">=1.2.0" },
     { name = "pytest-mock", marker = "extra == 'tests'", specifier = ">=3.15.1" },
+    { name = "python-i18n", marker = "extra == 'i18n'" },
     { name = "rich", marker = "extra == 'example'", specifier = ">=14.2.0" },
     { name = "scalar-fastapi", marker = "extra == 'scalar'", specifier = ">=1.5.0" },
     { name = "sqlalchemy", marker = "extra == 'tests'", specifier = ">=2.0.41" },
@@ -585,6 +589,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/68/14/eb014d26be205d38ad5ad20d9a80f7d201472e08167f0bb4361e251084a9/pytest_mock-3.15.1.tar.gz", hash = "sha256:1849a238f6f396da19762269de72cb1814ab44416fa73a8686deac10b0d87a0f", size = 34036 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/5a/cc/06253936f4a7fa2e0f48dfe6d851d9c56df896a9ab09ac019d70b760619c/pytest_mock-3.15.1-py3-none-any.whl", hash = "sha256:0a25e2eb88fe5168d535041d09a4529a188176ae608a6d249ee65abc0949630d", size = 10095 },
+]
+
+[[package]]
+name = "python-i18n"
+version = "0.3.9"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/fe/32/d9ba976458c9503ec22db4eb677a5d919edaecd73d893effeaa92a67b84b/python-i18n-0.3.9.tar.gz", hash = "sha256:df97f3d2364bf3a7ebfbd6cbefe8e45483468e52a9e30b909c6078f5f471e4e8", size = 11778 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5a/73/9a0b2974dd9a3d50788d235f10c4d73c2efcd22926036309645fc2f0db0c/python_i18n-0.3.9-py3-none-any.whl", hash = "sha256:bda5b8d889ebd51973e22e53746417bd32783c9bd6780fd27cadbb733915651d", size = 13750 },
 ]
 
 [[package]]

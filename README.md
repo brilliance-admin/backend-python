@@ -58,7 +58,7 @@ pip install brilliance-admin
 
 You need to generate `AdminSchema` instance:
 ``` python
-from admin_panel import schema
+from brilliance_admin import schema
 
 
 class CategoryExample(schema.CategoryTable):
@@ -103,8 +103,8 @@ Now, the `category` instance can be passed to `categories`.
 ### DRF class style schema
 
 ``` python
-from admin_panel import sqlalchemy
-from admin_panel.translations import TranslateText as _
+from brilliance_admin import sqlalchemy
+from brilliance_admin.translations import TranslateText as _
 
 from your_project.models import Terminal
 

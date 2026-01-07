@@ -6,7 +6,7 @@ from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, Small
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import expression
 
-from admin_panel.translations import TranslateText as _
+from brilliance_admin.translations import TranslateText as _
 from example.sqlite import async_sessionmaker_
 from example.utils import SQLAlchemyFactoryBase
 

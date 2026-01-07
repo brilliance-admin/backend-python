@@ -1,6 +1,6 @@
-from admin_panel import schema
-from admin_panel.schema.graphs.category_graphs import ChartData, GraphData, GraphsDataResult
-from admin_panel.translations import TranslateText as _
+from brilliance_admin import schema
+from brilliance_admin.schema.graphs.category_graphs import ChartData, GraphData, GraphsDataResult
+from brilliance_admin.translations import TranslateText as _
 
 
 class GraphsFiltersSchema(schema.FieldsSchema):

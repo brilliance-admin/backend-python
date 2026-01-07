@@ -2,8 +2,8 @@ from unittest import mock
 
 import pytest
 
-from admin_panel import schema, sqlalchemy
-from admin_panel.auth import UserABC
+from brilliance_admin import schema, sqlalchemy
+from brilliance_admin.auth import UserABC
 from example.main import CustomLanguageManager
 from example.sections.models import Terminal
 

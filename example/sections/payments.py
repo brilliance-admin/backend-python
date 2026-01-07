@@ -5,12 +5,12 @@ from typing import Any
 
 from faker import Faker
 
-from admin_panel import auth, schema
-from admin_panel.exceptions import FieldError
-from admin_panel.schema.table.admin_action import ActionData, ActionMessage, ActionResult, admin_action
-from admin_panel.translations import LanguageManager
-from admin_panel.translations import TranslateText as _
-from admin_panel.utils import get_logger
+from brilliance_admin import auth, schema
+from brilliance_admin.exceptions import FieldError
+from brilliance_admin.schema.table.admin_action import ActionData, ActionMessage, ActionResult, admin_action
+from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import TranslateText as _
+from brilliance_admin.utils import get_logger
 
 logger = get_logger()
 

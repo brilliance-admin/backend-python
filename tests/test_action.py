@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from admin_panel.schema.table.admin_action import ActionData
+from brilliance_admin.schema.table.admin_action import ActionData
 from example.main import app
 
 client = TestClient(app)

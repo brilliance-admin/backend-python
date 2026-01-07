@@ -6,9 +6,10 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = 'AGPL-3.0'
 dependencies = [
-    "asgiref>=3.11.0",
-    "fastapi>=0.115.8",
-    "jinja2>=3.1.6",
+    "asgiref>=3.11",
+    "fastapi>=0.115",
+    "jinja2>=3.1",
+    "PyYAML>=6.0",
 ]
 
 [build-system]
@@ -22,9 +23,6 @@ include = ["brilliance_admin*"]
 brilliance_admin = ["static/**/*", "templates/**/*"]
 
 [project.optional-dependencies]
-i18n = [
-    "python-i18n",
-]
 example = [
     "uvicorn>=0.34.0",
     "faker>=38.2.0",

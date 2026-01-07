@@ -6,7 +6,7 @@ from pydantic.dataclasses import dataclass
 from pydantic_core import core_schema
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.translations import LanguageManager, TranslateText
+from brilliance_admin.translations import LanguageContext, TranslateText
 from brilliance_admin.utils import DataclassBase
 
 
@@ -124,10 +124,10 @@ class Category(abc.ABC):
 
     _type_slug: ClassVar[str]
 
-    def generate_schema(self, user: UserABC, language_manager: LanguageManager) -> CategorySchemaData:
+    def generate_schema(self, user: UserABC, language_context: LanguageContext) -> CategorySchemaData:
         return CategorySchemaData(
-            title=language_manager.get_text(self.title) or self.slug,
-            description=language_manager.get_text(self.description),
+            title=language_context.get_text(self.title) or self.slug,
+            description=language_context.get_text(self.description),
             icon=self.icon,
             type=self._type_slug,
         )

@@ -1,0 +1,51 @@
+admin_title: 'Brilliance Admin Демо'
+
+admin_description: |
+  Используется для демонстрации возможностей админ панели.<br>
+  <br>
+  Данные и действия в этом режиме не влияют на рабочее окружение и периодически сбрасываются.
+
+login_greetings_message: |
+  <div class="text-h6 mb-1">
+    Демо режим
+  </div>
+  <div class="text-caption">
+    Логин: admin<br>
+    Пароль: admin
+  </div>
+
+created_at: 'Время создания'
+graphs_example: 'Пример графиков'
+amount: 'Сумма'
+registry_checked: 'Реестр проверен'
+registry_info_checked: 'Информация по реестру провайдера'
+payments: 'Платежи'
+payments_description: 'Статичные данные'
+statistics: 'Статистика'
+image: 'Изображение'
+payments_search_fields: 'Доступные поля для поиска: id'
+create_payment: 'Создать платеж'
+create_payment_description: 'Создать платеж и отправить его на обработку в платежную систему.'
+
+payment_create_result: |
+  <h3>Платеж успешно создан!</h3>
+  %(desctiption)s<br>
+  <br>
+  Данные платежа:<br>
+  gateway_id=%(gateway_id)s<br>
+  redirect_url: <a href="%(redirect_url)s" target="_blank"/>%(redirect_url)s</a>
+
+description: 'Описание'
+status: 'Статус'
+endpoint: 'Эндпоинт'
+action_with_exception: 'Действие с ошибкой'
+is_throw_error: 'Выбросить ошибку?'
+throw_error: 'Пример ошибки валидации поля.'
+exception_example: 'Пример ошибки исключения.'
+merchants: 'Мерчанты'
+terminals: 'Терминалы'
+currencies: 'Валюты'
+whitelist_ips: 'Белый список IP'
+users: 'Пользователи'
+field_not_found_in_schema: 'Поле "{field_slug}" не найдено среди доступных: {available}'
+related_not_found: 'Ошибка при обновлении связей поля {field_slug}: запись {model} с ключем pk={pk} не найдена. Возможно запись более недоступна.'

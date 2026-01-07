@@ -6,7 +6,7 @@ from pydantic.dataclasses import dataclass
 
 from brilliance_admin.exceptions import FieldError
 from brilliance_admin.schema.category import FieldSchemaData
-from brilliance_admin.translations import LanguageManager, TranslateText
+from brilliance_admin.translations import LanguageContext, TranslateText
 from brilliance_admin.utils import DeserializeAction, humanize_field_name
 
 
@@ -17,11 +17,11 @@ class TableField(abc.ABC, FieldSchemaData):
     label: str | TranslateText | None = None
     help_text: str | TranslateText | None = None
 
-    def generate_schema(self, user, field_slug, language_manager: LanguageManager) -> FieldSchemaData:
+    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
         schema = FieldSchemaData(
             type=self._type,
-            label=language_manager.get_text(self.label) or humanize_field_name(field_slug),
-            help_text=language_manager.get_text(self.help_text),
+            label=language_context.get_text(self.label) or humanize_field_name(field_slug),
+            help_text=language_context.get_text(self.help_text),
             header=self.header,
             read_only=self.read_only,
             default=self.default,
@@ -59,8 +59,8 @@ class IntegerField(TableField):
     precision: int | None = None
     scale: int | None = None
 
-    def generate_schema(self, user, field_slug, language_manager: LanguageManager) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_manager)
+    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_schema(user, field_slug, language_context)
 
         schema.choices = self.choices
 
@@ -97,8 +97,8 @@ class StringField(TableField):
 
     choices: List[Tuple[str, str]] | None = None
 
-    def generate_schema(self, user, field_slug, language_manager: LanguageManager) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_manager)
+    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_schema(user, field_slug, language_context)
 
         schema.multilined = self.multilined
         schema.choices = self.choices
@@ -135,8 +135,8 @@ class DateTimeField(TableField):
     include_date: bool | None = True
     include_time: bool | None = True
 
-    def generate_schema(self, user, field_slug, language_manager: LanguageManager) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_manager)
+    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_schema(user, field_slug, language_context)
 
         schema.range = self.range
         schema.include_date = self.include_date
@@ -180,8 +180,8 @@ class ArrayField(TableField):
 
     array_type: str | None
 
-    def generate_schema(self, user, field_slug, language_manager: LanguageManager) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_manager)
+    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_schema(user, field_slug, language_context)
 
         schema.array_type = self.array_type
 
@@ -208,8 +208,8 @@ class ImageField(TableField):
     preview_max_height: int = 100
     preview_max_width: int = 100
 
-    def generate_schema(self, user, field_slug, language_manager: LanguageManager) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_manager)
+    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_schema(user, field_slug, language_context)
 
         if self.preview_max_height is not None:
             schema.preview_max_height = self.preview_max_height
@@ -234,8 +234,8 @@ class ChoiceField(TableField):
     variant: str = 'elevated'
     size: str = 'default'
 
-    def generate_schema(self, user, field_slug, language_manager: LanguageManager) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_manager)
+    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_schema(user, field_slug, language_context)
 
         schema.choices = self.choices
 

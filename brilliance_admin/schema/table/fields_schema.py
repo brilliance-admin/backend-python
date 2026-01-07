@@ -8,7 +8,7 @@ from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.schema.category import FieldSchemaData, FieldsSchemaData
 from brilliance_admin.schema.table.fields.base import TableField
 from brilliance_admin.schema.table.fields.function_field import FunctionField
-from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import DeserializeAction
 
 NOT_FUND_EXCEPTION = '''Field slug "{field_slug}" not found inside generated fields inside {class_name}
@@ -143,13 +143,13 @@ class FieldsSchema:
     def get_fields(self) -> Dict[str, TableField]:
         return self._generated_fields
 
-    def generate_schema(self, user: UserABC, language_manager: LanguageManager) -> FieldsSchemaData:
+    def generate_schema(self, user: UserABC, language_context: LanguageContext) -> FieldsSchemaData:
         fields_schema = FieldsSchemaData(
             list_display=self.list_display,
         )
 
         for field_slug, field in self.get_fields().items():
-            field_schema: FieldSchemaData = field.generate_schema(user, field_slug, language_manager)
+            field_schema: FieldSchemaData = field.generate_schema(user, field_slug, language_context)
             fields_schema.fields[field_slug] = field_schema.to_dict(keep_none=False)
 
         return fields_schema

@@ -13,7 +13,7 @@ from brilliance_admin.schema.category import TableInfoSchemaData
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult, ListData, TableListResult
-from brilliance_admin.translations import LanguageManager, TranslateText
+from brilliance_admin.translations import LanguageContext, TranslateText
 from brilliance_admin.utils import DeserializeAction
 
 
@@ -60,20 +60,20 @@ class CategoryTable(Category):
         fn = getattr(self, 'update', None)
         return asyncio.iscoroutinefunction(fn)
 
-    def generate_schema(self, user, language_manager: LanguageManager) -> dict:
-        schema = super().generate_schema(user, language_manager)
+    def generate_schema(self, user, language_context: LanguageContext) -> dict:
+        schema = super().generate_schema(user, language_context)
 
         table_schema = getattr(self, 'table_schema', None)
         if not table_schema or not issubclass(table_schema.__class__, FieldsSchema):
             raise AttributeError(f'Admin category {self.__class__} must have table_schema instance of FieldsSchema')
 
         table = TableInfoSchemaData(
-            table_schema=self.table_schema.generate_schema(user, language_manager),
+            table_schema=self.table_schema.generate_schema(user, language_context),
             ordering_fields=self.ordering_fields,
             default_ordering=self.default_ordering,
 
             search_enabled=self.search_enabled,
-            search_help=language_manager.get_text(self.search_help),
+            search_help=language_context.get_text(self.search_help),
 
             pk_name=self.pk_name,
             can_retrieve=self.has_retrieve,
@@ -83,7 +83,7 @@ class CategoryTable(Category):
         )
 
         if self.table_filters:
-            table.table_filters = self.table_filters.generate_schema(user, language_manager)
+            table.table_filters = self.table_filters.generate_schema(user, language_context)
 
         actions = {}
         for attribute_name in dir(self):
@@ -94,14 +94,14 @@ class CategoryTable(Category):
             if asyncio.iscoroutinefunction(attribute) and getattr(attribute, '__action__', False):
                 action = copy.copy(attribute.action_info)
 
-                action['title'] = language_manager.get_text(action.get('title'))
-                action['description'] = language_manager.get_text(action.get('description'))
-                action['confirmation_text'] = language_manager.get_text(action.get('confirmation_text'))
+                action['title'] = language_context.get_text(action.get('title'))
+                action['description'] = language_context.get_text(action.get('description'))
+                action['confirmation_text'] = language_context.get_text(action.get('confirmation_text'))
 
                 form_schema = action['form_schema']
                 if form_schema:
                     try:
-                        action['form_schema'] = form_schema.generate_schema(user, language_manager)
+                        action['form_schema'] = form_schema.generate_schema(user, language_context)
                     except Exception as e:
                         msg = f'Action {attribute} form schema {form_schema} error: {e}'
                         raise Exception(msg) from e
@@ -126,7 +126,7 @@ class CategoryTable(Category):
             request: Request,
             action: str,
             action_data: ActionData,
-            language_manager: LanguageManager,
+            language_context: LanguageContext,
             user: UserABC,
     ) -> ActionResult:
         action_fn = self._get_action_fn(action)
@@ -162,7 +162,7 @@ class CategoryTable(Category):
 
     # pylint: disable=too-many-arguments
     @abc.abstractmethod
-    async def get_list(self, list_data: ListData, user: UserABC, language_manager: LanguageManager) -> TableListResult:
+    async def get_list(self, list_data: ListData, user: UserABC, language_context: LanguageContext) -> TableListResult:
         raise NotImplementedError()
 
 #     async def retrieve(self, pk: Any, user: UserABC) -> RetrieveResult:

@@ -1,6 +1,9 @@
 import logging
 import re
+from pathlib import Path
+from typing import Any, Dict
 
+import yaml
 from pydantic import TypeAdapter
 
 
@@ -48,3 +51,89 @@ def humanize_field_name(name: str) -> str:
         return token[:1].upper() + token[1:].lower()
 
     return " ".join(cap(p) for p in parts)
+
+
+def iter_locale_files(directory) -> list[Path]:
+    if isinstance(directory, str):
+        directory = Path(directory)
+
+    if not directory.exists():
+        raise FileNotFoundError(directory)
+    if not directory.is_dir():
+        raise NotADirectoryError(directory)
+
+    for path in directory.rglob('*'):
+        if not path.is_file():
+            continue
+
+        yield path
+
+
+def merge_dict_data(base: dict, extra: dict) -> dict:
+    if not isinstance(base, dict):
+        raise TypeError('base must be dict')
+    if not isinstance(extra, dict):
+        raise TypeError('extra must be dict')
+
+    result = base.copy()
+    for key, value in extra.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = merge_dict_data(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
+class YamlI18n:
+    data: Dict[str, Any] = {}
+
+    def load_folder(self, path):
+        for file_path in iter_locale_files(path):
+            with file_path.open(encoding='utf-8') as f:
+                data = yaml.safe_load(f)
+
+            if not isinstance(data, dict):
+                msg = f'YAML root must be dict: {file_path}, got {type(data)}'
+                raise TypeError(msg)
+
+            language = file_path.stem
+            if language not in self.data:
+                self.data[language] = {}
+
+            if not isinstance(self.data[language], dict):
+                raise TypeError(f'language root must be dict: {language}')
+
+            self.data[language] = merge_dict_data(self.data[language], data)
+
+    def get_text(self, slug, language, default_language):
+        if not isinstance(slug, str):
+            raise TypeError(f'slug must be str, got {type(slug)}')
+
+        if not isinstance(language, str):
+            raise TypeError(f'language must be str, got {type(language)}')
+
+        if not isinstance(default_language, str):
+            raise TypeError(f'default_language must be str, got {type(default_language)}')
+
+        if not self.data:
+            raise ValueError('i18n data is empty')
+
+        for lang in (language, default_language):
+            if lang not in self.data:
+                continue
+
+            node = self.data[lang]
+
+            for part in slug.split('.'):
+                if not isinstance(node, dict):
+                    node = None
+                    break
+                if part not in node:
+                    node = None
+                    break
+                node = node[part]
+
+            if isinstance(node, str):
+                return node
+
+        raise KeyError(f'translation key not found: {slug}')

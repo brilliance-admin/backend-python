@@ -12,7 +12,6 @@ from brilliance_admin.auth import AdminAuthentication, AuthData, AuthResult, Use
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.translations import LanguageManager
 from brilliance_admin.translations import TranslateText as _
-from example.phrases import LANGUAGES_PHRASES
 from example.sections.currency import CurrencyAdmin
 from example.sections.graphs import GraphsExample
 from example.sections.merchant import MerchantAdmin
@@ -45,15 +44,6 @@ cr.exception_formatter = RichTracebackFormatter(
 )
 
 
-class CustomLanguageManager(LanguageManager):
-    languages = {
-        'ru': 'Russian',
-        'en': 'English',
-        'test': 'Test',
-    }
-    languages_phrases = LANGUAGES_PHRASES
-
-
 LOGIN_GREETINGS_MESSAGE = '''
 <div class="text-h6 mb-1">
   Demo mode
@@ -83,7 +73,14 @@ admin_schema = schema.AdminSchema(
     logo_image='/static/logo-outline.png',
 
     auth=FakeAdminAuthentication(),
-    language_manager_class=CustomLanguageManager,
+    language_manager=LanguageManager(
+        locales_dir='example/locales',
+        languages={
+            'ru': 'Russian',
+            'en': 'English',
+            'test': 'Test',
+        },
+    ),
 
     groups=[
         schema.Group(

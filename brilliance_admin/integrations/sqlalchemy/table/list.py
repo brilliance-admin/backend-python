@@ -1,7 +1,7 @@
 from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.integrations.sqlalchemy.fields_schema import SQLAlchemyFieldsSchema
-from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
 
@@ -87,7 +87,7 @@ class SQLAlchemyAdminListMixin:
         self,
         list_data: schema.ListData,
         user: auth.UserABC,
-        language_manager: LanguageManager,
+        language_context: LanguageContext,
     ) -> schema.TableListResult:
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import exc, func, select

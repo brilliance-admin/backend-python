@@ -1,7 +1,7 @@
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError
-from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
 
@@ -15,7 +15,7 @@ class SQLAlchemyAdminCreate:
             self,
             data: dict,
             user: UserABC,
-            language_manager: LanguageManager,
+            language_context: LanguageContext,
     ) -> schema.CreateResult:
         if not self.has_create:
             raise AdminAPIException(APIError(message=_('method_not_allowed')), status_code=500)

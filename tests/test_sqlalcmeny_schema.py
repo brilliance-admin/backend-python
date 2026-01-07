@@ -4,7 +4,6 @@ import pytest
 
 from brilliance_admin import schema, sqlalchemy
 from brilliance_admin.auth import UserABC
-from example.main import CustomLanguageManager
 from example.sections.models import Terminal
 
 category_schema_data = {
@@ -143,7 +142,7 @@ FIELDS = [
 
 
 @pytest.mark.asyncio
-async def test_generate_category_schema(sqlite_sessionmaker):
+async def test_generate_category_schema(sqlite_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         search_fields=['id'],
         model=Terminal,
@@ -154,6 +153,5 @@ async def test_generate_category_schema(sqlite_sessionmaker):
             created_at=schema.DateTimeField(range=True),
         ),
     )
-    language_manager = CustomLanguageManager('ru')
-    new_schema = category.generate_schema(UserABC(username="test"), language_manager)
+    new_schema = category.generate_schema(UserABC(username="test"), language_context)
     assert new_schema.model_dump() == category_schema_data, new_schema.model_dump()

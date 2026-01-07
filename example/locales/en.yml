@@ -1,0 +1,52 @@
+# en.yml
+admin_title: 'Brilliance Admin Demo'
+
+admin_description: |
+  Used to demonstrate the capabilities of the admin panel.<br>
+  <br>
+  Data and actions in this mode do not affect the production environment and are periodically reset.
+
+login_greetings_message: |
+  <div class="text-h6 mb-1">
+    Demo mode
+  </div>
+  <div class="text-caption">
+    Login: admin<br>
+    Password: admin
+  </div>
+
+created_at: 'Created time'
+graphs_example: 'Graphs example'
+amount: 'Amount'
+registry_checked: 'Registry checked'
+registry_info_checked: 'Registry info checked'
+payments: 'Payments'
+payments_description: 'Static data'
+statistics: 'Statistics'
+image: 'Image'
+payments_search_fields: 'Search fields: id'
+create_payment: 'Create payment'
+create_payment_description: 'Create a payment and send it to the payment system for processing.'
+
+payment_create_result: |
+  <h3>The payment was created successfully!</h3>
+  %(desctiption)s<br>
+  <br>
+  Payment details:
+  gateway_id=%(gateway_id)s<br>
+  redirect_url: <a href="%(redirect_url)s" target="_blank"/>%(redirect_url)s</a>
+
+description: 'Description'
+status: 'Status'
+endpoint: 'Endpoint'
+action_with_exception: 'Action with exception'
+is_throw_error: 'Is throw error?'
+throw_error: 'Example of a field validation error.'
+exception_example: 'Exception example.'
+merchants: 'Merchants'
+terminals: 'Terminals'
+currencies: 'Currencies'
+whitelist_ips: 'Whitelist IPs'
+users: 'Users'
+field_not_found_in_schema: 'The field "{field_slug}" was not found among the available fields: {available}'
+related_not_found: 'Error updating related field {field_slug}: {model} record with pk={pk} was not found. The record may no longer be available.'

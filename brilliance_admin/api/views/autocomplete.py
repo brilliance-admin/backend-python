@@ -5,7 +5,7 @@ from brilliance_admin.api.utils import get_category
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult
-from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
 
 router = APIRouter(prefix="/autocomplete", tags=["Autocomplete"])
@@ -19,11 +19,11 @@ async def autocomplete(request: Request, group: str, category: str, data: Autoco
     schema_category, user = await get_category(request, group, category)
 
     language_slug = request.headers.get('Accept-Language')
-    language_manager: LanguageManager = schema.get_language_manager(language_slug)
-    context = {'language_manager': language_manager}
+    language_context: LanguageContext = schema.get_language_context(language_slug)
+    context = {'language_context': language_context}
 
     try:
-        result: AutocompleteResult = await schema_category.autocomplete(data, user, language_manager)
+        result: AutocompleteResult = await schema_category.autocomplete(data, user, language_context)
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
     except Exception as e:

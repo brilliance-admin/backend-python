@@ -1,10 +1,14 @@
 import abc
-from typing import ClassVar, Dict
+from importlib import resources
+from typing import Any, Dict
 
 import pydantic
 from asgiref.local import Local
+from pydantic_core import core_schema
 
-from brilliance_admin.utils import DataclassBase
+from brilliance_admin.utils import DataclassBase, YamlI18n, get_logger
+
+logger = get_logger()
 
 _active = Local()
 
@@ -20,24 +24,24 @@ class TranslateText(DataclassBase):
     @pydantic.model_serializer(mode='plain')
     def serialize_model(self, info: pydantic.SerializationInfo) -> str:
         ctx = info.context or {}
-        language_manager = ctx.get('language_manager')
+        language_context = ctx.get('language_context')
 
-        if not language_manager:
-            raise AttributeError('language_manager is not in context manager for serialization')
+        if not language_context:
+            raise AttributeError('language_context is not in context manager for serialization')
 
-        if not issubclass(type(language_manager), LanguageManager):
-            raise AttributeError(f'language_manager "{type(language_manager)}" is not subclass of LanguageManager')
+        if not issubclass(type(language_context), LanguageContext):
+            raise AttributeError(f'language_context "{type(language_context)}" is not subclass of LanguageContext')
 
-        return language_manager.get_text(self)
+        return language_context.get_text(self)
 
     def __str__(self):
-        lm = getattr(_active, '_language_manager', None)
+        lm = getattr(_active, '_language_context', None)
         if not lm:
 
-            raise AttributeError(f'language_manager is not in local scope for translation: {locals()}')
+            raise AttributeError(f'language_context is not in local scope for translation: {locals()}')
 
-        if not issubclass(type(lm), LanguageManager):
-            raise AttributeError(f'language_manager "{lm}" is not subclass of LanguageManager')
+        if not issubclass(type(lm), LanguageContext):
+            raise AttributeError(f'language_context "{lm}" is not subclass of LanguageContext')
 
         return lm.get_text(self)
 
@@ -49,97 +53,63 @@ class TranslateText(DataclassBase):
         return self
 
 
-SQLALCHEMY_SEARCH_HELP_RU = '''<b>Доступные поля для поиска:</b>
-%(fields)s
-
-<b>Доступные операторы:</b>
-<b>""</b> - кавычки для точного совпадения
-<b>%%</b> - любая последовательность символов
-<b>_</b> - один любой символ
-'''
-sqlalchemy_search_help_EN = '''<b>Available search fields:</b>
-%(fields)s
-
-<b>Available operators:</b>
-<b>""</b> - quotes for exact match
-<b>%%</b> - any sequence of characters
-<b>_</b> - any single character
-'''
-
-DEFAULT_PHRASES = {
-    'ru': {
-        'delete': 'Удалить',
-        'delete_confirmation_text': 'Вы уверены, что хотите удалить данные записи?\nДанное действие нельзя отменить.',
-        'deleted_successfully': 'Записи успешно удалены.',
-        'pk_not_found': 'Поле "%(pk_name)s" не найдено среди переданных данных.',
-        'record_not_found': 'Запись по ключу %(pk_name)s=%(pk)s не найдена.',
-        'db_error_create': 'Ошибка создания записи в базе данных.',
-        'db_error_update': 'Ошибка обновления записи в базе данных.',
-        'db_error_retrieve': 'Ошибка получения записи из базы данных.',
-        'db_error_list': 'Ошибка получения данных таблицы из базы данных.',
-        'connection_refused_error': 'Ошибка подключения к базе данных: %(error)s',
-        'search_help': 'Доступные поля для поиска: %(fields)s',
-        'sqlalchemy_search_help': SQLALCHEMY_SEARCH_HELP_RU,
-        'filters_exception': 'Произошла неизвестная техническая ошибка при фильтрации данных.',
-        'method_not_allowed': 'Ошибка, данный метод недоступен.',
-        'filter_error': 'Проишла ошибка при фильтрации: {error}',
-    },
-    'en': {
-        'delete': 'Delete',
-        'delete_confirmation_text': 'Are you sure you want to delete those records?\nThis action cannot be undone.',
-        'deleted_successfully': 'The entries were successfully deleted.',
-        'pk_not_found': 'The "%(pk_name)s" field was not found in the submitted data.',
-        'record_not_found': 'No record found for %(pk_name)s=%(pk)s.',
-        'db_error_update': 'Error updating the record in the database.',
-        'db_error_create': 'Error creating a record in the database.',
-        'db_error_retrieve': 'Error retrieving the record from the database.',
-        'db_error_list': 'Failed to retrieve table data from the database.',
-        'connection_refused_error': 'Database connection error: %(error)s',
-        'search_help': 'Available search fields: %(fields)s',
-        'sqlalchemy_search_help': sqlalchemy_search_help_EN,
-        'filters_exception': 'An unknown technical error occurred while filtering data.',
-        'method_not_allowed': 'Error, method not allowed. This action is not permitted.',
-        'filter_error': 'An error occurred during filtering: {error}',
-    }
-}
-
-
-def merge_phrases(base: dict[str, dict[str, str]], extra: dict[str, dict[str, str]]) -> dict[str, dict[str, str]]:
-    merged = {lang: phrases.copy() for lang, phrases in base.items()}
-
-    for lang, phrases in extra.items():
-        if lang in merged:
-            merged[lang].update(phrases)
-
-    return merged
-
-
 class LanguageManager(abc.ABC):
+    languages: Dict[str, str] | None
+    phrases: YamlI18n = None
+
+    def __init__(self, languages: str | None, locales_dir: str | None = None):
+        self.languages = languages
+        self.phrases = YamlI18n()
+
+        builtin_locales_dir = resources.files("brilliance_admin").joinpath("locales")
+        self.phrases.load_folder(builtin_locales_dir)
+        logger.info('Language manager builtin dir loaded: %s', builtin_locales_dir)
+
+        if locales_dir:
+            self.phrases.load_folder(locales_dir)
+            logger.info('Language manager locales_dir loaded: %s', locales_dir)
+
+        langs = ', '.join(self.phrases.data.keys())
+        logger.info('Language manager setup completed; languages: %s', langs)
+
+    def get_text(self, text, language) -> str:
+        if not isinstance(text, TranslateText):
+            return text
+
+        default_lang = list(self.languages.keys())[0]
+
+        translation = self.phrases.get_text(text.slug, language or default_lang, default_lang) or text.slug
+        if text.translation_kwargs:
+            translation %= text.translation_kwargs
+
+        return translation
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type: Any, handler: Any) -> core_schema.CoreSchema:
+        def validate(v: Any) -> "LanguageManager":
+            if isinstance(v, cls):
+                return v
+            raise TypeError(f"Expected {cls.__name__} instance")
+
+        return core_schema.no_info_plain_validator_function(
+            validate,
+            serialization=core_schema.plain_serializer_function_ser_schema(
+                lambda v: repr(v),
+                info_arg=False,
+                return_schema=core_schema.str_schema(),
+            ),
+        )
+
+
+class LanguageContext(abc.ABC):
     language: str | None
+    language_manager: LanguageManager
 
-    languages: ClassVar[Dict[str, str | TranslateText] | None] = None
-    languages_phrases: ClassVar[dict | None] = None
-
-    def __init__(self, language: str | None):
+    def __init__(self, language, language_manager):
         self.language = language
-        _active._language_manager = self
+        self.language_manager = language_manager
 
-        if not self.languages_phrases:
-            self.languages_phrases = {}
-
-        self.languages_phrases = merge_phrases(self.languages_phrases, DEFAULT_PHRASES)
+        _active._language_context = self
 
     def get_text(self, text) -> str:
-        if self.languages_phrases and isinstance(text, TranslateText):
-            default_lang = list(self.languages_phrases.keys())[0]
-
-            phrases = self.languages_phrases.get(self.language or default_lang)
-            if not phrases:
-                phrases = self.languages_phrases[default_lang]
-
-            translation = phrases.get(text.slug) or text.slug
-            if text.translation_kwargs:
-                translation %= text.translation_kwargs
-            return translation
-
-        return text
+        return self.language_manager.get_text(text, self.language)

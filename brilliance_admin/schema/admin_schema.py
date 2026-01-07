@@ -1,7 +1,7 @@
 import importlib.metadata
 import json
 from importlib import resources
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
 from fastapi import FastAPI, Request
@@ -12,8 +12,13 @@ from pydantic.dataclasses import dataclass
 from brilliance_admin.auth import UserABC
 from brilliance_admin.docs import build_redoc_docs, build_scalar_docs
 from brilliance_admin.schema.group import Group, GroupSchemaData
-from brilliance_admin.translations import LanguageManager, TranslateText
+from brilliance_admin.translations import LanguageContext, LanguageManager, TranslateText
 from brilliance_admin.utils import DataclassBase
+
+DEFAULT_LANGUAGES = {
+    'ru': 'Russian',
+    'en': 'English',
+}
 
 
 @dataclass
@@ -60,18 +65,21 @@ class AdminSchema:
     backend_prefix = None
     static_prefix = None
 
-    language_manager_class: Type[LanguageManager] = LanguageManager
+    language_manager: LanguageManager | None = None
 
     def __post_init__(self):
         for group in self.groups:
             if not issubclass(group.__class__, Group):
                 raise TypeError(f'Group "{group}" is not instance of Group subclass')
 
-    def get_language_manager(self, language_slug: str | None) -> LanguageManager:
-        return self.language_manager_class(language_slug)
+        if not self.language_manager:
+            self.language_manager = LanguageManager(DEFAULT_LANGUAGES)
+
+    def get_language_context(self, language_slug: str | None) -> LanguageContext:
+        return LanguageContext(language_slug, language_manager=self.language_manager)
 
     def generate_schema(self, user: UserABC, language_slug: str | None) -> AdminSchemaData:
-        language_manager: LanguageManager = self.get_language_manager(language_slug)
+        language_context: LanguageContext = self.get_language_context(language_slug)
 
         groups = {}
 
@@ -80,7 +88,7 @@ class AdminSchema:
                 msg = f'Category group {type(group).__name__}.slug is empty'
                 raise AttributeError(msg)
 
-            groups[group.slug] = group.generate_schema(user, language_manager)
+            groups[group.slug] = group.generate_schema(user, language_context)
 
         return AdminSchemaData(
             groups=groups,
@@ -96,13 +104,13 @@ class AdminSchema:
 
     async def get_settings(self, request: Request) -> AdminSettingsData:
         language_slug = request.headers.get('Accept-Language')
-        language_manager: LanguageManager = self.get_language_manager(language_slug)
+        language_context: LanguageContext = self.get_language_context(language_slug)
 
         languages = None
-        if language_manager.languages:
+        if self.languages:
             languages = {}
-            for k, v in language_manager.languages.items():
-                languages[k] = language_manager.get_text(v)
+            for k, v in self.languages.items():
+                languages[k] = v
 
         return AdminSettingsData(
             title=self.title,
@@ -124,11 +132,11 @@ class AdminSchema:
             include_redoc=False,
     ) -> FastAPI:
         # pylint: disable=unused-variable
-        language_manager = self.get_language_manager(language_slug=None)
+        language_context = self.get_language_context(language_slug=None)
 
         app = FastAPI(
-            title=language_manager.get_text(self.title),
-            description=language_manager.get_text(self.description),
+            title=language_context.get_text(self.title),
+            description=language_context.get_text(self.description),
             debug=debug,
             docs_url='/docs' if include_docs else None,
             redoc_url=None,
@@ -161,8 +169,8 @@ class AdminSchema:
         return app
 
     async def get_index_context_data(self, request: Request) -> dict:
-        language_manager = self.get_language_manager(language_slug=None)
-        context = {'language_manager': language_manager}
+        language_context = self.get_language_context(language_slug=None)
+        context = {'language_context': language_context}
 
         backend_prefix = self.backend_prefix
         if not backend_prefix:

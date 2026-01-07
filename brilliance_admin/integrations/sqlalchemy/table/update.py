@@ -2,7 +2,7 @@ from typing import Any
 
 from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import AdminAPIException, APIError
-from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
 
@@ -18,7 +18,7 @@ class SQLAlchemyAdminUpdate:
             pk: Any,
             data: dict,
             user: auth.UserABC,
-            language_manager: LanguageManager,
+            language_context: LanguageContext,
     ) -> schema.UpdateResult:
         if not self.has_update:
             raise AdminAPIException(APIError(message=_('method_not_allowed')), status_code=500)

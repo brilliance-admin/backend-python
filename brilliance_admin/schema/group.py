@@ -5,7 +5,7 @@ from pydantic.dataclasses import dataclass
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.schema.category import Category, CategorySchemaData
-from brilliance_admin.translations import LanguageManager, TranslateText
+from brilliance_admin.translations import LanguageContext, TranslateText
 from brilliance_admin.utils import DataclassBase, get_logger
 
 logger = get_logger()
@@ -34,10 +34,10 @@ class Group(abc.ABC):
             if not issubclass(category.__class__, Category):
                 raise TypeError(f'Category "{category}" is not instance of Category subclass')
 
-    def generate_schema(self, user: UserABC, language_manager: LanguageManager) -> GroupSchemaData:
+    def generate_schema(self, user: UserABC, language_context: LanguageContext) -> GroupSchemaData:
         result = GroupSchemaData(
-            title=language_manager.get_text(self.title) or self.slug,
-            description=language_manager.get_text(self.description),
+            title=language_context.get_text(self.title) or self.slug,
+            description=language_context.get_text(self.description),
             icon=self.icon,
             categories={},
         )
@@ -55,7 +55,7 @@ class Group(abc.ABC):
                 msg = f'Category {type(category).__name__}.slug "{self.slug}" already registered by "{exists.title}"'
                 raise KeyError(msg)
 
-            result.categories[category.slug] = category.generate_schema(user, language_manager)
+            result.categories[category.slug] = category.generate_schema(user, language_context)
 
         return result
 

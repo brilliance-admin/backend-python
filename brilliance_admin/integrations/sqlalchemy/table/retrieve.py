@@ -2,7 +2,7 @@ from typing import Any
 
 from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import AdminAPIException, APIError
-from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
 
@@ -16,7 +16,7 @@ class SQLAlchemyAdminRetrieveMixin:
             self,
             pk: Any,
             user: auth.UserABC,
-            language_manager: LanguageManager,
+            language_context: LanguageContext,
     ) -> schema.RetrieveResult:
         if not self.has_delete:
             raise AdminAPIException(APIError(message=_('method_not_allowed')), status_code=500)

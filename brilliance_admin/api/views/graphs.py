@@ -5,7 +5,7 @@ from brilliance_admin.api.utils import get_category
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.graphs.category_graphs import CategoryGraphs, GraphData, GraphsDataResult
-from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
 
 router = APIRouter(prefix="/graph", tags=["Category - Graph"])
@@ -21,8 +21,8 @@ async def graph_data(request: Request, group: str, category: str, data: GraphDat
     result: GraphsDataResult = await schema_category.get_data(data, user)
 
     language_slug = request.headers.get('Accept-Language')
-    language_manager: LanguageManager = schema.get_language_manager(language_slug)
-    context = {'language_manager': language_manager}
+    language_context: LanguageContext = schema.get_language_context(language_slug)
+    context = {'language_context': language_context}
 
     try:
         return JSONResponse(result.model_dump(mode='json', context=context))

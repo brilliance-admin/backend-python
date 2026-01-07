@@ -5,7 +5,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from brilliance_admin import auth, schema, sqlalchemy
-from example.main import CustomLanguageManager
 from example.sections.models import Currency, CurrencyFactory, MerchantFactory, Terminal, TerminalFactory
 from tests.test_sqlalcmeny_schema import FIELDS
 
@@ -23,9 +22,8 @@ def get_category(sqlite_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_create(sqlite_sessionmaker):
+async def test_create(sqlite_sessionmaker, language_context):
     category = get_category(sqlite_sessionmaker)
-    language_manager = CustomLanguageManager('ru')
     user = auth.UserABC(username="test")
     merchant = await MerchantFactory()
     currency = await CurrencyFactory()
@@ -39,16 +37,15 @@ async def test_create(sqlite_sessionmaker):
     create_result: schema.CreateResult = await category.create(
         data=create_data,
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
 
     assert create_result.pk == 1
 
 
 @pytest.mark.asyncio
-async def test_retrieve(sqlite_sessionmaker):
+async def test_retrieve(sqlite_sessionmaker, language_context):
     category = get_category(sqlite_sessionmaker)
-    language_manager = CustomLanguageManager('ru')
     user = auth.UserABC(username="test")
     merchant = await MerchantFactory()
     currency = await CurrencyFactory()
@@ -64,7 +61,7 @@ async def test_retrieve(sqlite_sessionmaker):
     retrieve_result = await category.retrieve(
         pk=terminal.id,
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     expected_data = {
         'created_at': mock.ANY,
@@ -84,7 +81,7 @@ async def test_retrieve(sqlite_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_retrieve_currency(sqlite_sessionmaker):
+async def test_retrieve_currency(sqlite_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Currency,
         db_async_session=sqlite_sessionmaker,
@@ -97,7 +94,6 @@ async def test_retrieve_currency(sqlite_sessionmaker):
         ),
     )
 
-    language_manager = CustomLanguageManager('ru')
     user = auth.UserABC(username="test")
     merchant = await MerchantFactory()
     currency = await CurrencyFactory()
@@ -115,7 +111,7 @@ async def test_retrieve_currency(sqlite_sessionmaker):
     retrieve_result = await category.retrieve(
         pk=currency.id,
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     expected_data = {
         'id': currency.id,
@@ -128,9 +124,8 @@ async def test_retrieve_currency(sqlite_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_list(sqlite_sessionmaker):
+async def test_list(sqlite_sessionmaker, language_context):
     category = get_category(sqlite_sessionmaker)
-    language_manager = CustomLanguageManager('ru')
     user = auth.UserABC(username="test")
     await TerminalFactory(
         is_h2h=False,
@@ -148,7 +143,7 @@ async def test_list(sqlite_sessionmaker):
             }
         ),
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     data = [
         {
@@ -177,9 +172,8 @@ async def test_list(sqlite_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_update_related_one(sqlite_sessionmaker):
+async def test_update_related_one(sqlite_sessionmaker, language_context):
     category = get_category(sqlite_sessionmaker)
-    language_manager = CustomLanguageManager('ru')
     user = auth.UserABC(username="test")
     terminal = await TerminalFactory(
         merchant=await MerchantFactory(title="Test merch"),
@@ -195,13 +189,13 @@ async def test_update_related_one(sqlite_sessionmaker):
         pk=terminal.id,
         data=update_data,
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert update_result == schema.UpdateResult(pk=terminal.id)
 
 
 @pytest.mark.asyncio
-async def test_update_related_many(sqlite_sessionmaker):
+async def test_update_related_many(sqlite_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Currency,
         db_async_session=sqlite_sessionmaker,
@@ -213,7 +207,6 @@ async def test_update_related_many(sqlite_sessionmaker):
             ],
         ),
     )
-    language_manager = CustomLanguageManager('ru')
     user = auth.UserABC(username="test")
 
     currency_rub = await CurrencyFactory(title='RUB')
@@ -237,7 +230,7 @@ async def test_update_related_many(sqlite_sessionmaker):
         pk=currency_rub.id,
         data=update_data,
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert update_result == schema.UpdateResult(pk=currency_rub.id)
 
@@ -259,10 +252,9 @@ async def test_update_related_many(sqlite_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_autocomplete(sqlite_sessionmaker):
+async def test_autocomplete(sqlite_sessionmaker, language_context):
     category = get_category(sqlite_sessionmaker)
     category = sqlalchemy.SQLAlchemyAdmin(model=Terminal, db_async_session=sqlite_sessionmaker)
-    language_manager = CustomLanguageManager('ru')
 
     user = auth.UserABC(username="test")
     autocomplete_result = await category.autocomplete(
@@ -270,6 +262,6 @@ async def test_autocomplete(sqlite_sessionmaker):
             field_slug='merchant_id',
         ),
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert autocomplete_result == schema.AutocompleteResult()

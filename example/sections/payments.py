@@ -8,7 +8,7 @@ from faker import Faker
 from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import FieldError
 from brilliance_admin.schema.table.admin_action import ActionData, ActionMessage, ActionResult, admin_action
-from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
 
@@ -150,7 +150,7 @@ class PaymentsAdmin(schema.CategoryTable):
         self,
         list_data: schema.ListData,
         user: auth.UserABC,
-        language_manager: LanguageManager,
+        language_context: LanguageContext,
     ) -> schema.TableListResult:
         await asyncio.sleep(0.2)
 
@@ -172,7 +172,7 @@ class PaymentsAdmin(schema.CategoryTable):
             self,
             pk: Any,
             user: auth.UserABC,
-            language_manager: LanguageManager,
+            language_context: LanguageContext,
     ) -> schema.RetrieveResult:
         line_data = self._get_data(int(pk))
         line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
@@ -183,7 +183,7 @@ class PaymentsAdmin(schema.CategoryTable):
             pk: Any,
             data: dict,
             user: auth.UserABC,
-            language_manager: LanguageManager,
+            language_context: LanguageContext,
     ) -> schema.UpdateResult:
         logger.info('Updated pk=%s data=%s', pk, data)
         await asyncio.sleep(0.5)
@@ -193,7 +193,7 @@ class PaymentsAdmin(schema.CategoryTable):
             self,
             data: dict, user:
             auth.UserABC,
-            language_manager: LanguageManager,
+            language_context: LanguageContext,
     ) -> schema.CreateResult:
         logger.info('Create data=%s', data)
         return schema.CreateResult(pk=0)

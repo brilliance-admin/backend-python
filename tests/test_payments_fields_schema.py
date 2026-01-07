@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 from brilliance_admin.auth import UserABC
-from example.main import CustomLanguageManager
+from brilliance_admin.translations import LanguageContext
 from example.sections.payments import PaymentsAdmin
 
 category_schema_data = {
@@ -215,8 +215,7 @@ category_schema_data = {
 
 
 @pytest.mark.asyncio
-async def test_generate_category_schema():
+async def test_generate_category_schema(language_context):
     category = PaymentsAdmin()
-    language_manager = CustomLanguageManager('ru')
-    new_schema = category.generate_schema(UserABC(username="test"), language_manager)
+    new_schema = category.generate_schema(UserABC(username="test"), language_context)
     assert new_schema.model_dump() == category_schema_data, new_schema.model_dump()

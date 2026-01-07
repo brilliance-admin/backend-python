@@ -1,11 +1,11 @@
 from brilliance_admin.auth import UserABC
 from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult
-from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import LanguageContext
 
 
 class SQLAlchemyAdminAutocompleteMixin:
     async def autocomplete(
-            self, data: AutocompleteData, user: UserABC, language_manager: LanguageManager,
+            self, data: AutocompleteData, user: UserABC, language_context: LanguageContext,
     ) -> AutocompleteResult:
         form_schema = None
 

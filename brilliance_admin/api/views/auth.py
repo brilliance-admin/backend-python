@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from brilliance_admin.auth import AdminAuthentication, AuthData, AuthResult
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.schema.admin_schema import AdminSchema
-from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import LanguageContext
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
@@ -17,8 +17,8 @@ async def login(request: Request, auth_data: AuthData) -> AuthResult:
     schema: AdminSchema = request.app.state.schema
 
     language_slug = request.headers.get('Accept-Language')
-    language_manager: LanguageManager = schema.get_language_manager(language_slug)
-    context = {'language_manager': language_manager}
+    language_context: LanguageContext = schema.get_language_context(language_slug)
+    context = {'language_context': language_context}
 
     auth: AdminAuthentication = schema.auth
     try:

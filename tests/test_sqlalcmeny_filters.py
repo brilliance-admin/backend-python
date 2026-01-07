@@ -3,12 +3,11 @@ from datetime import datetime
 import pytest
 
 from brilliance_admin import auth, schema, sqlalchemy
-from example.main import CustomLanguageManager
 from example.sections.models import Currency, CurrencyFactory, MerchantFactory, Terminal, TerminalFactory
 
 
 @pytest.mark.asyncio
-async def test_list_filter(sqlite_sessionmaker):
+async def test_list_filter(sqlite_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Terminal,
         db_async_session=sqlite_sessionmaker,
@@ -22,7 +21,6 @@ async def test_list_filter(sqlite_sessionmaker):
             created_at=schema.DateTimeField(range=True),
         ),
     )
-    language_manager = CustomLanguageManager('ru')
     user = auth.UserABC(username="test")
 
     merchant = await MerchantFactory(title="Test merch")
@@ -34,7 +32,7 @@ async def test_list_filter(sqlite_sessionmaker):
     list_result: dict = await category.get_list(
         list_data=schema.ListData(filters={'id': terminal_1.id}),
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_1.id}], total_count=1
@@ -43,7 +41,7 @@ async def test_list_filter(sqlite_sessionmaker):
     list_result: dict = await category.get_list(
         list_data=schema.ListData(filters={'title': 'Test terminal second'}),
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_2.id}], total_count=1
@@ -52,7 +50,7 @@ async def test_list_filter(sqlite_sessionmaker):
     list_result: dict = await category.get_list(
         list_data=schema.ListData(filters={'title': 'Test%'}),
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_2.id}, {'id': terminal_1.id}], total_count=2
@@ -67,7 +65,7 @@ async def test_list_filter(sqlite_sessionmaker):
     list_result: dict = await category.get_list(
         list_data=schema.ListData(filters={'created_at': {'from': '2022-12-04T18:55:00', 'to': '2023-12-17T18:55:00'}}),
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_old.id}], total_count=1
@@ -75,7 +73,7 @@ async def test_list_filter(sqlite_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_list_search(sqlite_sessionmaker):
+async def test_list_search(sqlite_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         search_fields=['title'],
         model=Terminal,
@@ -85,7 +83,6 @@ async def test_list_search(sqlite_sessionmaker):
             fields=['id'],
         ),
     )
-    language_manager = CustomLanguageManager('ru')
     user = auth.UserABC(username="test")
 
     merchant = await MerchantFactory(title="Test merch")
@@ -98,7 +95,7 @@ async def test_list_search(sqlite_sessionmaker):
     list_result: dict = await category.get_list(
         list_data=schema.ListData(search='Test%'),
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_2.id}, {'id': terminal_1.id}], total_count=2,
@@ -106,7 +103,7 @@ async def test_list_search(sqlite_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_filter_related_one(sqlite_sessionmaker):
+async def test_filter_related_one(sqlite_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Currency,
         db_async_session=sqlite_sessionmaker,
@@ -119,7 +116,6 @@ async def test_filter_related_one(sqlite_sessionmaker):
             fields=['terminals'],
         ),
     )
-    language_manager = CustomLanguageManager('ru')
     user = auth.UserABC(username="test")
 
     currency_rub = await CurrencyFactory(title='RUB')
@@ -136,7 +132,7 @@ async def test_filter_related_one(sqlite_sessionmaker):
             'terminals': [{'key': terminal_1.id, 'title': 'test'}, {'key': terminal_2.id, 'title': 'test'}],
         }),
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': currency_rub.id}], total_count=1
@@ -144,7 +140,7 @@ async def test_filter_related_one(sqlite_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_filter_related_many(sqlite_sessionmaker):
+async def test_filter_related_many(sqlite_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Terminal,
         db_async_session=sqlite_sessionmaker,
@@ -157,7 +153,6 @@ async def test_filter_related_many(sqlite_sessionmaker):
             fields=['merchant_id'],
         ),
     )
-    language_manager = CustomLanguageManager('ru')
     user = auth.UserABC(username="test")
 
     currency = await CurrencyFactory()
@@ -173,7 +168,7 @@ async def test_filter_related_many(sqlite_sessionmaker):
             'merchant_id': {'key': merchant_2.id, 'title': 'test'}
         }),
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert list_result == schema.TableListResult(data=[{'id': terminal_2.id}], total_count=1), 'Фильтр по related'
 
@@ -191,7 +186,7 @@ async def test_list_bad_search_field(sqlite_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_ordering(sqlite_sessionmaker):
+async def test_ordering(sqlite_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Terminal,
         db_async_session=sqlite_sessionmaker,
@@ -201,7 +196,6 @@ async def test_ordering(sqlite_sessionmaker):
             fields=['id'],
         ),
     )
-    language_manager = CustomLanguageManager('ru')
     user = auth.UserABC(username="test")
 
     currency = await CurrencyFactory()
@@ -213,7 +207,7 @@ async def test_ordering(sqlite_sessionmaker):
     list_result: dict = await category.get_list(
         list_data=schema.ListData(ordering='id'),
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_1.id}, {'id': terminal_2.id, }], total_count=2
@@ -222,7 +216,7 @@ async def test_ordering(sqlite_sessionmaker):
     list_result: dict = await category.get_list(
         list_data=schema.ListData(ordering='-id'),
         user=user,
-        language_manager=language_manager,
+        language_context=language_context,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_2.id}, {'id': terminal_1.id, }], total_count=2

@@ -7,7 +7,7 @@ from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.schema.category import FieldSchemaData
 from brilliance_admin.schema.table.fields.base import TableField
 from brilliance_admin.schema.table.table_models import Record
-from brilliance_admin.translations import LanguageManager
+from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction
 
@@ -58,8 +58,8 @@ class SQLAlchemyRelatedField(TableField):
     # Работает только если many=True
     dual_list: bool = False
 
-    def generate_schema(self, user: UserABC, field_slug, language_manager: LanguageManager) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_manager)
+    def generate_schema(self, user: UserABC, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_schema(user, field_slug, language_context)
         schema.many = self.many
         schema.rel_name = self.rel_name
         schema.dual_list = self.dual_list

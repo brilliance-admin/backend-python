@@ -6,8 +6,8 @@ from pydantic.dataclasses import dataclass
 from pydantic_core import core_schema
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.translations import LanguageContext, TranslateText
-from brilliance_admin.utils import DataclassBase
+from brilliance_admin.translations import LanguageContext
+from brilliance_admin.utils import DataclassBase, SupportsStr
 
 
 # pylint: disable=too-many-instance-attributes
@@ -116,8 +116,8 @@ class CategorySchemaData(DataclassBase):
 
 class Category(abc.ABC):
     slug: ClassVar[str]
-    title: ClassVar[str | TranslateText | None] = None
-    description: ClassVar[str | TranslateText | None] = None
+    title: ClassVar[SupportsStr | None] = None
+    description: ClassVar[SupportsStr | None] = None
 
     # https://pictogrammers.com/library/mdi/
     icon: ClassVar[str | None] = None

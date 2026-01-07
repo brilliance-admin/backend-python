@@ -5,7 +5,8 @@ from pydantic import BaseModel, Field, validate_call
 from pydantic.dataclasses import dataclass
 
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
-from brilliance_admin.translations import DataclassBase, TranslateText
+from brilliance_admin.translations import DataclassBase
+from brilliance_admin.utils import SupportsStr
 
 
 class ActionData(BaseModel):
@@ -20,7 +21,7 @@ class ActionData(BaseModel):
 
 @dataclass
 class ActionMessage(DataclassBase):
-    text: str | TranslateText
+    text: SupportsStr
     type: str = 'success'
     position: str = 'top-center'
 
@@ -28,16 +29,16 @@ class ActionMessage(DataclassBase):
 @dataclass
 class ActionResult(DataclassBase):
     message: ActionMessage | None = None
-    persistent_message: str | TranslateText | None = None
+    persistent_message: SupportsStr | None = None
 
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-positional-arguments
 @validate_call
 def admin_action(
-    title: str | TranslateText,
-    description: Optional[str | TranslateText] = None,
-    confirmation_text: Optional[str | TranslateText] = None,
+    title: SupportsStr,
+    description: Optional[SupportsStr] = None,
+    confirmation_text: Optional[SupportsStr] = None,
 
     # https://vuetifyjs.com/en/styles/colors/#material-colors
     base_color: Optional[str] = None,

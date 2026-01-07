@@ -5,8 +5,8 @@ from pydantic.dataclasses import dataclass
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.schema.category import Category, CategorySchemaData
-from brilliance_admin.translations import LanguageContext, TranslateText
-from brilliance_admin.utils import DataclassBase, get_logger
+from brilliance_admin.translations import LanguageContext
+from brilliance_admin.utils import DataclassBase, SupportsStr, get_logger
 
 logger = get_logger()
 
@@ -23,8 +23,8 @@ class GroupSchemaData(DataclassBase):
 class Group(abc.ABC):
     categories: List[Category]
     slug: str
-    title: str | TranslateText | None = None
-    description: str | TranslateText | None = None
+    title: SupportsStr | None = None
+    description: SupportsStr | None = None
 
     # https://pictogrammers.com/library/mdi/
     icon: str | None = None

@@ -5,7 +5,8 @@ from pydantic import BaseModel, Field
 from brilliance_admin.schema import Category
 from brilliance_admin.schema.category import GraphInfoSchemaData
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
-from brilliance_admin.translations import LanguageContext, TranslateText
+from brilliance_admin.translations import LanguageContext
+from brilliance_admin.utils import SupportsStr
 
 
 class GraphData(BaseModel):
@@ -29,7 +30,7 @@ class CategoryGraphs(Category):
     _type_slug: str = 'graphs'
 
     search_enabled: bool = False
-    search_help: str | TranslateText | None = None
+    search_help: SupportsStr | None = None
 
     table_filters: FieldsSchema | None = None
 

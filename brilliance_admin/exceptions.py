@@ -3,13 +3,12 @@ from typing import Dict
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 
-from brilliance_admin.translations import TranslateText
-from brilliance_admin.utils import DataclassBase
+from brilliance_admin.utils import DataclassBase, SupportsStr
 
 
 @dataclass
 class FieldError(DataclassBase, Exception):
-    message: str | TranslateText = None
+    message: SupportsStr = None
     code: str | None = None
 
     def __post_init__(self):
@@ -20,7 +19,7 @@ class FieldError(DataclassBase, Exception):
 
 @dataclass
 class APIError(DataclassBase):
-    message: str | TranslateText | None = None
+    message: SupportsStr | None = None
     code: str | None = None
     field_errors: Dict[str, FieldError] | None = None
 

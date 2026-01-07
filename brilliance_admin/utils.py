@@ -1,10 +1,24 @@
 import logging
 import re
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Protocol
 
 import yaml
 from pydantic import TypeAdapter
+from pydantic_core import core_schema
+
+
+class SupportsStr(Protocol):
+    def __str__(self) -> str: ...
+
+    @classmethod
+    def __get_pydantic_core_schema__(cls, source_type, handler):
+        def validate(v):
+            if not hasattr(v, '__str__'):
+                raise TypeError(f'value must implement __str__, got {type(v)}')
+            return v
+
+        return core_schema.no_info_plain_validator_function(validate)
 
 
 def get_logger():

@@ -6,16 +6,16 @@ from pydantic.dataclasses import dataclass
 
 from brilliance_admin.exceptions import FieldError
 from brilliance_admin.schema.category import FieldSchemaData
-from brilliance_admin.translations import LanguageContext, TranslateText
-from brilliance_admin.utils import DeserializeAction, humanize_field_name
+from brilliance_admin.translations import LanguageContext
+from brilliance_admin.utils import DeserializeAction, SupportsStr, humanize_field_name
 
 
 @dataclass
 class TableField(abc.ABC, FieldSchemaData):
     _type: ClassVar[str]
 
-    label: str | TranslateText | None = None
-    help_text: str | TranslateText | None = None
+    label: SupportsStr | None = None
+    help_text: SupportsStr | None = None
 
     def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
         schema = FieldSchemaData(

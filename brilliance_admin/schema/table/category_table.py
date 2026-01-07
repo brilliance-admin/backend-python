@@ -13,15 +13,15 @@ from brilliance_admin.schema.category import TableInfoSchemaData
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult, ListData, TableListResult
-from brilliance_admin.translations import LanguageContext, TranslateText
-from brilliance_admin.utils import DeserializeAction
+from brilliance_admin.translations import LanguageContext
+from brilliance_admin.utils import DeserializeAction, SupportsStr
 
 
 class CategoryTable(Category):
     _type_slug: str = 'table'
 
     search_enabled: bool = False
-    search_help: str | TranslateText | None = None
+    search_help: SupportsStr | None = None
 
     table_schema: FieldsSchema = None
     table_filters: FieldsSchema | None = None

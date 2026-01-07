@@ -12,8 +12,8 @@ from pydantic.dataclasses import dataclass
 from brilliance_admin.auth import UserABC
 from brilliance_admin.docs import build_redoc_docs, build_scalar_docs
 from brilliance_admin.schema.group import Group, GroupSchemaData
-from brilliance_admin.translations import LanguageContext, LanguageManager, TranslateText
-from brilliance_admin.utils import DataclassBase
+from brilliance_admin.translations import LanguageContext, LanguageManager
+from brilliance_admin.utils import DataclassBase, SupportsStr
 
 DEFAULT_LANGUAGES = {
     'ru': 'Russian',
@@ -34,9 +34,9 @@ class AdminSchemaData(DataclassBase):
 # pylint: disable=too-many-instance-attributes
 @dataclass
 class AdminSettingsData(DataclassBase):
-    title: str | TranslateText
-    description: str | TranslateText | None
-    login_greetings_message: str | TranslateText | None
+    title: SupportsStr
+    description: SupportsStr | None
+    login_greetings_message: SupportsStr | None
     navbar_density: str
     languages: Dict[str, str] | None
 
@@ -53,9 +53,9 @@ class AdminSchema:
     groups: List[Group]
     auth: Any
 
-    title: str | TranslateText | None = 'Admin'
-    description: str | TranslateText | None = None
-    login_greetings_message: str | TranslateText | None = None
+    title: SupportsStr | None = 'Admin'
+    description: SupportsStr | None = None
+    login_greetings_message: SupportsStr | None = None
 
     logo_image: str | None = None
     favicon_image: str = '/admin/static/favicon.jpg'

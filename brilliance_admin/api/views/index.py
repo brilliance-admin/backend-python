@@ -28,7 +28,12 @@ async def admin_index(request: Request, rest_of_path: str):
     '''
 
     path = PurePosixPath('/' + rest_of_path)
-    if path in EXACT_BLOCK or path.startswith(PREFIX_BLOCK):
+
+    if '..' in path.parts:
+        raise HTTPException(status_code=404)
+
+    path_str = str(path)
+    if path_str in EXACT_BLOCK or path_str.startswith(PREFIX_BLOCK):
         raise HTTPException(status_code=404)
 
     schema: AdminSchema = request.app.state.schema

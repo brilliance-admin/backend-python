@@ -10,11 +10,12 @@ class CurrencyAdmin(sqlalchemy.SQLAlchemyAdmin):
 
     table_schema = sqlalchemy.SQLAlchemyFieldsSchema(
         model=Currency,
+        readonly_fields=['terminals'],
     )
     table_filters = sqlalchemy.SQLAlchemyFieldsSchema(
         model=Currency,
         fields=[
             'id',
             'terminals',
-        ]
+        ],
     )

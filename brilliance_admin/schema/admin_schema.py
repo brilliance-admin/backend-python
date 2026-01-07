@@ -58,7 +58,7 @@ class AdminSchema:
     login_greetings_message: SupportsStr | None = None
 
     logo_image: str | None = None
-    favicon_image: str = '/admin/static/favicon.jpg'
+    favicon_image: str | None = None
 
     navbar_density: str = 'default'
 

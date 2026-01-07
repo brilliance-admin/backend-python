@@ -70,7 +70,9 @@ admin_schema = schema.AdminSchema(
     title=_('admin_title'),
     description=_('admin_description'),
     login_greetings_message=_('login_greetings_message'),
+
     logo_image='/static/logo-outline.png',
+    favicon_image='/static/favicon.jpg',
 
     auth=FakeAdminAuthentication(),
     language_manager=LanguageManager(

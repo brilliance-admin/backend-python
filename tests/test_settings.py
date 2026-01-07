@@ -3,6 +3,8 @@ from unittest import mock
 import pytest
 from fastapi import Request
 
+from brilliance_admin.api.views.settings import AdminSettingsData
+from brilliance_admin.translations import TranslateText
 from example.main import admin_schema, app
 
 SCOPE = {
@@ -30,3 +32,17 @@ async def test_index_context_data():
         'settings_json': mock.ANY,
         'title': 'Brilliance Admin Демо',
     }
+
+
+@pytest.mark.asyncio
+async def test_settings():
+    request = Request(scope=SCOPE)
+    settings = await admin_schema.get_settings(request)
+    s = AdminSettingsData(
+        title=TranslateText(slug='admin_title'),
+        description=TranslateText(slug='admin_description'),
+        login_greetings_message=TranslateText(slug='login_greetings_message'),
+        navbar_density='default',
+        languages={'ru': 'Russian', 'en': 'English', 'test': 'Test'},
+    )
+    assert settings == s, settings

@@ -107,9 +107,9 @@ class AdminSchema:
         language_context: LanguageContext = self.get_language_context(language_slug)
 
         languages = None
-        if self.languages:
+        if self.language_manager.languages:
             languages = {}
-            for k, v in self.languages.items():
+            for k, v in self.language_manager.languages.items():
                 languages[k] = v
 
         return AdminSettingsData(

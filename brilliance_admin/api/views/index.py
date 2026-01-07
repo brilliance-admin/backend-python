@@ -1,3 +1,5 @@
+from pathlib import PurePosixPath
+
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
@@ -25,7 +27,7 @@ async def admin_index(request: Request, rest_of_path: str):
     The request responds with a pre-rendered SPA served as an HTML page.
     '''
 
-    path = "/" + rest_of_path
+    path = PurePosixPath('/' + rest_of_path)
     if path in EXACT_BLOCK or path.startswith(PREFIX_BLOCK):
         raise HTTPException(status_code=404)
 

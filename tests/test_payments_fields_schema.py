@@ -160,34 +160,6 @@ category_schema_data = {
                     'required': False,
                     'type': 'string',
                 },
-                'status': {
-                    'choices': [
-                        {
-                            'title': 'Process',
-                            'value': 'process',
-                        },
-                        {
-                            'title': 'Success',
-                            'value': 'success',
-                        },
-                        {
-                            'title': 'Error',
-                            'value': 'error',
-                        },
-                    ],
-                    'header': {},
-                    'label': 'Статус',
-                    'read_only': False,
-                    'required': False,
-                    'size': 'default',
-                    'tag_colors': {
-                        'error': 'red-lighten-2',
-                        'process': 'grey-lighten-1',
-                        'success': 'green-darken-1',
-                    },
-                    'type': 'choice',
-                    'variant': 'elevated',
-                },
                 'whitelist_ips': {
                     'header': {},
                     'label': 'Белый список IP',
@@ -200,7 +172,6 @@ category_schema_data = {
                 'id',
                 'amount',
                 'endpoint',
-                'status',
                 'description',
                 'created_at',
                 'get_provider_registry',

@@ -25,13 +25,6 @@ class PaymentFiltersSchema(schema.FieldsSchema):
     ]
 
 
-STATUS_COLORS = {
-    'process': 'grey-lighten-1',
-    'success': 'green-darken-1',
-    'error': 'red-lighten-2',
-}
-
-
 class PaymentFieldsSchema(schema.FieldsSchema):
     id = schema.IntegerField(label='ID', read_only=True)
     amount = schema.IntegerField(label=_('amount'))
@@ -39,11 +32,6 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     description = schema.StringField(label=_('description'))
     other_field = schema.StringField(read_only=True)
     whitelist_ips = schema.ArrayField(label=_('whitelist_ips'))
-    status = schema.ChoiceField(
-        label=_('status'),
-        tag_colors=STATUS_COLORS,
-        choices=list({'value': k, 'title': k.capitalize()} for k in STATUS_COLORS),
-    )
     # image = schema.ImageField(label=_('image'))
     created_at = schema.DateTimeField(label=_('created_at'), read_only=True)
 
@@ -51,7 +39,6 @@ class PaymentFieldsSchema(schema.FieldsSchema):
         'id',
         'amount',
         'endpoint',
-        'status',
         'description',
         'created_at',
         'get_provider_registry',

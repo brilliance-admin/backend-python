@@ -49,3 +49,8 @@ whitelist_ips: 'Белый список IP'
 users: 'Пользователи'
 field_not_found_in_schema: 'Поле "{field_slug}" не найдено среди доступных: {available}'
 related_not_found: 'Ошибка при обновлении связей поля {field_slug}: запись {model} с ключем pk={pk} не найдена. Возможно запись более недоступна.'
+
+statuses:
+  process: 'В процессе'
+  success: 'Успех'
+  error: 'Ошибка'

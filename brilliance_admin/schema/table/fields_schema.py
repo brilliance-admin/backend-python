@@ -148,9 +148,10 @@ class FieldsSchema:
             list_display=self.list_display,
         )
 
+        context = {'language_context': language_context}
         for field_slug, field in self.get_fields().items():
             field_schema: FieldSchemaData = field.generate_schema(user, field_slug, language_context)
-            fields_schema.fields[field_slug] = field_schema.to_dict(keep_none=False)
+            fields_schema.fields[field_slug] = field_schema.to_dict(keep_none=False, context=context)
 
         return fields_schema
 

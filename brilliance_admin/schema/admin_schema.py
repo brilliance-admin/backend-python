@@ -44,7 +44,7 @@ class AdminSettingsData(DataclassBase):
 @dataclass
 class AdminIndexContextData(DataclassBase):
     title: str
-    favicon_image: str
+    favicon_image: str | None
     settings_json: str
 
 

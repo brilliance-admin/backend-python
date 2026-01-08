@@ -42,8 +42,8 @@ class DataclassBase:
         adapter = TypeAdapter(type(self))
         return adapter.dump_python(self, *args, **kwargs)
 
-    def to_dict(self, keep_none=True) -> dict:
-        data = self.model_dump()
+    def to_dict(self, *args, keep_none=True, **kwargs) -> dict:
+        data = self.model_dump(*args, **kwargs)
         return {
             k: v for k, v in data.items()
             if v is not None and not keep_none
@@ -150,4 +150,4 @@ class YamlI18n:
             if isinstance(node, str):
                 return node
 
-        raise KeyError(f'translation key not found: {slug}')
+        return slug

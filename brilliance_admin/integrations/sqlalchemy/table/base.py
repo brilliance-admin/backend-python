@@ -123,11 +123,11 @@ class SQLAlchemyAdminBase(SQLAlchemyAdminAutocompleteMixin, CategoryTable):
             # pylint: disable=protected-access
             if field._type == "related":
 
-                # pylint: disable=import-outside-toplevel
-                from sqlalchemy import inspect
-
-                model_attrs = [attr.key for attr in inspect(self.model).mapper.attrs]
                 if not hasattr(self.model, field.rel_name):
+                    # pylint: disable=import-outside-toplevel
+                    from sqlalchemy import inspect
+                    model_attrs = [attr.key for attr in inspect(self.model).mapper.attrs]
+
                     msg = EXCEPTION_REL_NAME.format(
                         slug=slug,
                         model_name=self.model.__name__,

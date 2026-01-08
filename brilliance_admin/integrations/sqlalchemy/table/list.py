@@ -109,7 +109,7 @@ class SQLAlchemyAdminListMixin:
                     'list_data': list_data,
                 }
             )
-            msg = _('filter_error') % {'error': e.message}
+            msg = _('errors.filter_error') % {'error': e.message}
             raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=500) from e
 
         except Exception as e:
@@ -120,7 +120,7 @@ class SQLAlchemyAdminListMixin:
                     'list_data': list_data,
                 }
             )
-            raise AdminAPIException(APIError(message=_('filters_exception'), code='filters_exception'), status_code=500) from e
+            raise AdminAPIException(APIError(message=_('errors.filters_exception'), code='filters_exception'), status_code=500) from e
 
         data = []
 
@@ -143,7 +143,7 @@ class SQLAlchemyAdminListMixin:
                     'list_data': list_data,
                 }
             )
-            msg = _('connection_refused_error') % {'error': str(e)}
+            msg = _('errors.connection_refused_error') % {'error': str(e)}
             raise AdminAPIException(
                 APIError(message=msg, code='connection_refused_error'),
                 status_code=500,
@@ -172,7 +172,7 @@ class SQLAlchemyAdminListMixin:
                 }
             )
             raise AdminAPIException(
-                APIError(message=_('db_error_list'), code='db_error_list'), status_code=500,
+                APIError(message=_('errors.db_error_list'), code='db_error_list'), status_code=500,
             ) from e
 
         return schema.TableListResult(data=data, total_count=int(total_count or 0))

@@ -139,6 +139,9 @@ class SQLAlchemyRelatedField(TableField):
         - value всегда scalar (None или int)
         - ORM-объект доступен через extra["record"]
         """
+        if not value:
+            return
+
         record = extra.get('record')
         if record is None:
             raise FieldError(f'Missing record in serialize context in value: {value}')
@@ -146,13 +149,15 @@ class SQLAlchemyRelatedField(TableField):
         if self.many:
             related = getattr(record, self.rel_name, None)
             if related is None:
-                raise FieldError(f'Related field "{self.rel_name}" is missing on record {record} (many=True)')
+                msg = f'Many Related field "{self.rel_name}" is missing on record "{record}" (many=True)'
+                raise FieldError(msg)
 
             return [{'key': get_pk(obj), 'title': str(obj)} for obj in related]
 
         related = getattr(record, self.rel_name, None)
         if related is None:
-            raise FieldError(f'Related field "{self.rel_name}" is missing on record (many=False)')
+            msg = f'Related field "{self.rel_name}" is missing on record "{record}" (many=False)'
+            raise FieldError(msg)
 
         return {'key': get_pk(related), 'title': str(related)}
 

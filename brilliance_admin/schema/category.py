@@ -30,7 +30,6 @@ class FieldSchemaData(DataclassBase):
 
     choices: List[dict] | None = None
 
-    tag_colors: dict | None = None
     variant: str | None = None
     size: str | None = None
 

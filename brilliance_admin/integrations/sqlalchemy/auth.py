@@ -54,7 +54,7 @@ class SQLAlchemyJWTAdminAuthentication(AdminAuthentication):
             logger.exception(
                 'SQLAlchemy %s login db error: %s', type(self).__name__, e,
             )
-            msg = _('connection_refused_error') % {'error': str(e)}
+            msg = _('errors.connection_refused_error') % {'error': str(e)}
             raise AdminAPIException(
                 APIError(message=msg, code='connection_refused_error'),
                 status_code=500,
@@ -127,7 +127,7 @@ class SQLAlchemyJWTAdminAuthentication(AdminAuthentication):
             logger.exception(
                 'SQLAlchemy %s authenticate db error: %s', type(self).__name__, e,
             )
-            msg = _('connection_refused_error') % {'error': str(e)}
+            msg = _('errors.connection_refused_error') % {'error': str(e)}
             raise AdminAPIException(
                 APIError(message=msg, code='connection_refused_error'),
                 status_code=500,

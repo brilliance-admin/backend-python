@@ -1,5 +1,7 @@
+import random
 import uuid
 from datetime import datetime
+from enum import Enum
 
 import factory
 from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, SmallInteger, String, func
@@ -116,6 +118,55 @@ class MerchantFactory(SQLAlchemyFactoryBase):
         return self.title
 
 
+class Fee(BaseIDModel):
+    __tablename__ = "fee"
+
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    terminals: Mapped[list["Terminal"]] = relationship(back_populates="fee")
+
+    def __repr__(self):
+        return f"<Fee(id={self.id}, title='{self.title}')>"
+
+    def __str__(self):
+        return self.title
+
+
+class FeeFactory(SQLAlchemyFactoryBase):
+    class Meta:
+        model = Fee
+        sqlalchemy_session_factory = async_sessionmaker_
+        sqlalchemy_session_persistence = "commit"
+
+    title = factory.Faker("word")
+
+    def __str__(self):
+        return self.title
+
+
+class TerminalStatuses(Enum):
+    PROCESS = 'process'
+    SUCCESS = 'success'
+    ERROR = 'error'
+
+    @property
+    def label(self):
+        labels = {
+            self.PROCESS: _('statuses.process'),
+            self.SUCCESS: _('statuses.success'),
+            self.ERROR: _('statuses.error'),
+        }
+        return labels[self]
+
+    @property
+    def tag_color(self):
+        colors = {
+            self.PROCESS: 'grey-lighten-1',
+            self.SUCCESS: 'green-darken-1',
+            self.ERROR: 'red-lighten-2',
+        }
+        return colors[self]
+
+
 class Terminal(BaseIDModel):
     __tablename__ = "terminal"
 
@@ -131,6 +182,12 @@ class Terminal(BaseIDModel):
         default=lambda: str(uuid.uuid4()),
     )
 
+    status: Mapped[str] = mapped_column(
+        String(255),
+        nullable=False,
+        info={"choices": TerminalStatuses},
+    )
+
     return_url: Mapped[str] = mapped_column(String(500), nullable=True)
     callback_url: Mapped[str] = mapped_column(String(500), nullable=True)
 
@@ -139,6 +196,9 @@ class Terminal(BaseIDModel):
 
     currency_id: Mapped[int] = mapped_column(ForeignKey("currency.id"), index=True)
     currency: Mapped["Currency"] = relationship(back_populates="terminals")  # noqa F821
+
+    fee_id: Mapped[int] = mapped_column(ForeignKey("fee.id"), nullable=True)
+    fee: Mapped["Fee"] = relationship(back_populates="terminals")
 
     is_h2h: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=expression.true())
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=expression.true())
@@ -175,6 +235,8 @@ class TerminalFactory(SQLAlchemyFactoryBase):
 
     title = factory.Faker("company")
     description = factory.Faker("sentence", nb_words=6)
+
+    status = factory.LazyFunction(lambda: random.choice(list(TerminalStatuses)).value)
 
     secret_key = factory.LazyFunction(lambda: str(uuid.uuid4()))
     public_id = factory.LazyFunction(lambda: str(uuid.uuid4()))

@@ -21,7 +21,7 @@ class SQLAlchemyAdminUpdate:
             language_context: LanguageContext,
     ) -> schema.UpdateResult:
         if not self.has_update:
-            raise AdminAPIException(APIError(message=_('method_not_allowed')), status_code=500)
+            raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import inspect
@@ -29,7 +29,7 @@ class SQLAlchemyAdminUpdate:
 
         if pk is None:
             raise AdminAPIException(
-                APIError(message=_('pk_not_found') % {'pk_name': self.pk_name}, code='pk_not_found'),
+                APIError(message=_('errors.pk_not_found') % {'pk_name': self.pk_name}, code='pk_not_found'),
                 status_code=400,
             )
 
@@ -42,7 +42,7 @@ class SQLAlchemyAdminUpdate:
             async with self.db_async_session() as session:
                 record = (await session.execute(stmt)).scalars().first()
                 if record is None:
-                    msg = _('record_not_found') % {'pk_name': self.pk_name, 'pk': pk}
+                    msg = _('errors.record_not_found') % {'pk_name': self.pk_name, 'pk': pk}
                     raise AdminAPIException(
                         APIError(message=msg, code='record_not_found'),
                         status_code=400,
@@ -59,7 +59,7 @@ class SQLAlchemyAdminUpdate:
                 type(self).__name__, self.table_schema.model.__name__, pk, e,
                 extra={'data': data},
             )
-            msg = _('connection_refused_error') % {'error': str(e)}
+            msg = _('errors.connection_refused_error') % {'error': str(e)}
             raise AdminAPIException(
                 APIError(message=msg, code='connection_refused_error'),
                 status_code=400,
@@ -84,7 +84,7 @@ class SQLAlchemyAdminUpdate:
                 extra={'data': data}
             )
             raise AdminAPIException(
-                APIError(message=_('db_error_update'), code='db_error_update'), status_code=500,
+                APIError(message=_('errors.db_error_update'), code='db_error_update'), status_code=500,
             ) from e
 
         logger.info(

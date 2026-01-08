@@ -65,7 +65,7 @@ wheels = [
 
 [[package]]
 name = "brilliance-admin"
-version = "0.41.2"
+version = "0.43.5"
 source = { editable = "." }
 dependencies = [
     { name = "asgiref" },

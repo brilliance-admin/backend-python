@@ -14,5 +14,5 @@ class SQLAlchemyDeleteAction:
     )
     async def delete(self, action_data: ActionData):
         if not self.has_delete:
-            raise AdminAPIException(APIError(message=_('method_not_allowed')), status_code=500)
+            raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
         return ActionResult(message=ActionMessage(_('deleted_successfully')))

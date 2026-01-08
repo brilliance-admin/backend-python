@@ -20,6 +20,7 @@ class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
         model=Terminal,
         list_display=[
             'id',
+            'status',
             'merchant_id',
             'public_id',
             'currency_id',

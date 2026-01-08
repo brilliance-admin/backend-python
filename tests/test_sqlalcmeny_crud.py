@@ -5,7 +5,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from brilliance_admin import auth, schema, sqlalchemy
-from example.sections.models import Currency, CurrencyFactory, MerchantFactory, Terminal, TerminalFactory
+from brilliance_admin.translations import TranslateText
+from example.sections.models import (
+    Currency, CurrencyFactory, MerchantFactory, Terminal, TerminalFactory, TerminalStatuses)
 from tests.test_sqlalcmeny_schema import FIELDS
 
 
@@ -31,6 +33,7 @@ async def test_create(sqlite_sessionmaker, language_context):
     create_data = {
         'merchant_id': merchant.id,
         'currency_id': currency.id,
+        'status': 'test',
         'description': 'test',
         'title': 'test',
     }
@@ -52,6 +55,7 @@ async def test_retrieve(sqlite_sessionmaker, language_context):
     terminal = await TerminalFactory(
         title="test",
         description='test',
+        status=TerminalStatuses.PROCESS.value,
         is_h2h=False,
         registered_delay=None,
         merchant=merchant,
@@ -69,6 +73,10 @@ async def test_retrieve(sqlite_sessionmaker, language_context):
         'currency_id': {
             'key': currency.id,
             'title': mock.ANY,
+        },
+        'status': {
+            'title': TranslateText('statuses.process'),
+            'value': 'process',
         },
         'title': 'test',
         'id': terminal.id,
@@ -93,6 +101,10 @@ async def test_retrieve_currency(sqlite_sessionmaker, language_context):
             ],
         ),
     )
+    terminals_field = category.table_schema.get_field('terminals')
+    assert terminals_field._type == "related"
+    assert terminals_field.rel_name == "terminals"
+    assert terminals_field.many is True
 
     user = auth.UserABC(username="test")
     merchant = await MerchantFactory()
@@ -132,6 +144,7 @@ async def test_list(sqlite_sessionmaker, language_context):
         registered_delay=None,
         title='Test terminal',
         description="description",
+        status=TerminalStatuses.PROCESS.value,
         merchant=await MerchantFactory(title="Test merch"),
         currency=await CurrencyFactory(),
     )
@@ -151,6 +164,10 @@ async def test_list(sqlite_sessionmaker, language_context):
             'currency_id': {
                 'key': 1,
                 'title': mock.ANY,
+            },
+            'status': {
+                'title': TranslateText('statuses.process'),
+                'value': 'process',
             },
             'description': 'description',
             'id': 1,

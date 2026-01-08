@@ -1,6 +1,7 @@
 import abc
 import datetime
-from typing import Any, ClassVar, List, Tuple
+from enum import Enum
+from typing import Any, ClassVar
 
 from pydantic.dataclasses import dataclass
 
@@ -52,6 +53,8 @@ class TableField(abc.ABC, FieldSchemaData):
 class IntegerField(TableField):
     _type = 'integer'
 
+    choices: Any | None = None
+
     max_value: int | None = None
     min_value: int | None = None
 
@@ -61,8 +64,6 @@ class IntegerField(TableField):
 
     def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
         schema = super().generate_schema(user, field_slug, language_context)
-
-        schema.choices = self.choices
 
         if self.max_value is not None:
             schema.max_value = self.max_value
@@ -95,13 +96,12 @@ class StringField(TableField):
     min_length: int | None = None
     max_length: int | None = None
 
-    choices: List[Tuple[str, str]] | None = None
+    choices: Any | None = None
 
     def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
         schema = super().generate_schema(user, field_slug, language_context)
 
         schema.multilined = self.multilined
-        schema.choices = self.choices
         schema.ckeditor = self.ckeditor
         schema.tinymce = self.tinymce
 
@@ -227,23 +227,52 @@ class ImageField(TableField):
 class ChoiceField(TableField):
     _type = 'choice'
 
+    # Tag color available:
     # https://vuetifyjs.com/en/styles/colors/#classes
-    tag_colors: dict | None = None
+    choices: Any | None = None
 
     # https://vuetifyjs.com/en/components/chips/#color-and-variants
     variant: str = 'elevated'
     size: str = 'default'
+
+    def __post_init__(self):
+        self.choices = self.generate_choices()
+
+    def generate_choices(self):
+        if not self.choices:
+            return None
+
+        if issubclass(self.choices, Enum):
+            return [
+                {'value': c.value, 'title': c.label, 'tag_color': getattr(c, 'tag_color', None)}
+                for c in self.choices
+            ]
+
+        msg = f'Field choices is not suppored: {self.choices}'
+        raise NotImplementedError(msg)
+
+    def find_choice(self, value):
+        if not self.choices:
+            return None
+
+        return next((c for c in self.choices if c.get('value') == value), None)
 
     def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
         schema = super().generate_schema(user, field_slug, language_context)
 
         schema.choices = self.choices
 
-        schema.tag_colors = self.tag_colors
         schema.size = self.size
         schema.variant = self.variant
 
         return schema
 
     async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
-        return {'value': value, 'title': value.capitalize() if value else value}
+        if not value:
+            return
+
+        choice = self.find_choice(value)
+        return {
+            'value': value,
+            'title': choice.get('title') or value if choice else value.capitalize(),
+        }

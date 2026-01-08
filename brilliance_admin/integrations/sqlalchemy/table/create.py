@@ -18,7 +18,7 @@ class SQLAlchemyAdminCreate:
             language_context: LanguageContext,
     ) -> schema.CreateResult:
         if not self.has_create:
-            raise AdminAPIException(APIError(message=_('method_not_allowed')), status_code=500)
+            raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
         # pylint: disable=import-outside-toplevel
         from sqlalchemy.exc import IntegrityError
@@ -37,7 +37,7 @@ class SQLAlchemyAdminCreate:
                 type(self).__name__, self.table_schema.model.__name__, e,
                 extra={'data': data},
             )
-            msg = _('connection_refused_error') % {'error': str(e)}
+            msg = _('errors.connection_refused_error') % {'error': str(e)}
             raise AdminAPIException(
                 APIError(message=msg, code='connection_refused_error'),
                 status_code=500,
@@ -62,7 +62,7 @@ class SQLAlchemyAdminCreate:
                 extra={'data': data},
             )
             raise AdminAPIException(
-                APIError(message=_('db_error_create'), code='db_error_create'), status_code=500,
+                APIError(message=_('errors.db_error_create'), code='db_error_create'), status_code=500,
             ) from e
 
         logger.info(

@@ -54,9 +54,6 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                 and not col.primary_key
             )
 
-            if "choices" in info:
-                field_data["choices"] = [(c[0], c[1]) for c in info["choices"]]
-
             col_type = col.type
             try:
                 py_t = col_type.python_type
@@ -64,11 +61,15 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                 py_t = None
 
             impl = getattr(attr, 'impl', None)
-            is_mutable = isinstance(impl, Mutable)
+            is_impl_mutable = isinstance(impl, Mutable)
 
             # Foreign key column
             if col.foreign_keys:
                 continue
+
+            elif "choices" in info:
+                field_data["choices"] = info['choices']
+                field_class = schema.ChoiceField
 
             elif isinstance(col_type, (sqltypes.BigInteger, sqltypes.Integer)) or py_t is int:
                 field_class = schema.IntegerField
@@ -97,7 +98,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
             elif isinstance(col_type, ARRAY):
                 field_class = schema.ArrayField
                 field_data["array_type"] = type(col_type.item_type).__name__.lower()
-                field_data["read_only"] = not is_mutable
+                field_data["read_only"] = is_impl_mutable or isinstance(col_type, Mutable)
 
             elif isinstance(col_type, sqltypes.NullType):
                 continue
@@ -126,6 +127,12 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
 
         # relationship-поля
         for rel in mapper.relationships:
+            # relationship, у которых есть локальные FK-колонки, не добавляем в схему,
+            # так как связь редактируется через scalar-поле (FK),
+            # а relationship используется только для ORM-навигации
+            if any(col.foreign_keys for col in rel.local_columns):
+                continue
+
             field_slug = rel.key
 
             field_data = {}
@@ -233,15 +240,17 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
         return stmt
 
     async def serialize(self, record, extra: dict, *args, **kwargs) -> dict:
-        # pylint: disable=import-outside-toplevel
-        from sqlalchemy import inspect
 
         # Convert model values to dict
-        record_data = {
-            attr.key: getattr(record, attr.key, None)
-            for attr in inspect(record).mapper.column_attrs
-            if self.get_field(attr.key)
-        }
+        record_data = {}
+
+        for slug, field in self.get_fields().items():
+            # pylint: disable=protected-access
+            if field._type == 'related':
+                record_data[slug] = record
+            else:
+                record_data[slug] = getattr(record, slug, None)
+
         return await super().serialize(record_data, extra, *args, **kwargs)
 
     def validate_incoming_data(self, data):

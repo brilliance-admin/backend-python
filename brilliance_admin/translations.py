@@ -63,14 +63,14 @@ class LanguageManager(abc.ABC):
 
         builtin_locales_dir = resources.files("brilliance_admin").joinpath("locales")
         self.phrases.load_folder(builtin_locales_dir)
-        logger.info('Language manager builtin dir loaded: %s', builtin_locales_dir)
+        logger.debug('Language manager builtin dir loaded: %s', builtin_locales_dir)
 
         if locales_dir:
             self.phrases.load_folder(locales_dir)
-            logger.info('Language manager locales_dir loaded: %s', locales_dir)
+            logger.debug('Language manager locales_dir loaded: %s', locales_dir)
 
         langs = ', '.join(self.phrases.data.keys())
-        logger.info('Language manager setup completed; languages: %s', langs)
+        logger.debug('Language manager setup completed; languages: %s', langs)
 
     def get_text(self, text, language) -> str:
         if not isinstance(text, TranslateText):

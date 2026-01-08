@@ -6,7 +6,7 @@ from pydantic.dataclasses import dataclass
 from brilliance_admin.auth import UserABC
 from brilliance_admin.schema.category import Category, CategorySchemaData
 from brilliance_admin.translations import LanguageContext
-from brilliance_admin.utils import DataclassBase, SupportsStr, get_logger
+from brilliance_admin.utils import DataclassBase, SupportsStr, get_logger, humanize_field_name
 
 logger = get_logger()
 
@@ -36,7 +36,7 @@ class Group(abc.ABC):
 
     def generate_schema(self, user: UserABC, language_context: LanguageContext) -> GroupSchemaData:
         result = GroupSchemaData(
-            title=language_context.get_text(self.title) or self.slug,
+            title=language_context.get_text(self.title) or humanize_field_name(self.slug),
             description=language_context.get_text(self.description),
             icon=self.icon,
             categories={},

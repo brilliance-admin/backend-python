@@ -32,7 +32,11 @@ class SQLAlchemyAdminAutocompleteMixin:
         if not field:
             raise Exception(f'Field "{data.field_slug}" is not found')
 
-        async with self.db_async_session() as session:
-            results = await field.autocomplete(self.model, data, user, extra={'db_session': session})
+        results = await field.autocomplete(
+            self.model,
+            data,
+            user,
+            extra={'db_async_session': self.db_async_session},
+        )
 
         return AutocompleteResult(results=results)

@@ -43,7 +43,7 @@ class SQLAlchemyRelatedField(TableField):
     # - для доступа к связи через ORM
     #   getattr(record, rel_name)
     # - для записи и чтения связанных объектов
-    rel_name: str | None = None
+    rel_name: str | None
 
     # Класс связанной SQLAlchemy-модели.
     # Откуда берётся:
@@ -101,11 +101,11 @@ class SQLAlchemyRelatedField(TableField):
         from sqlalchemy import select
         from sqlalchemy.sql import expression
 
-        if extra is None or extra.get('db_session') is None:
-            msg = f'SQLAlchemyRelatedField.autocomplete {type(self).__name__} requires extra["db_session"] (AsyncSession)'
+        if extra is None or extra.get('db_async_session') is None:
+            msg = f'SQLAlchemyRelatedField.autocomplete {type(self).__name__} requires extra["db_async_session"] (AsyncSession)'
             raise AttributeError(msg)
 
-        session = extra['db_session']
+        db_async_session = extra['db_async_session']
 
         results = []
 
@@ -125,7 +125,9 @@ class SQLAlchemyRelatedField(TableField):
         if existed_choices and hasattr(target_model, 'id'):
             stmt = stmt.where(getattr(target_model, 'id').in_(existed_choices) | expression.true())
 
-        records = (await session.execute(stmt)).scalars().all()
+        async with db_async_session() as session:
+            records = (await session.execute(stmt)).scalars().all()
+
         for record in records:
             results.append(Record(key=getattr(record, 'id'), title=str(record)))
 

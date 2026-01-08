@@ -31,6 +31,7 @@ async def test_create(sqlite_sessionmaker, language_context):
     currency = await CurrencyFactory()
 
     create_data = {
+        'manager_id': 0,
         'merchant_id': merchant.id,
         'currency_id': currency.id,
         'status': 'test',
@@ -68,6 +69,7 @@ async def test_retrieve(sqlite_sessionmaker, language_context):
         language_context=language_context,
     )
     expected_data = {
+        'manager_id': mock.ANY,
         'created_at': mock.ANY,
         'description': 'test',
         'currency_id': {
@@ -161,6 +163,7 @@ async def test_list(sqlite_sessionmaker, language_context):
     )
     data = [
         {
+            'manager_id': mock.ANY,
             'created_at': mock.ANY,
             'currency_id': {
                 'key': 1,

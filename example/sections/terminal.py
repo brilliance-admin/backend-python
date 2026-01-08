@@ -1,6 +1,6 @@
 from brilliance_admin import sqlalchemy
 from brilliance_admin.translations import TranslateText as _
-from example.sections.models import Terminal
+from example.sections.models import Terminal, User
 
 
 class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
@@ -21,6 +21,7 @@ class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
         list_display=[
             'id',
             'status',
+            'manager_id',
             'merchant_id',
             'public_id',
             'currency_id',

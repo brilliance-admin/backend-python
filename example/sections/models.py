@@ -170,6 +170,8 @@ class TerminalStatuses(Enum):
 class Terminal(BaseIDModel):
     __tablename__ = "terminal"
 
+    manager_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
+
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(
         String(255),
@@ -232,6 +234,8 @@ class TerminalFactory(SQLAlchemyFactoryBase):
         model = Terminal
         sqlalchemy_session_factory = async_sessionmaker_
         sqlalchemy_session_persistence = "commit"
+
+    manager_id = factory.Sequence(lambda n: n + 1)
 
     title = factory.Faker("company")
     description = factory.Faker("sentence", nb_words=6)

@@ -7,7 +7,7 @@ from pydantic_core import core_schema
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.translations import LanguageContext
-from brilliance_admin.utils import DataclassBase, SupportsStr
+from brilliance_admin.utils import DataclassBase, SupportsStr, humanize_field_name
 
 
 # pylint: disable=too-many-instance-attributes
@@ -125,7 +125,7 @@ class Category(abc.ABC):
 
     def generate_schema(self, user: UserABC, language_context: LanguageContext) -> CategorySchemaData:
         return CategorySchemaData(
-            title=language_context.get_text(self.title) or self.slug,
+            title=language_context.get_text(self.title) or humanize_field_name(self.slug),
             description=language_context.get_text(self.description),
             icon=self.icon,
             type=self._type_slug,

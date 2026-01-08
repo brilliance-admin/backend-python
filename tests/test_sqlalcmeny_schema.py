@@ -146,9 +146,17 @@ category_schema_data = {
                     'required': False,
                     'type': 'related',
                 },
+                'manager_id': {
+                    'header': {},
+                    'label': 'Manager ID',
+                    'read_only': False,
+                    'required': True,
+                    'type': 'integer',
+                },
             },
             'list_display': [
                 'id',
+                'manager_id',
                 'title',
                 'fee_id',
                 'status',
@@ -162,12 +170,13 @@ category_schema_data = {
             ],
         },
     },
-    'title': 'terminal',
+    'title': 'Terminal',
     'type': 'table',
 }
 
 FIELDS = [
     'id',
+    'manager_id',
     'title',
     'fee_id',
     'status',

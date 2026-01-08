@@ -181,3 +181,4 @@ auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
 | Schema generation | User-defined format | From Django models | From ORM models | User-defined format | From SQLAlchemy models |
 | Async support | Yes | No | Yes | Yes | Yes |
 | API-first approach | Yes | No | Partially | Partially | No |
+| Built-in Localization | Yes | Yes | No | No | No |

@@ -146,18 +146,15 @@ class SQLAlchemyRelatedField(TableField):
         if record is None:
             raise FieldError(f'Missing record in serialize context in value: {value}')
 
-        if self.many:
-            related = getattr(record, self.rel_name, None)
-            if related is None:
-                msg = f'Many Related field "{self.rel_name}" is missing on record "{record}" (many=True)'
-                raise FieldError(msg)
+        related = getattr(record, self.rel_name, None)
 
+        if self.many:
+            if related is None:
+                raise FieldError(f'Many Related field "{self.rel_name}" is missing on record "{record}"')
             return [{'key': get_pk(obj), 'title': str(obj)} for obj in related]
 
-        related = getattr(record, self.rel_name, None)
         if related is None:
-            msg = f'Related field "{self.rel_name}" is missing on record "{record}" (many=False)'
-            raise FieldError(msg)
+            return None
 
         return {'key': get_pk(related), 'title': str(related)}
 

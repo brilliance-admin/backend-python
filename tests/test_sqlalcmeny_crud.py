@@ -74,6 +74,7 @@ async def test_retrieve(sqlite_sessionmaker, language_context):
             'key': currency.id,
             'title': mock.ANY,
         },
+        'fee_id': None,
         'status': {
             'title': TranslateText('statuses.process'),
             'value': 'process',
@@ -169,6 +170,7 @@ async def test_list(sqlite_sessionmaker, language_context):
                 'title': TranslateText('statuses.process'),
                 'value': 'process',
             },
+            'fee_id': None,
             'description': 'description',
             'id': 1,
             'is_h2h': False,

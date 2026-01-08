@@ -118,12 +118,9 @@ class PaymentsAdmin(schema.CategoryTable):
         fake = Faker()
         Faker.seed(pk)
 
-        statuses = list(STATUS_COLORS.keys())
-        status = statuses[fake.pyint(min_value=0, max_value=len(statuses) - 1)]
         return {
             'id': pk,
             'amount': 10 * fake.pyint(min_value=0, max_value=100),
-            'status': status,
             'endpoint': fake.word(),
             'whitelist_ips': ['localhost', '0.0.0.0'],
             'description': fake.sentence(nb_words=5),

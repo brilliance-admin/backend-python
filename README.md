@@ -171,13 +171,13 @@ auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
 
 ## Comparison of Similar Projects
 
-| Criterion | Brilliance Admin | Django Admin/Unfold | FastAPI Admin | Starlette Admin |
-|---------|------------------|---------------|---------------|-----------------|
-| Base framework | FastAPI | Django | FastAPI | Starlette / FastAPI |
-| Rendering model | Prebuilt Vue 3 + Vuetify SPA + Jinja2 | Server-side Django templates | Server-side Jinja2 templates + Tabler UI | Server-side Jinja2 templates + Tabler UI |
-| Frontend architecture | Separate frontend (SPA) | Classic server-rendered UI | Server-rendered UI with JS interactivity | Server-rendered UI with JS interactivity |
-| Data source | Any source + SQLAlchemy | Django ORM | Tortoise ORM | Any source + SQLAlchemy, MongoDB |
-| Multiple databases per model | Yes | Database routers | No (global engine) | Yes (session per ModelView) |
-| Schema generation | User-defined format | From Django models | From ORM models | User-defined format |
-| Async support | Yes | No | Yes | Yes |
-| API-first approach | Yes | No | Partially | Partially |
+| Criterion | Brilliance Admin | Django Admin | FastAPI Admin | Starlette Admin | SQLAdmin |
+|---------|------------------|---------------------|---------------|-----------------|----------|
+| Base framework | FastAPI | Django | FastAPI | Starlette / FastAPI | FastAPI / Starlette |
+| Rendering model | Prebuilt Vue 3 + Vuetify SPA + Jinja2 | Server-side Django templates | Server-side Jinja2 templates + Tabler UI | Server-side Jinja2 templates + Tabler UI | Server-side Jinja2 templates + Bootstrap |
+| Frontend architecture | Separate frontend (SPA) | Classic server-rendered UI | Server-rendered UI with JS interactivity | Server-rendered UI with JS interactivity | Server-rendered UI |
+| Data source | Any source + SQLAlchemy | Django ORM | Tortoise ORM | Any source + SQLAlchemy, MongoDB | SQLAlchemy |
+| Multiple databases per model | Yes | Database routers | No (global engine) | Yes (session per ModelView) | No (single engine per Admin) |
+| Schema generation | User-defined format | From Django models | From ORM models | User-defined format | From SQLAlchemy models |
+| Async support | Yes | No | Yes | Yes | Yes |
+| API-first approach | Yes | No | Partially | Partially | No |

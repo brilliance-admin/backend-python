@@ -45,9 +45,11 @@ Focused on simplified, but rich configuration.
 * **SQLAlchemy** - schema autogeneration for tables + CRUD operations + authorization
 
 **Planned:**
-* Role-based access control system
-* Nested data support for creation and detail views
-* Django ORM inegration
+* Dashboard features
+* Role-based access permissions system via interface
+* Backend interface for storing and viewing action history in the admin interface
+* Nested data support for creation and detail views (inline editing), nested CRUD workflows
+* Django ORM integration
 
 ## How to use it
 

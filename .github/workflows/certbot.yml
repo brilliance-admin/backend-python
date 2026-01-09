@@ -28,7 +28,7 @@ jobs:
             sudo certbot --nginx \
               -d brilliance-admin.com \
               -d www.brilliance-admin.com \
-              -d admin.brilliance-admin.com \
+              -d docs.brilliance-admin.com \
               --expand \
               --non-interactive \
               --agree-tos \

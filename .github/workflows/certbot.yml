@@ -18,11 +18,11 @@ jobs:
               sudo apt update
               sudo apt install -y certbot python3-certbot-nginx
             fi
-
             sudo certbot --nginx \
               -d brilliance-admin.com \
               -d www.brilliance-admin.com \
               -d admin.brilliance-admin.com \
+              --expand \
               --non-interactive \
               --agree-tos \
               -m admin@brilliance-admin.com \

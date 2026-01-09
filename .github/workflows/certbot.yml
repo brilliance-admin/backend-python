@@ -7,17 +7,24 @@ jobs:
   setup-https:
     runs-on: ubuntu-latest
     steps:
-      - name: Setup HTTPS with certbot
+      - name: Setup HTTPS with certbot (snap)
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.SERVER_HOST }}
           username: deploy
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            if ! command -v certbot >/dev/null 2>&1; then
+            sudo apt remove -y certbot python3-certbot-nginx || true
+
+            if ! command -v snap >/dev/null 2>&1; then
               sudo apt update
-              sudo apt install -y certbot python3-certbot-nginx
+              sudo apt install -y snapd
             fi
+
+            sudo snap install core || sudo snap refresh core
+            sudo snap install --classic certbot || true
+            sudo ln -sf /snap/bin/certbot /usr/bin/certbot
+
             sudo certbot --nginx \
               -d brilliance-admin.com \
               -d www.brilliance-admin.com \

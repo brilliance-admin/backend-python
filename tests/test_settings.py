@@ -30,7 +30,7 @@ async def test_index_context_data():
     assert result == {
         'favicon_image': '/static/favicon.jpg',
         'settings_json': mock.ANY,
-        'title': 'Brilliance Admin Демо',
+        'title': 'Brilliance Admin Demo',
     }
 
 

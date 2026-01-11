@@ -78,8 +78,8 @@ admin_schema = schema.AdminSchema(
     language_manager=LanguageManager(
         locales_dir='example/locales',
         languages={
-            'ru': 'Russian',
             'en': 'English',
+            'ru': 'Russian',
             'test': 'Test',
         },
     ),

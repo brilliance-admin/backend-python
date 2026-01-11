@@ -175,6 +175,11 @@ class CategoryLink(BaseCategory):
 
     link: str
 
+    def generate_schema(self, user: UserABC, language_context: LanguageContext) -> CategorySchemaData:
+        result = super().generate_schema(user, language_context)
+        result.link = self.link
+        return result
+
 
 class CategoryGroup(BaseCategory):
     _type_slug: str = 'group'

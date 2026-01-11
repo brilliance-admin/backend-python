@@ -84,45 +84,56 @@ admin_schema = schema.AdminSchema(
         },
     ),
 
-    groups=[
-        schema.Group(
+    categories=[
+        schema.CategoryLink(
+            slug='docs',
+            title=_('docs'),
+            link='https://docs.brilliance-admin.com',
+        ),
+        schema.CategoryLink(
+            slug='github',
+            title="GitHub Repo",
+            icon="mdi-github",
+            link='https://github.com/brilliance-admin/backend-python',
+        ),
+        schema.CategoryGroup(
             slug='payments',
             title=_('payments'),
             icon='mdi-cash-multiple',
-            categories=[
+            subcategories=[
                 PaymentsAdmin(),
             ]
         ),
-        schema.Group(
+        schema.CategoryGroup(
             slug='users',
             title=_('users'),
             icon='mdi-account',
-            categories=[
+            subcategories=[
                 UserAdmin(db_async_session=async_sessionmaker_),
             ]
         ),
-        schema.Group(
+        schema.CategoryGroup(
             slug='merchants',
             title=_('merchants'),
             icon='mdi-folder-account-outline',
-            categories=[
+            subcategories=[
                 MerchantAdmin(db_async_session=async_sessionmaker_),
                 TerminalAdmin(db_async_session=async_sessionmaker_),
             ]
         ),
-        schema.Group(
+        schema.CategoryGroup(
             slug='currencies',
             title=_('currencies'),
             icon='mdi-cash-multiple',
-            categories=[
+            subcategories=[
                 CurrencyAdmin(db_async_session=async_sessionmaker_),
             ]
         ),
-        schema.Group(
+        schema.CategoryGroup(
             slug='statistics',
             title=_('statistics'),
             icon='mdi-finance',
-            categories=[
+            subcategories=[
                 GraphsExample(),
             ]
         ),

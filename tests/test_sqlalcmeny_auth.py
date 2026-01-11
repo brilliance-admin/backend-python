@@ -57,7 +57,7 @@ async def test_authenticate(sqlite_sessionmaker):
 
     token = auth.get_token(user)
     result_user = await auth.authenticate(headers={'Authorization': f'Token {token}'})
-    AdminSchemaData(groups={}, profile=result_user)
+    AdminSchemaData(categories={}, profile=result_user)
 
     assert result_user.username == user.username
 
@@ -73,7 +73,7 @@ async def test_authenticate_bad_secret(sqlite_sessionmaker):
 
     token = auth.get_token(user)
     result_user = await auth.authenticate(headers={'Authorization': f'Token {token}'})
-    AdminSchemaData(groups={}, profile=result_user)
+    AdminSchemaData(categories={}, profile=result_user)
     assert result_user.username == user.username
 
     auth.secret = 'another'

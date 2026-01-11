@@ -5,6 +5,7 @@ from typing import Any, Dict, Protocol
 
 import yaml
 from pydantic import TypeAdapter
+from pydantic.fields import FieldInfo
 from pydantic_core import core_schema
 
 
@@ -35,6 +36,43 @@ class DeserializeAction:
     UPDATE = 1
     TABLE_ACTION = 2
     FILTERS = 3
+
+
+class KwargsInitMixin:
+    """
+    Принимает только аргументы, объявленные в аннотациях.
+    Применяет default / default_factory из Field.
+    """
+
+    def __init__(self, **kwargs):
+        annotations = {}
+        for cls in type(self).__mro__:
+            annotations.update(getattr(cls, '__annotations__', {}))
+
+        allowed = set(annotations.keys())
+
+        for key, value in kwargs.items():
+            if key not in allowed:
+                raise AttributeError(
+                    f'{type(self).__name__} has no field "{key}". '
+                    f'Allowed fields: {sorted(allowed)}'
+                )
+            setattr(self, key, value)
+
+        self._apply_field_defaults()
+
+    def _apply_field_defaults(self):
+        for cls in type(self).__mro__:
+            for name, value in cls.__dict__.items():
+                if not isinstance(value, FieldInfo):
+                    continue
+
+                # если в инстансе всё ещё FieldInfo — заменить
+                if getattr(self, name, None) is value:
+                    if value.default_factory is not None:
+                        setattr(self, name, value.default_factory())
+                    elif value.default is not None:
+                        setattr(self, name, value.default)
 
 
 class DataclassBase:

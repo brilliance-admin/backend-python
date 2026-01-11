@@ -1,7 +1,7 @@
 [project]
 name = "brilliance-admin"
 version = "0.43.7"
-description = 'Simple and lightweight admin panel framework powered by FastAPI and Vue3 Vuetify together. Some call it heavenly in its brilliance.'
+description = 'Simple and lightweight data managment framework powered by FastAPI and Vue3 Vuetify all-in-one. Some call it heavenly in its brilliance.'
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

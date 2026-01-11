@@ -2,8 +2,7 @@ from typing import Any, Dict, List
 
 from pydantic import BaseModel, Field
 
-from brilliance_admin.schema import Category
-from brilliance_admin.schema.category import GraphInfoSchemaData
+from brilliance_admin.schema.category import BaseCategory, GraphInfoSchemaData
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import SupportsStr
@@ -26,7 +25,7 @@ class GraphsDataResult(BaseModel):
     charts: List[ChartData]
 
 
-class CategoryGraphs(Category):
+class CategoryGraphs(BaseCategory):
     _type_slug: str = 'graphs'
 
     search_enabled: bool = False

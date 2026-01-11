@@ -4,10 +4,13 @@ from typing import Any, ClassVar, Dict, List
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 from pydantic_core import core_schema
+from structlog import get_logger
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.translations import LanguageContext
-from brilliance_admin.utils import DataclassBase, SupportsStr, humanize_field_name
+from brilliance_admin.utils import DataclassBase, KwargsInitMixin, SupportsStr, humanize_field_name
+
+logger = get_logger()
 
 
 # pylint: disable=too-many-instance-attributes
@@ -106,37 +109,56 @@ class CategorySchemaData(DataclassBase):
     icon: str | None
     type: str
 
+    categories: dict = Field(default_factory=dict)
+
     table_info: TableInfoSchemaData | None = None
     graph_info: GraphInfoSchemaData | None = None
+
+    link: str | None = None
 
     def __repr__(self):
         return f'<CategorySchemaData type={self.type} "{self.title}">'
 
 
-class Category(abc.ABC):
-    slug: ClassVar[str]
-    title: ClassVar[SupportsStr | None] = None
-    description: ClassVar[SupportsStr | None] = None
+class BaseCategory(KwargsInitMixin, abc.ABC):
+    slug: str
+    title: SupportsStr | None = None
+    description: SupportsStr | None = None
 
     # https://pictogrammers.com/library/mdi/
-    icon: ClassVar[str | None] = None
+    icon: str | None = None
 
     _type_slug: ClassVar[str]
 
     def generate_schema(self, user: UserABC, language_context: LanguageContext) -> CategorySchemaData:
-        return CategorySchemaData(
+        type_slug = getattr(type(self), '_type_slug', None)
+        if not type_slug:
+            msg = f'{type(self).__name__}._type_slug must be set!'
+            raise AttributeError(msg)
+
+        result = CategorySchemaData(
             title=language_context.get_text(self.title) or humanize_field_name(self.slug),
             description=language_context.get_text(self.description),
             icon=self.icon,
-            type=self._type_slug,
+            type=type_slug,
         )
+        return result
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+
+        if cls is BaseCategory:
+            return
+
+        if not issubclass(cls, BaseCategory):
+            raise TypeError(f'{cls.__name__} must inherit from Category')
 
     @classmethod
     def __get_pydantic_core_schema__(cls, source_type: Any, handler: Any) -> core_schema.CoreSchema:
-        def validate(v: Any) -> "Category":
+        def validate(v: Any) -> "BaseCategory":
             if isinstance(v, cls):
                 return v
-            raise TypeError(f"Expected {cls.__name__} instance")
+            raise TypeError(f"Expected {cls.__name__} instance, recieved: {type(v)} {v}")
 
         return core_schema.no_info_plain_validator_function(
             validate,
@@ -146,3 +168,51 @@ class Category(abc.ABC):
                 return_schema=core_schema.str_schema(),
             ),
         )
+
+
+class CategoryLink(BaseCategory):
+    _type_slug: str = 'link'
+
+    link: str
+
+
+class CategoryGroup(BaseCategory):
+    _type_slug: str = 'group'
+
+    subcategories: list = Field(default_factory=list)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for category in self.subcategories:
+            if not isinstance(category, BaseCategory):
+                raise TypeError(f'Category "{category}" is not instance of BaseCategory subclass')
+
+    def generate_schema(self, user: UserABC, language_context: LanguageContext) -> CategorySchemaData:
+        result = super().generate_schema(user, language_context)
+
+        for category in self.subcategories:
+
+            if not category.slug:
+                msg = f'Category {type(category).__name__}.slug is empty'
+                raise AttributeError(msg)
+
+            if category.slug in result.categories:
+                exists = result.categories[category.slug]
+                msg = f'Category {type(category).__name__}.slug "{self.slug}" already registered by "{exists.title}"'
+                raise KeyError(msg)
+
+            try:
+                result.categories[category.slug] = category.generate_schema(user, language_context)
+            except Exception as e:
+                msg = f'Category "{category.slug}" {type(category)} generate_schema error: {e}'
+                raise Exception(msg) from e
+
+        return result
+
+    def get_category(self, category_slug: str):
+        for category in self.subcategories:
+            if category.slug == category_slug:
+                return category
+
+        return None

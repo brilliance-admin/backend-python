@@ -7,11 +7,12 @@ from urllib.parse import urljoin
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from pydantic import Field
 from pydantic.dataclasses import dataclass
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.docs import build_redoc_docs, build_scalar_docs
-from brilliance_admin.schema.group import Group, GroupSchemaData
+from brilliance_admin.schema.category import BaseCategory, CategorySchemaData
 from brilliance_admin.translations import LanguageContext, LanguageManager
 from brilliance_admin.utils import DataclassBase, SupportsStr
 
@@ -23,8 +24,8 @@ DEFAULT_LANGUAGES = {
 
 @dataclass
 class AdminSchemaData(DataclassBase):
-    groups: Dict[str, GroupSchemaData]
     profile: UserABC | Any
+    categories: Dict[str, CategorySchemaData] = Field(default_factory=dict)
 
     def __post_init__(self):
         if not isinstance(self.profile, UserABC):
@@ -50,7 +51,7 @@ class AdminIndexContextData(DataclassBase):
 
 @dataclass
 class AdminSchema:
-    groups: List[Group]
+    categories: List[BaseCategory]
     auth: Any
 
     title: SupportsStr | None = 'Admin'
@@ -68,9 +69,9 @@ class AdminSchema:
     language_manager: LanguageManager | None = None
 
     def __post_init__(self):
-        for group in self.groups:
-            if not issubclass(group.__class__, Group):
-                raise TypeError(f'Group "{group}" is not instance of Group subclass')
+        for category in self.categories:
+            if not issubclass(category.__class__, BaseCategory):
+                raise TypeError(f'Root category "{category}" is not instance of BaseCategory subclass')
 
         if not self.language_manager:
             self.language_manager = LanguageManager(DEFAULT_LANGUAGES)
@@ -81,24 +82,25 @@ class AdminSchema:
     def generate_schema(self, user: UserABC, language_slug: str | None) -> AdminSchemaData:
         language_context: LanguageContext = self.get_language_context(language_slug)
 
-        groups = {}
+        result = AdminSchemaData(profile=user)
 
-        for group in self.groups:
-            if not group.slug:
-                msg = f'Category group {type(group).__name__}.slug is empty'
+        for category in self.categories:
+            if not category.slug:
+                msg = f'Category {type(category).__name__}.slug is empty'
                 raise AttributeError(msg)
 
-            groups[group.slug] = group.generate_schema(user, language_context)
+            try:
+                result.categories[category.slug] = category.generate_schema(user, language_context).to_dict(keep_none=False)
+            except Exception as e:
+                msg = f'Root category "{category.slug}" generate_schema error: {e}'
+                raise Exception(msg) from e
 
-        return AdminSchemaData(
-            groups=groups,
-            profile=user,
-        )
+        return result
 
-    def get_group(self, group_slug: str) -> Optional[Group]:
-        for group in self.groups:
-            if group.slug == group_slug:
-                return group
+    def get_group(self, group_slug: str) -> Optional[BaseCategory]:
+        for category in self.categories:
+            if category.slug == group_slug:
+                return category
 
         return None
 

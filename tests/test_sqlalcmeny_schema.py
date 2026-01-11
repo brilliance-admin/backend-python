@@ -10,6 +10,8 @@ category_schema_data = {
     'graph_info': None,
     'icon': None,
     'description': None,
+    'link': None,
+    'categories': {},
     'table_info': {
         'actions': {
             'delete': {

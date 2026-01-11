@@ -8,7 +8,7 @@ from pydantic import Field
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError
-from brilliance_admin.schema import Category
+from brilliance_admin.schema.category import BaseCategory
 from brilliance_admin.schema.category import TableInfoSchemaData
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
@@ -17,7 +17,7 @@ from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import DeserializeAction, SupportsStr
 
 
-class CategoryTable(Category):
+class CategoryTable(BaseCategory):
     _type_slug: str = 'table'
 
     search_enabled: bool = False
@@ -32,6 +32,8 @@ class CategoryTable(Category):
     pk_name: str | None = None
 
     def __init__(self, *args, table_schema=None, table_filters=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
         if table_schema:
             self.table_schema = table_schema
 

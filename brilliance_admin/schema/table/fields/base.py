@@ -8,6 +8,7 @@ from pydantic.dataclasses import dataclass
 from brilliance_admin.exceptions import FieldError
 from brilliance_admin.schema.category import FieldSchemaData
 from brilliance_admin.translations import LanguageContext
+from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction, SupportsStr, humanize_field_name
 
 
@@ -80,7 +81,7 @@ class IntegerField(TableField):
     async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
         value = await super().deserialize(value, action, extra, *args, **kwargs)
         if value and not isinstance(value, int):
-            raise FieldError(f'bad int type: {type(value)}')
+            raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'init'})
 
         return value
 
@@ -116,7 +117,7 @@ class StringField(TableField):
     async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
         value = await super().deserialize(value, action, extra, *args, **kwargs)
         if value and not isinstance(value, str):
-            raise FieldError(f'bad string type: {type(value)}')
+            raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'string'})
 
         return value
 
@@ -151,7 +152,7 @@ class DateTimeField(TableField):
             return
 
         if value and not isinstance(value, (str, dict)):
-            raise FieldError(f'bad datetime type: {type(value)}')
+            raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'datetime'})
 
         if isinstance(value, str):
             return datetime.datetime.strptime(value, self.format)
@@ -166,12 +167,23 @@ class DateTimeField(TableField):
                 'to': datetime.datetime.strptime(value.get('to'), self.format),
             }
 
-        raise NotImplementedError(f'Value "{value}" is not supporetd for datetime')
+        raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'datetime'})
 
 
 @dataclass
 class JSONField(TableField):
     _type = 'json'
+
+    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize(value, action, extra, *args, **kwargs)
+
+        if value is None:
+            return
+
+        if not isinstance(value, (dict, list)):
+            raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'JSON'})
+
+        return value
 
 
 @dataclass
@@ -190,8 +202,11 @@ class ArrayField(TableField):
     async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
         value = await super().deserialize(value, action, extra, *args, **kwargs)
 
-        if value and not isinstance(value, list):
-            raise FieldError(f'bad array type: {type(value)}')
+        if value is None:
+            return
+
+        if not isinstance(value, list):
+            raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'Array'})
 
         return value
 

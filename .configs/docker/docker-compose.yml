@@ -1,8 +1,5 @@
 name: brilliance
 
-volumes:
-  db_data:
-
 services:
   backend:
     build:
@@ -12,24 +9,32 @@ services:
       - ./../../:/app
       - ~/.ssh/id_rsa:/root/.ssh/id_rsa:delegated
       - ~/.ssh/known_hosts:/root/.ssh/known_hosts:delegated
-    env_file:
-      - ./../../.env
+    environment:
+      POSTGRES_DB: brilliance
+      POSTGRES_USER: brilliance
+      POSTGRES_PASSWORD: brilliance
+      POSTGRES_HOST: postgres
     tmpfs:
       - /tmp
     ports:
       - 8082:8082
     command: uv run uvicorn example.main:app --host 0.0.0.0 --port 8082 --reload --proxy-headers --forwarded-allow-ips='*'
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://127.0.0.1:8082']
-      interval: 5s
-      timeout: 2s
-      retries: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   postgres:
     image: postgres:alpine
-    env_file:
-      - ./../../.env
-    volumes:
-      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: brilliance
+      POSTGRES_USER: brilliance
+      POSTGRES_PASSWORD: brilliance
+    tmpfs:
+      - /var/lib/postgresql/data
     ports:
       - 5432:5432
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-h', 'localhost', '-p', '5432', '-U', 'brilliance']
+      interval: 2s
+      timeout: 2s
+      retries: 10

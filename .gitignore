@@ -1,4 +1,5 @@
 # Python-generated files
+.env
 test.db
 __pycache__/
 *.py[oc]

@@ -3,16 +3,18 @@ delete_confirmation_text: "Are you sure you want to delete those records?\nThis 
 deleted_successfully: 'The entries were successfully deleted.'
 
 errors:
+  pk_not_found: 'The "%(pk_name)s" field was not found in the submitted data.'
+  record_not_found: 'No record found for %(pk_name)s=%(pk)s.'
   db_error_create: 'Error creating a record in the database.'
   db_error_update: 'Error updating the record in the database.'
   db_error_retrieve: 'Error retrieving the record from the database.'
   db_error_list: 'Failed to retrieve table data from the database.'
-  pk_not_found: 'The "%(pk_name)s" field was not found in the submitted data.'
-  record_not_found: 'No record found for %(pk_name)s=%(pk)s.'
   connection_refused_error: 'Database connection error: %(error)s'
   filters_exception: 'An unknown technical error occurred while filtering data.'
   method_not_allowed: 'Error, method not allowed. This action is not permitted.'
   filter_error: 'An error occurred during filtering: {error}'
+  serialize_field_error: 'Serialize error: %(error)s'
+  bad_type_error: 'Invalid data type: %(type)s but %(expected)s expected'
 
 search_help: 'Available search fields: %(fields)s'
 sqlalchemy_search_help: |

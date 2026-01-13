@@ -8,7 +8,8 @@ from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.schema import AdminSchema
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.category_table import CategoryTable
-from brilliance_admin.schema.table.table_models import CreateResult, ListData, RetrieveResult, TableListResult, UpdateResult
+from brilliance_admin.schema.table.table_models import (
+    CreateResult, ListData, RetrieveResult, TableListResult, UpdateResult)
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
 

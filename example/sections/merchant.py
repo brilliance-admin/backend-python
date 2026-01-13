@@ -26,6 +26,8 @@ class MerchantAdmin(sqlalchemy.SQLAlchemyAdmin):
             'id',
             'user_id',
             'title',
+            'provider_settings',
+            'tx_actions',
             'description',
             'created_at',
             'terminals',

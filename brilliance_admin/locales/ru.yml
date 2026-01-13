@@ -14,6 +14,7 @@ errors:
   method_not_allowed: 'Ошибка, данный метод недоступен.'
   filter_error: 'Проишла ошибка при фильтрации: %(error)s'
   serialize_field_error: 'Ошибка чтения данных: %(error)s'
+  bad_type_error: 'Некорректный тип данных: %(type)s; ожидается %(expected)s'
 
 search_help: 'Доступные поля для поиска: %(fields)s'
 sqlalchemy_search_help: |

@@ -6,7 +6,7 @@ from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.schema.category import FieldSchemaData
 from brilliance_admin.schema.table.fields.base import TableField
-from brilliance_admin.schema.table.table_models import Record
+from brilliance_admin.schema.table.table_models import AutocompleteData, Record
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction
@@ -96,10 +96,9 @@ class SQLAlchemyRelatedField(TableField):
         msg = f'Cannot resolve target model for FK "{field_slug}"'
         raise AttributeError(msg)
 
-    async def autocomplete(self, model, data, user, *, extra: dict | None = None) -> List[Record]:
+    async def autocomplete(self, model, data: AutocompleteData, user, *, extra: dict | None = None) -> List[Record]:
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import select
-        from sqlalchemy.sql import expression
 
         if extra is None or extra.get('db_async_session') is None:
             msg = f'SQLAlchemyRelatedField.autocomplete {type(self).__name__} requires extra["db_async_session"] (AsyncSession)'
@@ -113,23 +112,37 @@ class SQLAlchemyRelatedField(TableField):
         limit = min(150, data.limit)
         stmt = select(target_model).limit(limit)
 
+        pk = get_pk(target_model)
+        python_pk_type = pk.property.columns[0].type.python_type
+
         if data.search_string:
-            if hasattr(target_model, 'id'):
-                stmt = stmt.where(getattr(target_model, 'id') == data.search_string)
+            try:
+                value = python_pk_type(data.search_string)
+            except (ValueError, TypeError):
+                # Search string cannot be cast to primary key type, skip id filter
+                value = None
+
+            stmt = stmt.where(pk == value)
 
         # Add already selected choices
-        existed_choices = []
         if data.existed_choices:
             existed_choices = [i['key'] for i in data.existed_choices if 'key' in i]
 
-        if existed_choices and hasattr(target_model, 'id'):
-            stmt = stmt.where(getattr(target_model, 'id').in_(existed_choices) | expression.true())
+            values = []
+            for value in existed_choices:
+                try:
+                    values.append(python_pk_type(value))
+                except (ValueError, TypeError) as e:
+                    msg = f'Invalid existed_choices value "{value}" for pk {pk} python_pk_type:{python_pk_type.__name__}'
+                    raise AdminAPIException(APIError(message=msg), status_code=500) from e
+
+            stmt = stmt.where(pk.in_(values))
 
         async with db_async_session() as session:
             records = (await session.execute(stmt)).scalars().all()
 
         for record in records:
-            results.append(Record(key=getattr(record, 'id'), title=str(record)))
+            results.append(Record(key=getattr(record, pk.key), title=str(record)))
 
         return results
 

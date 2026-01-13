@@ -2,9 +2,12 @@ import random
 import uuid
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 import factory
-from sqlalchemy import BigInteger, Boolean, DateTime, ForeignKey, Integer, SmallInteger, String, func
+from sqlalchemy import JSON, BigInteger, Boolean, DateTime, ForeignKey, Integer, SmallInteger, String, func
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.sql import expression
 
@@ -92,6 +95,21 @@ class Merchant(BaseIDModel):
 
     user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    provider_settings: Mapped[dict[str, Any]] = mapped_column(
+        MutableDict.as_mutable(
+            JSONB().with_variant(JSON(), 'sqlite')
+        ),
+        nullable=True,
+    )
+
+    tx_actions: Mapped[list[str]] = mapped_column(
+        MutableList.as_mutable(
+            ARRAY(String(50)).with_variant(JSON(), 'sqlite')
+        ),
+        nullable=True,
+    )
+
     description: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)  # pylint: disable=not-callable
     terminals: Mapped[list["Terminal"]] = relationship(back_populates="merchant")

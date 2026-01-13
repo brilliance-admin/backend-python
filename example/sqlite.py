@@ -2,15 +2,21 @@ from contextlib import asynccontextmanager
 
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from example.config import settings
+
 
 ASYNC_ENGINE = create_async_engine(
-    "sqlite+aiosqlite:///:memory:",
+    settings.get_connection_string(),
     future=True,
+    echo=False,
 )
 
 
 @event.listens_for(ASYNC_ENGINE.sync_engine, "connect")
 def _enable_fk_async(dbapi_connection, _):
+    if ASYNC_ENGINE.sync_engine.dialect.name != 'sqlite':
+        return
+
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()

@@ -122,6 +122,7 @@ class SQLAlchemyJWTAdminAuthentication(AdminAuthentication):
         try:
             async with self.db_async_session() as session:
                 result = await session.execute(stmt)
+                user = result.scalar_one_or_none()
 
         except ConnectionRefusedError as e:
             logger.exception(
@@ -132,8 +133,6 @@ class SQLAlchemyJWTAdminAuthentication(AdminAuthentication):
                 APIError(message=msg, code='connection_refused_error'),
                 status_code=500,
             ) from e
-
-        user = result.scalar_one_or_none()
 
         if not user:
             raise AdminAPIException(

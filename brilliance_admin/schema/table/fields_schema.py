@@ -159,7 +159,13 @@ class FieldsSchema:
         result = {}
         for field_slug, field in self.get_fields().items():
             value = data.get(field_slug)
-            result[field_slug] = await field.serialize(value, extra)
+
+            try:
+                result[field_slug] = await field.serialize(value, extra)
+            except FieldError as e:
+                e.field_slug = field_slug
+                raise e
+
         return result
 
     async def deserialize(self, data: dict, action: DeserializeAction, extra) -> dict:

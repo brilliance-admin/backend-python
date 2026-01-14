@@ -15,8 +15,11 @@ errors:
   filters_exception: 'An unknown technical error occurred while filtering data.'
   method_not_allowed: 'Error, method not allowed. This action is not permitted.'
   filter_error: 'An error occurred during filtering: {error}'
-  serialize_field_error: 'Serialize error: %(error)s'
   bad_type_error: 'Invalid data type: %(type)s but %(expected)s expected'
+
+serialize_error:
+  field_error: 'Field %(field_slug)s serialize error: %(error)s'
+  unexpected_error: 'Unexpected serialize error: %(error)s'
 
 search_help: 'Available search fields: %(fields)s'
 sqlalchemy_search_help: |

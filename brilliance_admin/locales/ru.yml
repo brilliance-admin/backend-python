@@ -15,8 +15,11 @@ errors:
   filters_exception: 'Произошла неизвестная техническая ошибка при фильтрации данных.'
   method_not_allowed: 'Ошибка, данный метод недоступен.'
   filter_error: 'Проишла ошибка при фильтрации: %(error)s'
-  serialize_field_error: 'Ошибка чтения данных: %(error)s'
   bad_type_error: 'Некорректный тип данных: %(type)s; ожидается %(expected)s'
+
+serialize_error:
+  field_error: 'ошибка чтения поля %(field_slug)s: %(error)s'
+  unexpected_error: 'Ошибка обработки данных: %(error)s'
 
 search_help: 'Доступные поля для поиска: %(fields)s'
 sqlalchemy_search_help: |

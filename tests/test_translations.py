@@ -24,6 +24,7 @@ async def test_translate_exception(mocker, language_context):
             'field_errors': {
                 'test': {
                     'code': None,
+                    'field_slug': None,
                     'message': 'Пример ошибки валидации поля.',
                 },
             },

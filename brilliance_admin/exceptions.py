@@ -10,6 +10,7 @@ from brilliance_admin.utils import DataclassBase, SupportsStr
 class FieldError(DataclassBase, Exception):
     message: SupportsStr = None
     code: str | None = None
+    field_slug: str | None = None
 
     def __post_init__(self):
         if not self.message and not self.code:

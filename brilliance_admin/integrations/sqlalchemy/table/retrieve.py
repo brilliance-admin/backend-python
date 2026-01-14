@@ -36,18 +36,6 @@ class SQLAlchemyAdminRetrieveMixin:
         try:
             async with self.db_async_session() as session:
                 record = (await session.execute(stmt)).scalars().first()
-                data = await self.table_schema.serialize(
-                    record,
-                    extra={"record": record, "user": user},
-                )
-
-        except FieldError as e:
-            logger.exception(
-                'SQLAlchemy %s retrieve %s #%s field error: %s',
-                type(self).__name__, self.model.__name__, pk, e,
-            )
-            msg = _('errors.serialize_field_error') % {'error': e.message}
-            raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=500) from e
 
         except Exception as e:
             logger.exception(
@@ -65,6 +53,27 @@ class SQLAlchemyAdminRetrieveMixin:
                 APIError(message=msg, code='record_not_found'),
                 status_code=400,
             )
+
+        try:
+            data = await self.table_schema.serialize(
+                record,
+                extra={"record": record, "user": user},
+            )
+        except FieldError as e:
+            logger.exception(
+                'SQLAlchemy %s retrieve %s #%s serialize field error: %s',
+                type(self).__name__, self.model.__name__, pk, e,
+            )
+            msg = _('serialize_error.field_error') % {'error': e.message, 'field_slug': e.field_slug}
+            raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=500) from e
+
+        except Exception as e:
+            logger.exception(
+                'SQLAlchemy %s list %s #%s serialize error: %s',
+                type(self).__name__, self.model.__name__, pk, e,
+            )
+            msg = _('serialize_error.unexpected_error') % {'error': str(e)}
+            raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=500) from e
 
         logger.debug(
             '%s model %s #%s retrieved by %s',

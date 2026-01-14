@@ -30,12 +30,12 @@ class SQLAlchemyAdminListMixin:
 
         if list_data.ordering and ordering not in self.ordering_fields:
             msg = f'Ordering "{ordering}" is not allowed; available options: {self.ordering_fields} default_ordering: {self.default_ordering}'
-            raise FieldError(message=msg)
+            raise FieldError(message=msg, field_slug='ordering')
 
         column = getattr(self.model, ordering, None)
         if not isinstance(column, InstrumentedAttribute):
             msg = f'{type(self).__name__} ordering field "{ordering}" not found in model {self.model}'
-            raise FieldError(message=msg)
+            raise FieldError(message=msg, field_slug='ordering')
 
         return stmt.order_by(direction(column))
 
@@ -122,18 +122,10 @@ class SQLAlchemyAdminListMixin:
             )
             raise AdminAPIException(APIError(message=_('errors.filters_exception'), code='filters_exception'), status_code=500) from e
 
-        data = []
-
         try:
             async with self.db_async_session() as session:
                 total_count = await session.scalar(count_stmt)
                 records = (await session.execute(stmt)).scalars().all()
-                for record in records:
-                    line = await self.table_schema.serialize(
-                        record,
-                        extra={"record": record, "user": user},
-                    )
-                    data.append(line)
 
         except ConnectionRefusedError as e:
             logger.exception(
@@ -175,5 +167,30 @@ class SQLAlchemyAdminListMixin:
             raise AdminAPIException(
                 APIError(message=msg, code='db_error_list'), status_code=500,
             ) from e
+
+        try:
+            data = []
+            for record in records:
+                line = await self.table_schema.serialize(
+                    record,
+                    extra={"record": record, "user": user},
+                )
+                data.append(line)
+
+        except FieldError as e:
+            logger.exception(
+                'SQLAlchemy %s list %s serialize field error: %s',
+                type(self).__name__, self.model.__name__, e,
+            )
+            msg = _('serialize_error.field_error') % {'error': e.message, 'field_slug': e.field_slug}
+            raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=500) from e
+
+        except Exception as e:
+            logger.exception(
+                'SQLAlchemy %s list %s serialize error: %s',
+                type(self).__name__, self.model.__name__, e,
+            )
+            msg = _('serialize_error.unexpected_error') % {'error': str(e)}
+            raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=500) from e
 
         return schema.TableListResult(data=data, total_count=int(total_count or 0))

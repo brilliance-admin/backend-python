@@ -153,3 +153,8 @@ app.mount('/admin', admin_app)
 @app.get('/')
 async def root():
     return RedirectResponse(url='/admin/')
+
+
+@app.get('/health')
+def health():
+    return {'status': 'ok'}

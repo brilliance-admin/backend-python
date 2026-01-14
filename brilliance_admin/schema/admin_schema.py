@@ -68,6 +68,8 @@ class AdminSchema:
 
     language_manager: LanguageManager | None = None
 
+    debug: bool = False
+
     def __post_init__(self):
         for category in self.categories:
             if not issubclass(category.__class__, BaseCategory):
@@ -122,8 +124,6 @@ class AdminSchema:
             languages=languages,
         )
 
-    # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-positional-arguments
     def generate_app(
             self,
             debug=False,
@@ -133,6 +133,8 @@ class AdminSchema:
             include_docs=False,
             include_redoc=False,
     ) -> FastAPI:
+        self.debug = debug
+
         # pylint: disable=unused-variable
         language_context = self.get_language_context(language_slug=None)
 

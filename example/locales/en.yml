@@ -48,8 +48,8 @@ terminals: 'Terminals'
 currencies: 'Currencies'
 whitelist_ips: 'Whitelist IPs'
 users: 'Users'
-field_not_found_in_schema: 'The field "{field_slug}" was not found among the available fields: {available}'
-related_not_found: 'Error updating related field {field_slug}: {model} record with pk={pk} was not found. The record may no longer be available.'
+field_not_found_in_schema: 'The field "%(field_slug)s" was not found among the available fields: %(available)s'
+related_not_found: 'Error updating related field %(field_slug)s: %(model)s record with pk=%(pk)s was not found. The record may no longer be available.'
 
 statuses:
   process: 'Process'

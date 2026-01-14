@@ -1,6 +1,7 @@
 from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.integrations.sqlalchemy.fields_schema import SQLAlchemyFieldsSchema
+from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
@@ -88,6 +89,7 @@ class SQLAlchemyAdminListMixin:
         list_data: schema.ListData,
         user: auth.UserABC,
         language_context: LanguageContext,
+        admin_schema: AdminSchema,
     ) -> schema.TableListResult:
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import exc, func, select
@@ -120,7 +122,10 @@ class SQLAlchemyAdminListMixin:
                     'list_data': list_data,
                 }
             )
-            raise AdminAPIException(APIError(message=_('errors.filters_exception'), code='filters_exception'), status_code=500) from e
+            msg = _('errors.filters_exception') % {
+                'error': str(e) if admin_schema.debug else type(e).__name__,
+            }
+            raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=500) from e
 
         try:
             async with self.db_async_session() as session:
@@ -163,7 +168,9 @@ class SQLAlchemyAdminListMixin:
                     'list_data': list_data,
                 }
             )
-            msg = _('errors.db_error_list') % {'error_type': type(e).__name__}
+            msg = _('errors.db_error_list') % {
+                'error_type': str(e) if admin_schema.debug else type(e).__name__,
+            }
             raise AdminAPIException(
                 APIError(message=msg, code='db_error_list'), status_code=500,
             ) from e
@@ -182,15 +189,20 @@ class SQLAlchemyAdminListMixin:
                 'SQLAlchemy %s list %s serialize field error: %s',
                 type(self).__name__, self.model.__name__, e,
             )
-            msg = _('serialize_error.field_error') % {'error': e.message, 'field_slug': e.field_slug}
-            raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=500) from e
+            msg = _('serialize_error.field_error') % {
+                'error': e.message,
+                'field_slug': e.field_slug,
+            }
+            raise AdminAPIException(APIError(message=msg, code='field_error'), status_code=500) from e
 
         except Exception as e:
             logger.exception(
                 'SQLAlchemy %s list %s serialize error: %s',
                 type(self).__name__, self.model.__name__, e,
             )
-            msg = _('serialize_error.unexpected_error') % {'error': str(e)}
-            raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=500) from e
+            msg = _('serialize_error.unexpected_error') % {
+                'error': str(e) if admin_schema.debug else type(e).__name__,
+            }
+            raise AdminAPIException(APIError(message=msg, code='unexpected_error'), status_code=500) from e
 
         return schema.TableListResult(data=data, total_count=int(total_count or 0))

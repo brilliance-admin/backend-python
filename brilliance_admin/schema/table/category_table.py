@@ -8,8 +8,8 @@ from pydantic import Field
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError
-from brilliance_admin.schema.category import BaseCategory
-from brilliance_admin.schema.category import TableInfoSchemaData
+from brilliance_admin.schema.admin_schema import AdminSchema
+from brilliance_admin.schema.category import BaseCategory, TableInfoSchemaData
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult, ListData, TableListResult
@@ -130,6 +130,7 @@ class CategoryTable(BaseCategory):
             action_data: ActionData,
             language_context: LanguageContext,
             user: UserABC,
+            admin_schema: AdminSchema,
     ) -> ActionResult:
         action_fn = self._get_action_fn(action)
         if action_fn is None:
@@ -156,7 +157,7 @@ class CategoryTable(BaseCategory):
 
         return result
 
-    async def autocomplete(self, data: AutocompleteData, user: UserABC) -> AutocompleteResult:
+    async def autocomplete(self, data: AutocompleteData, user: UserABC, schema: AdminSchema) -> AutocompleteResult:
         """
         Retrieves list of found options to select.
         """
@@ -164,14 +165,16 @@ class CategoryTable(BaseCategory):
 
     # pylint: disable=too-many-arguments
     @abc.abstractmethod
-    async def get_list(self, list_data: ListData, user: UserABC, language_context: LanguageContext) -> TableListResult:
+    async def get_list(
+            self, list_data: ListData, user: UserABC, language_context: LanguageContext, admin_schema: AdminSchema
+    ) -> TableListResult:
         raise NotImplementedError()
 
-#     async def retrieve(self, pk: Any, user: UserABC) -> RetrieveResult:
+#     async def retrieve(self, pk: Any, user: UserABC, language_context: LanguageContext, admin_schema: AdminSchema) -> RetrieveResult:
 #        raise NotImplementedError()
 
-#    async def create(self, data: dict, user: UserABC) -> CreateResult:
+#    async def create(self, data: dict, user: UserABC, language_context: LanguageContext, admin_schema: AdminSchema) -> CreateResult:
 #        raise NotImplementedError()
 
-#    async def update(self, pk: Any, data: dict, user: UserABC) -> UpdateResult:
+#    async def update(self, pk: Any, data: dict, user: UserABC, language_context: LanguageContext, admin_schema: AdminSchema) -> UpdateResult:
 #        raise NotImplementedError()

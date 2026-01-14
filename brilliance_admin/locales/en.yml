@@ -12,7 +12,7 @@ errors:
   db_error_list: 'Failed to retrieve table data from the database: %(error_type)s'
 
   connection_refused_error: 'Database connection error: %(error)s'
-  filters_exception: 'An unknown technical error occurred while filtering data.'
+  filters_exception: 'An unknown technical error occurred while filtering data: %(error_type)s'
   method_not_allowed: 'Error, method not allowed. This action is not permitted.'
   filter_error: 'An error occurred during filtering: {error}'
   bad_type_error: 'Invalid data type: %(type)s but %(expected)s expected'

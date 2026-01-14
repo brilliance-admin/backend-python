@@ -12,7 +12,7 @@ class SQLAlchemyDeleteAction:
         base_color='red-lighten-2',
         variant='outlined',
     )
-    async def delete(self, action_data: ActionData):
+    async def delete(self, *args, action_data: ActionData, **kwargs):
         if not self.has_delete:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
         return ActionResult(message=ActionMessage(_('deleted_successfully')))

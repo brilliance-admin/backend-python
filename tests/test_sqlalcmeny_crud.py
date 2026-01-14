@@ -5,9 +5,11 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from brilliance_admin import auth, schema, sqlalchemy
+from brilliance_admin.exceptions import AdminAPIException
+from brilliance_admin.schema import admin_schema
 from brilliance_admin.translations import TranslateText
 from example.sections.models import (
-    Currency, CurrencyFactory, MerchantFactory, Terminal, TerminalFactory, TerminalStatuses)
+    Currency, CurrencyFactory, Merchant, MerchantFactory, Terminal, TerminalFactory, TerminalStatuses)
 from tests.test_sqlalcmeny_schema import FIELDS
 
 
@@ -42,9 +44,35 @@ async def test_create(sqlite_sessionmaker, language_context):
         data=create_data,
         user=user,
         language_context=language_context,
+        admin_schema=admin_schema,
     )
 
     assert create_result.pk == 1
+
+
+@pytest.mark.asyncio
+async def test_create_bad_fk(sqlite_sessionmaker, language_context):
+    category = get_category(sqlite_sessionmaker)
+    user = auth.UserABC(username="test")
+    merchant = await MerchantFactory()
+    currency = await CurrencyFactory()
+
+    create_data = {
+        'manager_id': 1,
+        'merchant_id': 100,
+        'currency_id': currency.id,
+        'status': 'test',
+        'description': 'test',
+        'title': 'test',
+    }
+    with pytest.raises(AdminAPIException) as e:
+        schema.CreateResult = await category.create(
+            data=create_data,
+            user=user,
+            language_context=language_context,
+            admin_schema=admin_schema,
+        )
+    assert e.value.get_error().message == 'NOT NULL constraint failed: terminal.merchant_id'
 
 
 @pytest.mark.asyncio
@@ -67,6 +95,7 @@ async def test_retrieve(sqlite_sessionmaker, language_context):
         pk=terminal.id,
         user=user,
         language_context=language_context,
+        admin_schema=admin_schema,
     )
     expected_data = {
         'manager_id': mock.ANY,
@@ -127,6 +156,7 @@ async def test_retrieve_currency(sqlite_sessionmaker, language_context):
         pk=currency.id,
         user=user,
         language_context=language_context,
+        admin_schema=admin_schema,
     )
     expected_data = {
         'id': currency.id,
@@ -136,6 +166,46 @@ async def test_retrieve_currency(sqlite_sessionmaker, language_context):
         ],
     }
     assert retrieve_result.data == expected_data, retrieve_result.data
+
+
+@pytest.mark.asyncio
+async def test_create_bad_json(sqlite_sessionmaker, language_context):
+    category = sqlalchemy.SQLAlchemyAdmin(
+        model=Merchant,
+        db_async_session=sqlite_sessionmaker,
+        table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
+            model=Merchant,
+            fields=[
+                'title',
+                'provider_settings',
+            ],
+        ),
+    )
+    user = auth.UserABC(username="test")
+    create_data = {
+        'title': 'test',
+        'provider_settings': 'not json',
+    }
+    with pytest.raises(AdminAPIException) as e:
+        await category.create(
+            data=create_data,
+            user=user,
+            language_context=language_context,
+            admin_schema=admin_schema,
+        )
+    context = {'language_context': language_context}
+    errors = {
+        'code': 'validation_error',
+        'field_errors': {
+            'provider_settings': {
+                'code': None,
+                'field_slug': None,
+                'message': "Некорректный тип данных: <class 'str'>; ожидается JSON",
+            },
+        },
+        'message': 'Validation error',
+    }
+    assert e.value.get_error().model_dump(context=context) == errors
 
 
 @pytest.mark.asyncio
@@ -160,6 +230,7 @@ async def test_list(sqlite_sessionmaker, language_context):
         ),
         user=user,
         language_context=language_context,
+        admin_schema=admin_schema,
     )
     data = [
         {
@@ -212,6 +283,7 @@ async def test_update_related_one(sqlite_sessionmaker, language_context):
         data=update_data,
         user=user,
         language_context=language_context,
+        admin_schema=admin_schema,
     )
     assert update_result == schema.UpdateResult(pk=terminal.id)
 
@@ -253,6 +325,7 @@ async def test_update_related_many(sqlite_sessionmaker, language_context):
         data=update_data,
         user=user,
         language_context=language_context,
+        admin_schema=admin_schema,
     )
     assert update_result == schema.UpdateResult(pk=currency_rub.id)
 
@@ -285,5 +358,6 @@ async def test_autocomplete(sqlite_sessionmaker, language_context):
         ),
         user=user,
         language_context=language_context,
+        admin_schema=admin_schema,
     )
     assert autocomplete_result == schema.AutocompleteResult()

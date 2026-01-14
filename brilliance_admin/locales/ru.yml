@@ -12,7 +12,7 @@ errors:
   db_error_list: 'Ошибка получения данных таблицы из базы данных: %(error_type)s'
 
   connection_refused_error: 'Ошибка подключения к базе данных: %(error)s'
-  filters_exception: 'Произошла неизвестная техническая ошибка при фильтрации данных.'
+  filters_exception: 'Произошла неизвестная техническая ошибка при фильтрации данных: %(error_type)s'
   method_not_allowed: 'Ошибка, данный метод недоступен.'
   filter_error: 'Проишла ошибка при фильтрации: %(error)s'
   bad_type_error: 'Некорректный тип данных: %(type)s; ожидается %(expected)s'

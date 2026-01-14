@@ -54,8 +54,9 @@ class SQLAlchemyAdminRetrieveMixin:
                 'SQLAlchemy %s retrieve %s #%s db error: %s',
                 type(self).__name__, self.model.__name__, pk, e,
             )
+            msg = _('errors.db_error_retrieve') % {'error_type': type(e).__name__}
             raise AdminAPIException(
-                APIError(message=_('errors.db_error_retrieve'), code='db_error_retrieve'), status_code=500,
+                APIError(message=msg, code='db_error_retrieve'), status_code=500,
             ) from e
 
         if record is None:

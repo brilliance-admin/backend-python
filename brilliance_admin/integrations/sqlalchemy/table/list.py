@@ -171,8 +171,9 @@ class SQLAlchemyAdminListMixin:
                     'list_data': list_data,
                 }
             )
+            msg = _('errors.db_error_list') % {'error_type': type(e).__name__}
             raise AdminAPIException(
-                APIError(message=_('errors.db_error_list'), code='db_error_list'), status_code=500,
+                APIError(message=msg, code='db_error_list'), status_code=500,
             ) from e
 
         return schema.TableListResult(data=data, total_count=int(total_count or 0))

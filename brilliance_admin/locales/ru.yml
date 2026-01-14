@@ -5,10 +5,12 @@ deleted_successfully: 'Записи успешно удалены.'
 errors:
   pk_not_found: 'Поле "%(pk_name)s" не найдено среди переданных данных.'
   record_not_found: 'Запись по ключу %(pk_name)s=%(pk)s не найдена.'
-  db_error_create: 'Ошибка создания записи в базе данных.'
-  db_error_update: 'Ошибка обновления записи в базе данных.'
-  db_error_retrieve: 'Ошибка получения записи из базы данных.'
-  db_error_list: 'Ошибка получения данных таблицы из базы данных.'
+
+  db_error_create: 'Ошибка создания записи в базе данных: %(error_type)s'
+  db_error_update: 'Ошибка обновления записи в базе данных: %(error_type)s'
+  db_error_retrieve: 'Ошибка получения записи из базы данных: %(error_type)s'
+  db_error_list: 'Ошибка получения данных таблицы из базы данных: %(error_type)s'
+
   connection_refused_error: 'Ошибка подключения к базе данных: %(error)s'
   filters_exception: 'Произошла неизвестная техническая ошибка при фильтрации данных.'
   method_not_allowed: 'Ошибка, данный метод недоступен.'

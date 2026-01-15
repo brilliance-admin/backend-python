@@ -6,7 +6,7 @@
 [![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin/)
 [![CI](https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg)](https://github.com/brilliance-admin/backend-python/actions)
 
-Simple and lightweight data managment framework powered by `FastAPI` and `Vue3` `Vuetify` all-in-one. \
+Simple and lightweight data management framework powered by `FastAPI` and `Vue3` `Vuetify` all-in-one. \
 Integrated with `SQLAlchemy`. Inspaired by Django Admin and DRF.\
 _Some call it heavenly in its brilliance._
 
@@ -25,6 +25,13 @@ A quick way to create a data management interface using:
 This endpoint can be added to any ASGI compatable backend. For existing project or standalone admin app.
 - API to fetch the UI JSON schema
 - API methods for that UI to work with (to read and modify data)
+
+<details>
+<summary><h2>Screenshots</h2></summary>
+<div align="center"><img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/login.png?raw=true"/></div>
+<div align="center"><img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/table.png?raw=true"/></div>
+<div align="center"><img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/charts.png?raw=true"/></div>
+</details>
 
 ## Key ideas
 

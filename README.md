@@ -26,7 +26,7 @@ This endpoint can be added to any ASGI compatable backend. For existing project 
 - API to fetch the UI JSON schema
 - API methods for that UI to work with (to read and modify data)
 
-<details>
+<details open>
 <summary><h2>Screenshots</h2></summary>
 <div align="center"><img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/login.png?raw=true"/></div>
 <div align="center"><img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/table.png?raw=true"/></div>

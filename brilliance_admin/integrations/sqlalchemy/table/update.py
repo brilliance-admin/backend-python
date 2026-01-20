@@ -85,7 +85,9 @@ class SQLAlchemyAdminUpdate:
                 type(self).__name__, self.table_schema.model.__name__, pk, e,
                 extra={'data': data}
             )
-            msg = _('errors.db_error_update') % {'error_type': type(e).__name__}
+            msg = _('errors.db_error_update') % {
+                'error_type': str(e) if admin_schema.debug else type(e).__name__,
+            }
             raise AdminAPIException(
                 APIError(message=msg, code='db_error_update'), status_code=500,
             ) from e

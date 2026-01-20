@@ -23,7 +23,7 @@ class SQLAlchemyAdminRetrieveMixin:
             language_context: LanguageContext,
             admin_schema: AdminSchema,
     ) -> schema.RetrieveResult:
-        if not self.has_delete:
+        if not self.has_retrieve:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
         # pylint: disable=import-outside-toplevel

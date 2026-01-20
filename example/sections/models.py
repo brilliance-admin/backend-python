@@ -42,7 +42,9 @@ class User(BaseIDModel):
 
     last_login: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)  # pylint: disable=not-callable
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )  # pylint: disable=not-callable
 
     # group_associations = relationship("UserGroup", back_populates="user")
 
@@ -97,21 +99,19 @@ class Merchant(BaseIDModel):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
 
     provider_settings: Mapped[dict[str, Any]] = mapped_column(
-        MutableDict.as_mutable(
-            JSONB().with_variant(JSON(), 'sqlite')
-        ),
+        MutableDict.as_mutable(JSONB().with_variant(JSON(), 'sqlite')),
         nullable=True,
     )
 
     tx_actions: Mapped[list[str]] = mapped_column(
-        MutableList.as_mutable(
-            ARRAY(String(50)).with_variant(JSON(), 'sqlite')
-        ),
+        MutableList.as_mutable(ARRAY(String(50)).with_variant(JSON(), 'sqlite')),
         nullable=True,
     )
 
     description: Mapped[str] = mapped_column(String(255), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)  # pylint: disable=not-callable
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )  # pylint: disable=not-callable
     terminals: Mapped[list["Terminal"]] = relationship(back_populates="merchant")
 
     def __repr__(self):
@@ -234,6 +234,12 @@ class Terminal(BaseIDModel):
 
     registered_delay: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
+    # errors: Mapped[dict[str, Any]] = mapped_column(JSONB().with_variant(JSON(), 'sqlite'), nullable=True)
+    errors: Mapped[list[Any]] = mapped_column(
+        MutableList.as_mutable(ARRAY(JSONB).with_variant(JSON(), 'sqlite')),
+        nullable=True,
+    )
+
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )  # DateTime used once
@@ -271,6 +277,8 @@ class TerminalFactory(SQLAlchemyFactoryBase):
 
     imitation_api = factory.Faker("random_element", elements=[None, "sandbox", "mock"])
     test_mode = factory.Faker("boolean")
+
+    errors = [{"code": "exception", "message": "Insufficient funds", "provider_code": "insufficient-funds"}]
 
     registered_delay = factory.Faker(
         "random_element",

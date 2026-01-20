@@ -36,9 +36,10 @@ async def test_create(sqlite_sessionmaker, language_context):
         'manager_id': 0,
         'merchant_id': merchant.id,
         'currency_id': currency.id,
-        'status': 'test',
+        'status': {'value': 'error', 'title': 'Error'},
         'description': 'test',
         'title': 'test',
+        'created_at': '2026-01-20T20:33:40.055184Z',
     }
     create_result: schema.CreateResult = await category.create(
         data=create_data,
@@ -61,7 +62,7 @@ async def test_create_bad_fk(sqlite_sessionmaker, language_context):
         'manager_id': 1,
         'merchant_id': 100,
         'currency_id': currency.id,
-        'status': 'test',
+        'status': {'value': 'error', 'title': 'Error'},
         'description': 'test',
         'title': 'test',
     }
@@ -72,7 +73,7 @@ async def test_create_bad_fk(sqlite_sessionmaker, language_context):
             language_context=language_context,
             admin_schema=admin_schema,
         )
-    assert e.value.get_error().message == 'NOT NULL constraint failed: terminal.merchant_id'
+    assert e.value.get_error().model_dump() == {'code': 'db_integrity_error', 'field_errors': None, 'message': 'NOT NULL constraint failed: terminal.merchant_id'}
 
 
 @pytest.mark.asyncio

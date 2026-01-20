@@ -127,6 +127,18 @@ class BooleanField(TableField):
     _type = 'boolean'
 
 
+def _parse_iso(value: str) -> datetime.datetime:
+    if value.endswith('Z'):
+        value = value.replace('Z', '+00:00')
+
+    dt = datetime.datetime.fromisoformat(value)
+
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=datetime.timezone.utc)
+
+    return dt
+
+
 @dataclass
 class DateTimeField(TableField):
     _type = 'datetime'
@@ -155,16 +167,17 @@ class DateTimeField(TableField):
             raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'datetime'})
 
         if isinstance(value, str):
-            return datetime.datetime.strptime(value, self.format)
+            return _parse_iso(value)
 
         if isinstance(value, dict):
             if not value.get('from') or not value.get('to'):
-                msg = f'{type(self).__name__} value must be dict with from,to values: {value}'
-                raise FieldError(msg)
+                raise FieldError(
+                    f'{type(self).__name__} value must be dict with from,to values: {value}'
+                )
 
             return {
-                'from': datetime.datetime.strptime(value.get('from'), self.format),
-                'to': datetime.datetime.strptime(value.get('to'), self.format),
+                'from': _parse_iso(value['from']),
+                'to': _parse_iso(value['to']),
             }
 
         raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'datetime'})
@@ -291,3 +304,29 @@ class ChoiceField(TableField):
             'value': value,
             'title': choice.get('title') or value if choice else value.capitalize(),
         }
+
+    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize(value, action, extra, *args, **kwargs)
+
+        if value is None:
+            return
+
+        if isinstance(value, dict):
+            if 'value' not in value:
+                raise FieldError(
+                    f'{type(self).__name__} dict value must contain "value": {value}'
+                )
+            value = value['value']
+
+        if not isinstance(value, str):
+            raise FieldError(
+                f'{type(self).__name__} value must be str, got {type(value)}'
+            )
+
+        choice = self.find_choice(value)
+        if not choice:
+            raise FieldError(
+                f'Invalid choice value "{value}", allowed: {[c["value"] for c in self.choices or []]}'
+            )
+
+        return value

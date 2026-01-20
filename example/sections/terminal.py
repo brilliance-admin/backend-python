@@ -1,9 +1,13 @@
 from brilliance_admin import sqlalchemy
 from brilliance_admin.translations import TranslateText as _
-from example.sections.models import Terminal, User
+from example.sections.models import Terminal
 
 
 class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
+    has_create = False
+    has_update = False
+    has_delete = False
+
     model = Terminal
     title = _('terminals')
     icon = 'mdi-console-network-outline'
@@ -31,6 +35,7 @@ class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
             'test_mode',
             'is_active',
         ],
+        readonly_fields=['errors'],
     )
     table_filters = sqlalchemy.SQLAlchemyFieldsSchema(
         model=Terminal,

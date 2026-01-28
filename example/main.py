@@ -140,7 +140,6 @@ admin_schema = schema.AdminSchema(
     ],
 )
 
-
 app = FastAPI(debug=True, lifespan=lifespan)
 app.mount('/static', StaticFiles(directory='example/static'), name='static')
 

@@ -63,8 +63,8 @@ class AdminSchema:
 
     navbar_density: str = 'default'
 
-    backend_prefix = None
-    static_prefix = None
+    backend_prefix: str | None = None
+    static_prefix: str | None = None
 
     language_manager: LanguageManager | None = None
 

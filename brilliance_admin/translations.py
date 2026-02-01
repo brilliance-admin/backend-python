@@ -21,6 +21,9 @@ class TranslateText(DataclassBase):
     def __init__(self, slug: str):
         self.slug = slug
 
+    def __hash__(self):
+        return hash(self.slug)
+
     @pydantic.model_serializer(mode='plain')
     def serialize_model(self, info: pydantic.SerializationInfo) -> str:
         ctx = info.context or {}

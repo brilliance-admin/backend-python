@@ -16,7 +16,42 @@ login_greetings_message: |
   </div>
 
 created_at: 'Created time'
-graphs_example: 'Graphs example'
+
+dashboard:
+  title: 'Dashboard'
+  period_title: 'Operations for period'
+  wallet_balance: 'Total wallet balance'
+  payment_payout_diff: 'Payments and payouts difference'
+
+payin: 'PayIn'
+payout: 'PayOut'
+
+date:
+  day_month: '%(month)s %(day)s'
+
+weekday:
+  mon: 'Mon'
+  tue: 'Tue'
+  wed: 'Wed'
+  thu: 'Thu'
+  fri: 'Fri'
+  sat: 'Sat'
+  sun: 'Sun'
+
+month:
+  jan: 'Jan'
+  feb: 'Feb'
+  mar: 'Mar'
+  apr: 'Apr'
+  may: 'May'
+  jun: 'Jun'
+  jul: 'Jul'
+  aug: 'Aug'
+  sep: 'Sep'
+  oct: 'Oct'
+  nov: 'Nov'
+  dec: 'Dec'
+
 amount: 'Amount'
 registry_checked: 'Registry checked'
 registry_info_checked: 'Registry info checked'

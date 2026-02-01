@@ -16,7 +16,42 @@ login_greetings_message: |
   </div>
 
 created_at: 'Время создания'
-graphs_example: 'Пример графиков'
+
+dashboard:
+  title: 'Dashboard'
+  period_title: 'Операции за период'
+  wallet_balance: 'Общий баланс кошельков'
+  payment_payout_diff: 'Разница пополнений и списаний'
+
+payin: 'Пополнения'
+payout: 'Выплаты'
+
+date:
+  day_month: '%(day)s %(month)s'
+
+weekday:
+  mon: 'Пн'
+  tue: 'Вт'
+  wed: 'Ср'
+  thu: 'Чт'
+  fri: 'Пт'
+  sat: 'Сб'
+  sun: 'Вс'
+
+month:
+  jan: 'янв'
+  feb: 'фев'
+  mar: 'мар'
+  apr: 'апр'
+  may: 'май'
+  jun: 'июн'
+  jul: 'июл'
+  aug: 'авг'
+  sep: 'сен'
+  oct: 'окт'
+  nov: 'ноя'
+  dec: 'дек'
+
 amount: 'Сумма'
 registry_checked: 'Реестр проверен'
 registry_info_checked: 'Информация по реестру провайдера'

@@ -1,5 +1,6 @@
 from brilliance_admin import schema
-from brilliance_admin.schema.dashboard.category_dashboard import ChartData, DashboardData, DashboardDataResult
+from brilliance_admin.schema.dashboard.category_dashboard import (
+    ChartData, DashboardContainer, DashboardData, PeriodGraph, SmallGraph, Subcard)
 from brilliance_admin.translations import TranslateText as _
 
 
@@ -14,15 +15,14 @@ class GraphsFiltersSchema(schema.FieldsSchema):
 
 
 class GraphsExample(schema.CategoryDashboard):
-    slug = 'graphs-example'
-    title = _('graphs_example')
+    slug = 'dashboard'
+    title = _('dashboard.title')
     icon = 'mdi-chart-bar-stacked'
 
     table_filters = GraphsFiltersSchema()
 
-    async def get_data(self, data: DashboardData, user) -> DashboardDataResult:
-        result = DashboardDataResult()
-        data_1 = ChartData(
+    async def get_data(self, data: DashboardData, user) -> DashboardContainer:
+        chart_1 = ChartData(
             type='line',
             data={
                 'labels': ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
@@ -57,9 +57,7 @@ class GraphsExample(schema.CategoryDashboard):
                 },
             },
         )
-        result.components.append(data_1)
-
-        data_2 = ChartData(
+        chart_2 = ChartData(
             type='line',
             data={
                 'labels': [
@@ -99,9 +97,7 @@ class GraphsExample(schema.CategoryDashboard):
                 },
             },
         )
-        result.components.append(data_2)
-
-        data_3 = ChartData(
+        chart_3 = ChartData(
             type='bar',
             data={
                 'labels': ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
@@ -135,6 +131,73 @@ class GraphsExample(schema.CategoryDashboard):
                 'animation': {'duration': 1500, 'easing': 'easeInOutQuad'},
             },
         )
-        result.components.append(data_3)
-
+        dashboard_period = PeriodGraph(
+            title=_('dashboard.period_title'),
+            value='150 558,01 RUB',
+            change=160,
+            subcards=[
+                Subcard(title=_('payin'), value='24 051.16 RUB', color='#4CAF50'),
+                Subcard(title=_('payout'), value='124 051.16 RUB', color='#1976D2'),
+            ],
+            vertical=['1 400,00 RUB', '1 050,00 RUB', '700,00 RUB', '350,00 RUB', '0,00 RUB'],
+            horizontal=[
+                _('weekday.wed'),
+                _('weekday.thu'),
+                _('weekday.fri'),
+                _('weekday.sat'),
+                _('weekday.sun'),
+                _('weekday.mon'),
+                _('weekday.tue'),
+            ],
+            values=[
+                [25, 35],
+                [35, 45],
+                [8, 40],
+                [85, 45],
+                [40, 35],
+                [65, 70],
+                [15, 40],
+            ],
+        )
+        wallet_balance = SmallGraph(
+            title=_('dashboard.wallet_balance'),
+            value='950 150 558,01 RUB',
+            change=15,
+            points={
+                _('date.day_month') % {'day': 1, 'month': _('month.may')}: 5,
+                _('date.day_month') % {'day': 5, 'month': _('month.may')}: 35,
+                _('date.day_month') % {'day': 10, 'month': _('month.may')}: 45,
+                _('date.day_month') % {'day': 15, 'month': _('month.may')}: 30,
+                _('date.day_month') % {'day': 20, 'month': _('month.may')}: 35,
+            },
+        )
+        payment_payout_diff = SmallGraph(
+            title=_('dashboard.payment_payout_diff'),
+            value='950 150 558,01 RUB',
+            change=-15,
+            points={
+                _('date.day_month') % {'day': 1, 'month': _('month.may')}: 5,
+                _('date.day_month') % {'day': 5, 'month': _('month.may')}: 35,
+                _('date.day_month') % {'day': 10, 'month': _('month.may')}: 45,
+                _('date.day_month') % {'day': 15, 'month': _('month.may')}: 30,
+                _('date.day_month') % {'day': 20, 'month': _('month.may')}: 35,
+            },
+        )
+        result = DashboardContainer(
+            components=[
+                DashboardContainer(
+                    cols=12,
+                    md=7,
+                    components=[dashboard_period]
+                ),
+                DashboardContainer(
+                    cols=12,
+                    md=5,
+                    components=[wallet_balance, payment_payout_diff]
+                ),
+                chart_1,
+                chart_2,
+                chart_3,
+            ],
+        )
         return result

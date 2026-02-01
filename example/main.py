@@ -74,6 +74,8 @@ admin_schema = schema.AdminSchema(
     logo_image='/static/logo-outline.png',
     favicon_image='/static/favicon.jpg',
 
+    main_page='/dashboard/dashboard/',
+
     auth=FakeAdminAuthentication(),
     language_manager=LanguageManager(
         locales_dir='example/locales',
@@ -97,11 +99,11 @@ admin_schema = schema.AdminSchema(
             link='https://github.com/brilliance-admin/backend-python',
         ),
         schema.CategoryGroup(
-            slug='payments',
-            title=_('payments'),
-            icon='mdi-cash-multiple',
+            slug='dashboard',
+            title=_('dashboard.title'),
+            icon='mdi-finance',
             subcategories=[
-                PaymentsAdmin(),
+                GraphsExample(),
             ]
         ),
         schema.CategoryGroup(
@@ -113,10 +115,11 @@ admin_schema = schema.AdminSchema(
             ]
         ),
         schema.CategoryGroup(
-            slug='merchants',
-            title=_('merchants'),
+            slug='payments',
+            title=_('payments'),
             icon='mdi-folder-account-outline',
             subcategories=[
+                PaymentsAdmin(),
                 MerchantAdmin(db_async_session=async_sessionmaker_),
                 TerminalAdmin(db_async_session=async_sessionmaker_),
             ]
@@ -127,14 +130,6 @@ admin_schema = schema.AdminSchema(
             icon='mdi-cash-multiple',
             subcategories=[
                 CurrencyAdmin(db_async_session=async_sessionmaker_),
-            ]
-        ),
-        schema.CategoryGroup(
-            slug='statistics',
-            title=_('statistics'),
-            icon='mdi-finance',
-            subcategories=[
-                GraphsExample(),
             ]
         ),
     ],

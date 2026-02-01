@@ -1,6 +1,6 @@
 from typing import Any, Dict, List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 from brilliance_admin.schema.category import BaseCategory, DashboardInfoSchemaData
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
@@ -20,9 +20,46 @@ class ChartData(BaseModel):
     height: int = 50
     type: str = 'line'
 
+    component_type: str = 'chart'
 
-class DashboardDataResult(BaseModel):
-    components: List[ChartData] = Field(default_factory=list)
+
+class Subcard(BaseModel):
+    title: SupportsStr
+    value: SupportsStr
+    color: str | None = None
+
+
+class PeriodGraph(BaseModel):
+    title: SupportsStr
+    value: SupportsStr
+    change: int | float | None = None
+    subcards: List[Subcard] = Field(default_factory=list)
+    values: List[List[int | float]] = Field(default_factory=list)
+    vertical: List[SupportsStr] = Field(default_factory=list)
+    horizontal: List[SupportsStr] = Field(default_factory=list)
+    component_type: str = 'period_graph'
+
+    @field_serializer('horizontal', 'vertical')
+    def serialize_str_list(self, val: list) -> list:
+        return [str(v) for v in val]
+
+
+class SmallGraph(BaseModel):
+    title: SupportsStr
+    value: SupportsStr
+    change: int | float | None = None
+    points: Dict[SupportsStr, float | int] = Field(default_factory=list)
+    component_type: str = 'small_graph'
+
+
+class DashboardContainer(BaseModel):
+    cols: int | None = None
+    md: int | None = None
+    lg: int | None = None
+    sm: int | None = None
+
+    component_type: str = 'container'
+    components: List[Any] = Field(default_factory=list)
 
 
 class CategoryDashboard(BaseCategory):
@@ -46,5 +83,5 @@ class CategoryDashboard(BaseCategory):
         schema.dashboard_info = dashboard_info
         return schema
 
-    async def get_data(self, data: DashboardData, user) -> DashboardDataResult:
+    async def get_data(self, data: DashboardData, user) -> DashboardContainer:
         raise NotImplementedError('get_data is not implemented')

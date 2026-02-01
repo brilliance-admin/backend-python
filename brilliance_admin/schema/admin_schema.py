@@ -40,6 +40,7 @@ class AdminSettingsData(DataclassBase):
     login_greetings_message: SupportsStr | None
     navbar_density: str
     languages: Dict[str, str] | None
+    main_page: str | None = None
 
 
 @dataclass
@@ -53,6 +54,8 @@ class AdminIndexContextData(DataclassBase):
 class AdminSchema:
     categories: List[BaseCategory]
     auth: Any
+
+    main_page: str | None = None
 
     title: SupportsStr | None = 'Admin'
     description: SupportsStr | None = None
@@ -118,6 +121,7 @@ class AdminSchema:
 
         return AdminSettingsData(
             title=self.title,
+            main_page=self.main_page,
             description=self.description,
             login_greetings_message=self.login_greetings_message,
             navbar_density=self.navbar_density,

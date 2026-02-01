@@ -95,7 +95,7 @@ class TableInfoSchemaData(DataclassBase):
 
 
 @dataclass
-class GraphInfoSchemaData(DataclassBase):
+class DashboardInfoSchemaData(DataclassBase):
     search_enabled: bool
     search_help: str | None
 
@@ -112,7 +112,7 @@ class CategorySchemaData(DataclassBase):
     categories: dict = Field(default_factory=dict)
 
     table_info: TableInfoSchemaData | None = None
-    graph_info: GraphInfoSchemaData | None = None
+    dashboard_info: DashboardInfoSchemaData | None = None
 
     link: str | None = None
 

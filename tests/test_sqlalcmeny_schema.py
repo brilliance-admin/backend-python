@@ -7,7 +7,7 @@ from brilliance_admin.auth import UserABC
 from example.sections.models import Terminal
 
 category_schema_data = {
-    'graph_info': None,
+    'dashboard_info': None,
     'icon': None,
     'description': None,
     'link': None,

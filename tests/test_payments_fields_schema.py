@@ -6,7 +6,7 @@ from brilliance_admin.auth import UserABC
 from example.sections.payments import PaymentsAdmin
 
 category_schema_data = {
-    'graph_info': None,
+    'dashboard_info': None,
     'icon': 'mdi-credit-card-outline',
     'description': 'Статичные данные',
     'link': None,

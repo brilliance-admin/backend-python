@@ -11,8 +11,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ hashFiles('**/Dockerfile', '**/pyproject.toml', '**/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
       - name: Build containers
         run: docker compose -f .configs/docker/docker-compose.yml build
+
+      - name: Cache uv
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
 
       - name: Run tests
         run: docker compose -f .configs/docker/docker-compose.yml run --rm backend sh -c 'uv sync --all-groups --all-extras && uv run pytest'
@@ -83,13 +102,16 @@ jobs:
           username: deploy
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            for i in 1 2 3 4 5 6; do
-              STATUS=$(docker inspect --format='{{.State.Health.Status}}' brilliance-backend-1 2>/dev/null || true)
+            for i in 1 2 3 4 5 6 7 8 9 10; do
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' brilliance-backend-1 2>/dev/null || echo "not found")
+              echo "Attempt $i: status=$STATUS"
               if [ "$STATUS" = "healthy" ]; then
                 exit 0
               fi
-              sleep 3
+              sleep 5
             done
+            echo "Container logs:"
+            docker logs brilliance-backend-1 --tail 50
             exit 1
 
   update-nginx:

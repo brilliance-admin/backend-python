@@ -34,8 +34,6 @@ services:
       POSTGRES_DB: brilliance
       POSTGRES_USER: brilliance
       POSTGRES_PASSWORD: brilliance
-    tmpfs:
-      - /var/lib/postgresql/data
     ports:
       - 5432:5432
     healthcheck:

@@ -1,6 +1,6 @@
 import random
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -60,6 +60,87 @@ class UserFactory(SQLAlchemyFactoryBase):
 
     username = factory.Sequence(lambda n: f"user_{n}")
     email = factory.Faker("email")
+
+
+class DeviceType(Enum):
+    DESKTOP = 'desktop'
+    MOBILE = 'mobile'
+    TABLET = 'tablet'
+
+    @property
+    def label(self):
+        labels = {
+            self.DESKTOP: _('device_type.desktop'),
+            self.MOBILE: _('device_type.mobile'),
+            self.TABLET: _('device_type.tablet'),
+        }
+        return labels[self]
+
+    @property
+    def tag_color(self):
+        colors = {
+            self.DESKTOP: 'blue-darken-1',
+            self.MOBILE: 'green-darken-1',
+            self.TABLET: 'orange-darken-1',
+        }
+        return colors[self]
+
+
+class UserSession(BaseIDModel):
+    __tablename__ = "user_session"
+
+    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True, nullable=False)
+    user: Mapped["User"] = relationship()
+
+    ip_address: Mapped[str] = mapped_column(String(45), nullable=False)
+    country_code: Mapped[str] = mapped_column(String(2), nullable=True)
+    city: Mapped[str] = mapped_column(String(100), nullable=True)
+
+    device_type: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        info={"choices": DeviceType},
+    )
+    browser: Mapped[str] = mapped_column(String(50), nullable=True)
+    os: Mapped[str] = mapped_column(String(50), nullable=True)
+    user_agent: Mapped[str] = mapped_column(String(500), nullable=True)
+
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=expression.true())
+
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    ended_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    def __repr__(self):
+        return f"<UserSession(id={self.id}, user_id={self.user_id}, ip={self.ip_address})>"
+
+
+class UserSessionFactory(SQLAlchemyFactoryBase):
+    class Meta:
+        model = UserSession
+        sqlalchemy_session_factory = async_sessionmaker_
+        sqlalchemy_session_persistence = "commit"
+
+    user = factory.SubFactory(UserFactory)
+
+    ip_address = factory.Faker("ipv4")
+    country_code = factory.Faker("country_code")
+    city = factory.Faker("city")
+
+    device_type = factory.Faker("random_element", elements=["desktop", "mobile", "tablet"])
+    browser = factory.Faker("random_element", elements=["Chrome", "Firefox", "Safari", "Edge", "Opera"])
+    os = factory.Faker("random_element", elements=["Windows 11", "macOS", "Ubuntu", "iOS", "Android"])
+    user_agent = factory.Faker("user_agent")
+
+    is_active = factory.Faker("boolean", chance_of_getting_true=30)
+
+    started_at = factory.Faker("date_time_between", start_date="-7d", end_date="now")
+    ended_at = factory.LazyAttribute(
+        lambda o: factory.Faker("date_time_between", start_date=o.started_at, end_date="now").evaluate(
+            None, None, {"locale": None}
+        ) if not o.is_active else None
+    )
 
 
 class Currency(BaseIDModel):
@@ -130,7 +211,7 @@ class MerchantFactory(SQLAlchemyFactoryBase):
     user_id = factory.Faker("random_int", min=1, max=10_000)
     title = factory.Faker("word")
     description = factory.Faker("sentence", nb_words=6)
-    created_at = factory.LazyFunction(datetime.utcnow)
+    created_at = factory.LazyFunction(lambda: datetime.now(UTC))
 
     def __str__(self):
         return self.title

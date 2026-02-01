@@ -47,5 +47,6 @@ async def lifespan(app):
     await models.MerchantFactory.create_batch_async(10)
     await models.TerminalFactory.create_batch_async(15)
     await models.UserFactory.create_batch_async(27)
+    await models.UserSessionFactory.create_batch_async(50)
 
     yield

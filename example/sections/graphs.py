@@ -136,8 +136,8 @@ class GraphsExample(schema.CategoryDashboard):
             value='150 558,01 RUB',
             change=160,
             subcards=[
-                Subcard(title=_('payin'), value='24 051.16 RUB', color='#4CAF50'),
-                Subcard(title=_('payout'), value='124 051.16 RUB', color='#1976D2'),
+                Subcard(title=_('payin'), value='24 051.16 RUB'),
+                Subcard(title=_('payout'), value='124 051.16 RUB'),
             ],
             vertical=['1 400,00 RUB', '1 050,00 RUB', '700,00 RUB', '350,00 RUB', '0,00 RUB'],
             horizontal=[

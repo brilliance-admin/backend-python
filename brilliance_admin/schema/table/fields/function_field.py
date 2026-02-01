@@ -1,5 +1,5 @@
-import asyncio
 import functools
+import inspect
 from typing import Any
 
 from pydantic.dataclasses import dataclass
@@ -45,7 +45,7 @@ class FunctionField(TableField):
     fn: Any = None
 
     def __post_init__(self):
-        if not asyncio.iscoroutinefunction(self.fn):
+        if not inspect.iscoroutinefunction(self.fn):
             msg = f'{type(self).__name__}.fn {self.fn} must be coroutine function'
             raise AttributeError(msg)
 

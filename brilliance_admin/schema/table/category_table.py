@@ -1,6 +1,6 @@
 import abc
-import asyncio
 import copy
+import inspect
 from typing import Awaitable, List
 
 from fastapi import HTTPException, Request
@@ -50,17 +50,17 @@ class CategoryTable(BaseCategory):
             return False
 
         fn = getattr(self, 'retrieve', None)
-        return asyncio.iscoroutinefunction(fn)
+        return inspect.iscoroutinefunction(fn)
 
     @property
     def has_create(self):
         fn = getattr(self, 'create', None)
-        return asyncio.iscoroutinefunction(fn)
+        return inspect.iscoroutinefunction(fn)
 
     @property
     def has_update(self):
         fn = getattr(self, 'update', None)
-        return asyncio.iscoroutinefunction(fn)
+        return inspect.iscoroutinefunction(fn)
 
     def generate_schema(self, user, language_context: LanguageContext) -> dict:
         schema = super().generate_schema(user, language_context)
@@ -93,7 +93,7 @@ class CategoryTable(BaseCategory):
                 continue
 
             attribute = getattr(self, attribute_name)
-            if asyncio.iscoroutinefunction(attribute) and getattr(attribute, '__action__', False):
+            if inspect.iscoroutinefunction(attribute) and getattr(attribute, '__action__', False):
                 action = copy.copy(attribute.action_info)
 
                 action['title'] = language_context.get_text(action.get('title'))
@@ -116,7 +116,7 @@ class CategoryTable(BaseCategory):
 
     def _get_action_fn(self, action: str) -> Awaitable | None:
         attribute = getattr(self, action)
-        if not asyncio.iscoroutinefunction(attribute) or not getattr(attribute, '__action__', False):
+        if not inspect.iscoroutinefunction(attribute) or not getattr(attribute, '__action__', False):
             return None
 
         return attribute

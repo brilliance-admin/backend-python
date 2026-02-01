@@ -52,6 +52,12 @@ month:
   nov: 'ноя'
   dec: 'дек'
 
+device_type:
+  desktop: 'Компьютер'
+  mobile: 'Телефон'
+  tablet: 'Планшет'
+
+user_sessions: 'Сессии пользователей'
 amount: 'Сумма'
 registry_checked: 'Реестр проверен'
 registry_info_checked: 'Информация по реестру провайдера'

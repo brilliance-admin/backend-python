@@ -1,6 +1,6 @@
 [project]
 name = "brilliance-admin"
-version = "0.44.13"
+version = "0.44.14"
 description = 'Simple and lightweight data managment framework powered by FastAPI and Vue3 Vuetify all-in-one. Some call it heavenly in its brilliance.'
 readme = "README.md"
 requires-python = ">=3.10"
@@ -46,6 +46,7 @@ tests = [
     "aiosqlite>=0.22.1",
     "factory-boy>=3.3.3",
     "pyjwt>=2.10.1",
+    "testcontainers>=4.14.1",
 ]
 scalar = [
     "scalar-fastapi>=1.5.0",

@@ -7,6 +7,11 @@ services:
       dockerfile: .configs/docker/Dockerfile
     volumes:
       - ./../../:/app
+
+      - backend_venv:/app/.venv
+      - uv_cache:/root/.cache/uv
+      - uv_python:/root/.local/share/uv
+
       - ~/.ssh/id_rsa:/root/.ssh/id_rsa:delegated
       - ~/.ssh/known_hosts:/root/.ssh/known_hosts:delegated
     environment:
@@ -41,3 +46,8 @@ services:
       interval: 2s
       timeout: 2s
       retries: 10
+
+volumes:
+  backend_venv:
+  uv_cache:
+  uv_python:

@@ -17,6 +17,7 @@ from example.sections.graphs import GraphsExample
 from example.sections.merchant import MerchantAdmin
 from example.sections.payments import PaymentsAdmin
 from example.sections.terminal import TerminalAdmin
+from example.sections.user_session import UserSessionAdmin
 from example.sections.users import UserAdmin
 from example.sqlite import async_sessionmaker_, lifespan
 
@@ -112,6 +113,7 @@ admin_schema = schema.AdminSchema(
             icon='mdi-account',
             subcategories=[
                 UserAdmin(db_async_session=async_sessionmaker_),
+                UserSessionAdmin(db_async_session=async_sessionmaker_),
             ]
         ),
         schema.CategoryGroup(

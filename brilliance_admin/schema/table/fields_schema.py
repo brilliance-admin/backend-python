@@ -1,4 +1,4 @@
-import asyncio
+import inspect
 from typing import Any, ClassVar, Dict, List
 
 from pydantic_core import core_schema
@@ -186,7 +186,7 @@ class FieldsSchema:
 
                 validate_method = getattr(self, f'validate_{field_slug}', None)
                 if callable(validate_method):
-                    if not asyncio.iscoroutinefunction(validate_method):
+                    if not inspect.iscoroutinefunction(validate_method):
                         msg = f'Validate method {type(self).__name__}.{field_slug} must be async'
                         raise AttributeError(msg)
                     deserialized_value = await validate_method(value)

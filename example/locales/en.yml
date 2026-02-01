@@ -52,6 +52,12 @@ month:
   nov: 'Nov'
   dec: 'Dec'
 
+device_type:
+  desktop: 'Desktop'
+  mobile: 'Mobile'
+  tablet: 'Tablet'
+
+user_sessions: 'User sessions'
 amount: 'Amount'
 registry_checked: 'Registry checked'
 registry_info_checked: 'Registry info checked'

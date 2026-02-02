@@ -12,17 +12,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-        with:
-          driver: docker
-
       - name: Build containers
-        run: |
-          docker build \
-            -t brilliance-backend \
-            -f .configs/docker/Dockerfile \
-            .
+        run: docker build -t brilliance-backend -f .configs/docker/Dockerfile .
 
       - name: Run tests
         run: docker compose -f .configs/docker/docker-compose.yml run --rm backend sh -c 'uv sync --all-groups --all-extras && uv run pytest'
@@ -48,27 +39,6 @@ jobs:
           installation_id: ${{ secrets.GH_APP_INSTALLATION_ID }}
           private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
 
-      - name: Ensure rsync installed on server
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ vars.SERVER_HOST }}
-          username: deploy
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            if ! command -v rsync >/dev/null 2>&1; then
-              sudo apt update
-              sudo apt install -y rsync
-            fi
-
-      - name: Fix folder permissions
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ vars.SERVER_HOST }}
-          username: deploy
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            sudo chown -R deploy:deploy /home/deploy/apps/backend-python
-
       - name: Copy files to server
         uses: burnett01/rsync-deployments@v8
         with:
@@ -79,65 +49,53 @@ jobs:
           remote_user: deploy
           remote_key: ${{ secrets.SERVER_SSH_KEY }}
 
-      - name: Run Docker on server
+      - name: Deploy and configure
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.SERVER_HOST }}
           username: deploy
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            set -e
+
+            # Ensure rsync
+            if ! command -v rsync >/dev/null 2>&1; then
+              sudo apt update && sudo apt install -y rsync
+            fi
+
+            # Fix permissions
+            sudo chown -R deploy:deploy /home/deploy/apps/backend-python
+
+            # Deploy Docker
             cd /home/deploy/apps/backend-python
             docker compose -f .configs/docker/docker-compose.yml run --rm backend /bin/bash -c "uv sync --all-groups --all-extras"
             docker compose -f .configs/docker/docker-compose.yml up -d --build
 
-      - name: Wait backend healthy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ vars.SERVER_HOST }}
-          username: deploy
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            for i in 1 2 3 4 5 6 7 8 9 10; do
+            # Wait for healthy
+            for i in $(seq 1 10); do
               STATUS=$(docker inspect --format='{{.State.Health.Status}}' brilliance-backend-1 2>/dev/null || echo "not found")
               echo "Attempt $i: status=$STATUS"
               if [ "$STATUS" = "healthy" ]; then
-                exit 0
+                break
+              fi
+              if [ "$i" = "10" ]; then
+                echo "Container logs:"
+                docker logs brilliance-backend-1 --tail 50
+                exit 1
               fi
               sleep 5
             done
-            echo "Container logs:"
-            docker logs brilliance-backend-1 --tail 50
-            exit 1
 
-  update-nginx:
-    needs: deploy
-    runs-on: self-hosted
-    if: ${{ success() }}
-    steps:
+            # Ensure nginx
+            if ! command -v nginx >/dev/null 2>&1; then
+              sudo apt update && sudo apt install -y nginx
+            fi
 
-      - name: Ensure nginx is running
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ vars.SERVER_HOST }}
-          username: deploy
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
             if ! systemctl is-active --quiet nginx; then
               sudo systemctl start nginx
             fi
-            sudo systemctl status nginx --no-pager
 
-      - name: Ensure nginx and update config
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ vars.SERVER_HOST }}
-          username: deploy
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            if ! command -v nginx >/dev/null 2>&1; then
-              sudo apt update
-              sudo apt install -y nginx
-            fi
+            # Update nginx config
             sudo ln -sf /home/deploy/apps/backend-python/.configs/nginx/example.conf /etc/nginx/sites-enabled/example
             sudo rm -f /etc/nginx/sites-enabled/default
             sudo nginx -t

@@ -30,12 +30,3 @@ docker compose -f .configs/docker/docker-compose.yml run --rm backend /bin/bash 
 docker exec -it rollyum-backend-1 git config --global --add safe.directory '*'
 docker exec -it rollyum-backend-1 uv run pre-commit run --all-files
 ```
-
-``` shell
-mkdir ~/actions-runner && cd ~/actions-runner
-curl -o actions-runner-linux-x64-2.321.0.tar.gz -L https://github.com/actions/runner/releases/download/v2.321.0/actions-runner-linux-x64-2.321.0.tar.gz
-tar xzf ./actions-runner-linux-x64-2.321.0.tar.gz
-./config.sh --url https://github.com/brilliance-admin/backend-python --token TOKEN
-sudo ./svc.sh install
-sudo ./svc.sh start
-```

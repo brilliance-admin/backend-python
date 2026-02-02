@@ -47,6 +47,10 @@ jobs:
       - name: Run tests
         run: docker compose -f .configs/docker/docker-compose.yml run --rm backend sh -c 'uv sync --all-groups --all-extras && uv run pytest'
 
+      - name: Cleanup
+        if: always()
+        run: sudo chown -R deploy:deploy $GITHUB_WORKSPACE || true
+
   deploy:
     needs: build-test
     runs-on: self-hosted

@@ -42,7 +42,7 @@ jobs:
       - name: Copy files to server
         uses: burnett01/rsync-deployments@v8
         with:
-          switches: -avzrv --delete --chown=deploy:deploy --exclude='.venv' --exclude='__pycache__' --exclude='.git' --exclude='*.pyc' --exclude='.pytest_cache'
+          switches: -avzr --delete --chown=deploy:deploy --ignore-errors --exclude='.venv' --exclude='__pycache__' --exclude='.git' --exclude='*.pyc' --exclude='.pytest_cache'
           path: .
           remote_path: /home/deploy/apps/backend-python
           remote_host: ${{ vars.SERVER_HOST }}

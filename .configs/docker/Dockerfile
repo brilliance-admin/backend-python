@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM python:3.12-slim
+FROM python:3.14.2-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates build-essential gettext libpq-dev git ssh openssh-client \

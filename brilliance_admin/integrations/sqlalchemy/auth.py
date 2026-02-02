@@ -1,3 +1,5 @@
+from typing import Callable
+
 from brilliance_admin.auth import AdminAuthentication, AuthData, AuthResult, UserABC, UserResult
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.translations import TranslateText as _
@@ -12,11 +14,18 @@ class SQLAlchemyJWTAdminAuthentication(AdminAuthentication):
     user_model = None
     pk_name = None
 
-    def __init__(self, secret: str, db_async_session, user_model, pk_name='id'):
+    password_validator: Callable[[UserABC, str], bool] | None = None
+
+    def __init__(self, secret: str, db_async_session, user_model, pk_name='id', password_validator=None):
         self.pk_name = pk_name
         self.secret = secret
         self.db_async_session = db_async_session
         self.user_model = user_model
+        self.password_validator = password_validator
+
+        if self.password_validator:
+            if not callable(self.password_validator):
+                raise ValueError("password_validator must be callable")
 
         if not isinstance(secret, str) or not secret:
             raise ValueError("JWT secret must be a non-empty string")
@@ -41,7 +50,7 @@ class SQLAlchemyJWTAdminAuthentication(AdminAuthentication):
             msg = f"user_model is missing required columns: {', '.join(sorted(missing))}"
             raise ValueError(msg)
 
-    async def login(self, data: AuthData) -> AuthResult:
+    async def login(self, data: AuthData, debug: bool = False) -> AuthResult:
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import select
 
@@ -64,6 +73,19 @@ class SQLAlchemyJWTAdminAuthentication(AdminAuthentication):
 
         if not user:
             raise AdminAPIException(APIError(code="user_not_found"), status_code=401)
+
+        try:
+            if self.password_validator:
+                if not self.password_validator(user, data.password):
+                    raise AdminAPIException(APIError(code="user_not_found"), status_code=401)
+
+        except AdminAPIException as e:
+            raise e
+        except Exception as e:
+            msg = _('errors.password_exception') % {
+                'error_type': str(e) if schema.debug else type(e).__name__,
+            }
+            raise AdminAPIException(APIError(message=msg, code="password_exception"), status_code=500) from e
 
         if not user.is_admin:
             raise AdminAPIException(APIError(code="not_an_admin"), status_code=401)

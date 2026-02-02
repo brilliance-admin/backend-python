@@ -11,6 +11,8 @@ errors:
   db_error_retrieve: 'Ошибка получения записи из базы данных: %(error_type)s'
   db_error_list: 'Ошибка получения данных таблицы из базы данных: %(error_type)s'
 
+  password_exception: 'Произошла неизвестная ошибка при проверке пароля: %(error_type)s'
+
   connection_refused_error: 'Ошибка подключения к базе данных: %(error)s'
   filters_exception: 'Произошла неизвестная техническая ошибка при фильтрации данных: %(error_type)s'
   method_not_allowed: 'Ошибка, данный метод недоступен.'

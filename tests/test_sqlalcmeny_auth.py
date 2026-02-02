@@ -15,7 +15,7 @@ async def test_login(sqlite_sessionmaker):
         user_model=User,
     )
     user = await UserFactory(username='123', password='test', is_admin=True)
-    result = await auth.login(data=AuthData(username='123', password='test'))
+    result = await auth.login(data=AuthData(username='123', password='test'), debug=True)
     assert result.user.username == user.username
 
 
@@ -28,7 +28,7 @@ async def test_login_not_admin(sqlite_sessionmaker):
     )
     await UserFactory(username='123', password='test')
     with pytest.raises(AdminAPIException) as e:
-        await auth.login(data=AuthData(username='123', password='test'))
+        await auth.login(data=AuthData(username='123', password='test'), debug=True)
 
     assert e.value.get_error().code == 'not_an_admin'
 
@@ -41,7 +41,7 @@ async def test_login_not_found(sqlite_sessionmaker):
         user_model=User,
     )
     with pytest.raises(AdminAPIException) as e:
-        await auth.login(data=AuthData(username='123', password='test'))
+        await auth.login(data=AuthData(username='123', password='test'), debug=True)
 
     assert e.value.get_error().code == 'user_not_found'
 
@@ -94,5 +94,37 @@ async def test_authenticate_not_admin(sqlite_sessionmaker):
     with pytest.raises(AdminAPIException) as e:
         token = auth.get_token(user)
         await auth.authenticate(headers={'Authorization': f'Token {token}'})
+
+    assert e.value.get_error().code == 'user_not_found'
+
+
+@pytest.mark.asyncio
+async def test_login_valid_password(sqlite_sessionmaker):
+    auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
+        secret='123',
+        db_async_session=sqlite_sessionmaker,
+        user_model=User,
+        password_validator=lambda user, password: password == 'correct_password',
+    )
+    await UserFactory(username='admin', password='correct_password', is_admin=True)
+
+    result = await auth.login(data=AuthData(username='admin', password='correct_password'), debug=True)
+
+    assert result.token is not None
+    assert result.user.username == 'admin'
+
+
+@pytest.mark.asyncio
+async def test_login_invalid_password(sqlite_sessionmaker):
+    auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
+        secret='123',
+        db_async_session=sqlite_sessionmaker,
+        user_model=User,
+        password_validator=lambda user, password: password == 'correct_password',
+    )
+    await UserFactory(username='admin', password='correct_password', is_admin=True)
+
+    with pytest.raises(AdminAPIException) as e:
+        await auth.login(data=AuthData(username='admin', password='wrong_password'), debug=True)
 
     assert e.value.get_error().code == 'user_not_found'

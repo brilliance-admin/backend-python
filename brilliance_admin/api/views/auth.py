@@ -22,7 +22,7 @@ async def login(request: Request, auth_data: AuthData) -> AuthResult:
 
     auth: AdminAuthentication = schema.auth
     try:
-        result: AuthResult = await auth.login(auth_data)
+        result: AuthResult = await auth.login(auth_data, debug=schema.debug)
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 

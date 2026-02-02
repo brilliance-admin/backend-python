@@ -14,13 +14,12 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          driver: docker
 
       - name: Build containers
         run: |
-          docker buildx build \
-            --cache-from type=local,src=/home/deploy/.buildx-cache \
-            --cache-to type=local,dest=/home/deploy/.buildx-cache \
-            --load \
+          docker build \
             -t brilliance-backend \
             -f .configs/docker/Dockerfile \
             .

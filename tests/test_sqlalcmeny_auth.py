@@ -99,23 +99,69 @@ async def test_authenticate_not_admin(sqlite_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_login_valid_password(sqlite_sessionmaker):
+async def test_login_valid_password_sync(sqlite_sessionmaker, language_context):
+    def async_password_validator(user, password):
+        return password == 'correct_password'
+
     auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
         secret='123',
         db_async_session=sqlite_sessionmaker,
         user_model=User,
-        password_validator=lambda user, password: password == 'correct_password',
+        password_validator=async_password_validator,
     )
     await UserFactory(username='admin', password='correct_password', is_admin=True)
 
-    result = await auth.login(data=AuthData(username='admin', password='correct_password'), debug=True)
+    result = await auth.login(data=AuthData(username='admin', password='correct_password'))
 
     assert result.token is not None
     assert result.user.username == 'admin'
 
 
 @pytest.mark.asyncio
-async def test_login_invalid_password(sqlite_sessionmaker):
+async def test_login_valid_password_async(sqlite_sessionmaker, language_context):
+    async def async_password_validator(user, password):
+        return password == 'correct_password'
+
+    auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
+        secret='123',
+        db_async_session=sqlite_sessionmaker,
+        user_model=User,
+        password_validator=async_password_validator,
+    )
+    await UserFactory(username='admin', password='correct_password', is_admin=True)
+
+    result = await auth.login(data=AuthData(username='admin', password='correct_password'))
+
+    assert result.token is not None
+    assert result.user.username == 'admin'
+
+
+@pytest.mark.asyncio
+async def test_login_invalid_password_async(sqlite_sessionmaker, language_context):
+    async def async_password_validator(user, password):
+        return password == 'correct_password'
+
+    auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
+        secret='123',
+        db_async_session=sqlite_sessionmaker,
+        user_model=User,
+        password_validator=async_password_validator,
+    )
+    await UserFactory(username='admin', password='correct_password', is_admin=True)
+
+    with pytest.raises(AdminAPIException) as e:
+        await auth.login(data=AuthData(username='admin', password='wrong_password'), debug=False)
+
+    context = {'language_context': language_context}
+    assert e.value.get_error().model_dump(context=context) == {
+        'code': 'user_not_found',
+        'field_errors': None,
+        'message': None,
+    }
+
+
+@pytest.mark.asyncio
+async def test_login_invalid_password(sqlite_sessionmaker, language_context):
     auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
         secret='123',
         db_async_session=sqlite_sessionmaker,
@@ -127,4 +173,9 @@ async def test_login_invalid_password(sqlite_sessionmaker):
     with pytest.raises(AdminAPIException) as e:
         await auth.login(data=AuthData(username='admin', password='wrong_password'), debug=True)
 
-    assert e.value.get_error().code == 'user_not_found'
+    context = {'language_context': language_context}
+    assert e.value.get_error().model_dump(context=context) == {
+        'code': 'user_not_found',
+        'field_errors': None,
+        'message': None,
+    }

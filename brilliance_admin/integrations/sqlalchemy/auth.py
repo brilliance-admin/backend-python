@@ -1,3 +1,4 @@
+import inspect
 from typing import Callable
 
 from brilliance_admin.auth import AdminAuthentication, AuthData, AuthResult, UserABC, UserResult
@@ -14,7 +15,7 @@ class SQLAlchemyJWTAdminAuthentication(AdminAuthentication):
     user_model = None
     pk_name = None
 
-    password_validator: Callable[[UserABC, str], bool] | None = None
+    password_validator = None
 
     def __init__(self, secret: str, db_async_session, user_model, pk_name='id', password_validator=None):
         self.pk_name = pk_name
@@ -76,14 +77,19 @@ class SQLAlchemyJWTAdminAuthentication(AdminAuthentication):
 
         try:
             if self.password_validator:
-                if not self.password_validator(user, data.password):
+                if inspect.iscoroutinefunction(self.password_validator):
+                    valid_password = await self.password_validator(user, data.password)
+                else:
+                    valid_password = self.password_validator(user, data.password)
+
+                if not valid_password:
                     raise AdminAPIException(APIError(code="user_not_found"), status_code=401)
 
         except AdminAPIException as e:
             raise e
         except Exception as e:
             msg = _('errors.password_exception') % {
-                'error_type': str(e) if schema.debug else type(e).__name__,
+                'error_type': str(e) if debug else type(e).__name__,
             }
             raise AdminAPIException(APIError(message=msg, code="password_exception"), status_code=500) from e
 

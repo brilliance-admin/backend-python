@@ -23,7 +23,17 @@ jobs:
             ${{ runner.os }}-buildx-
 
       - name: Build containers
-        run: docker compose -f .configs/docker/docker-compose.yml build
+        run: |
+          docker buildx build \
+            --cache-from type=local,src=/tmp/.buildx-cache \
+            --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            -t brilliance-backend \
+            -f .configs/docker/Dockerfile \
+            .
+          # Ротация кеша чтобы избежать бесконечного роста
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
       - name: Cache uv
         uses: actions/cache@v4

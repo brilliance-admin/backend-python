@@ -15,7 +15,6 @@ errors:
   filters_exception: 'An unknown technical error occurred while filtering data: %(error_type)s'
   method_not_allowed: 'Error, method not allowed. This action is not permitted.'
   filter_error: 'An error occurred during filtering: {error}'
-  bad_type_error: 'Invalid data type: %(type)s but %(expected)s expected'
 
 serialize_error:
   field_error: 'Field %(field_slug)s serialize error: %(error)s'
@@ -30,3 +29,16 @@ sqlalchemy_search_help: |
   <b>""</b> - quotes for exact match
   <b>%%</b> - any sequence of characters
   <b>_</b> - any single character
+
+password:
+  new_password: 'New password'
+  change_password: 'Change password'
+  password_changed: 'Password successfully updated'
+
+validation:
+  bad_type_error: 'Invalid data type: %(type)s but %(expected)s expected'
+  min_value_error: 'Value must be at least %(min)s'
+  max_value_error: 'Value must be at most %(max)s'
+  min_length_error: 'Length must be at least %(min)s characters'
+  max_length_error: 'Length must be at most %(max)s characters'
+

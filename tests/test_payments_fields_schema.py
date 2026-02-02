@@ -123,6 +123,7 @@ category_schema_data = {
                 'description': {
                     'header': {},
                     'label': 'Описание',
+                    'password': False,
                     'read_only': False,
                     'required': False,
                     'type': 'string',
@@ -130,6 +131,7 @@ category_schema_data = {
                 'endpoint': {
                     'header': {},
                     'label': 'Эндпоинт',
+                    'password': False,
                     'read_only': False,
                     'required': False,
                     'type': 'string',
@@ -158,6 +160,7 @@ category_schema_data = {
                 'other_field': {
                     'header': {},
                     'label': 'Other Field',
+                    'password': False,
                     'read_only': True,
                     'required': False,
                     'type': 'string',

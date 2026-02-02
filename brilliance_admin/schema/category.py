@@ -30,6 +30,7 @@ class FieldSchemaData(DataclassBase):
 
     max_length: int | None = None
     min_length: int | None = None
+    password: bool | None = None
 
     choices: List[dict] | None = None
 

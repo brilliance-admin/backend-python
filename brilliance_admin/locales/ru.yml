@@ -11,13 +11,12 @@ errors:
   db_error_retrieve: 'Ошибка получения записи из базы данных: %(error_type)s'
   db_error_list: 'Ошибка получения данных таблицы из базы данных: %(error_type)s'
 
-  password_exception: 'Произошла неизвестная ошибка при проверке пароля: %(error_type)s'
-
   connection_refused_error: 'Ошибка подключения к базе данных: %(error)s'
   filters_exception: 'Произошла неизвестная техническая ошибка при фильтрации данных: %(error_type)s'
   method_not_allowed: 'Ошибка, данный метод недоступен.'
   filter_error: 'Проишла ошибка при фильтрации: %(error)s'
-  bad_type_error: 'Некорректный тип данных: %(type)s; ожидается %(expected)s'
+
+  password_exception: 'Произошла неизвестная ошибка при проверке пароля: %(error_type)s'
 
 serialize_error:
   field_error: 'ошибка чтения поля %(field_slug)s: %(error)s'
@@ -32,3 +31,15 @@ sqlalchemy_search_help: |
   <b>""</b> - кавычки для точного совпадения
   <b>%%</b> - любая последовательность символов
   <b>_</b> - один любой символ
+
+password:
+  new_password: 'Новый пароль'
+  change_password: 'Изменить пароль'
+  password_changed: 'Пароль успешно обновлен'
+
+validation:
+  bad_type_error: 'Некорректный тип данных: %(type)s; ожидается %(expected)s'
+  min_value_error: 'Значение должно быть не меньше %(min)s'
+  max_value_error: 'Значение должно быть не больше %(max)s'
+  min_length_error: 'Длина должна быть не меньше %(min)s символов'
+  max_length_error: 'Длина должна быть не больше %(max)s символов'

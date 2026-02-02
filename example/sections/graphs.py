@@ -87,13 +87,19 @@ class GraphsExample(schema.CategoryDashboard):
                 'layout': {
                     'padding': 10,
                 },
-                'legend': {
-                    'position': 'bottom',
+                'plugins': {
+                    'legend': {
+                        'position': 'bottom',
+                    },
+                    'title': {'display': True, 'text': 'Precipitation in Toronto'},
                 },
-                'title': {'display': True, 'text': 'Precipitation in Toronto'},
                 'scales': {
-                    'yAxes': [{'scaleLabel': {'display': True, 'labelString': 'Precipitation in mm'}}],
-                    'xAxes': [{'scaleLabel': {'display': True, 'labelString': 'Month of the Year'}}],
+                    'y': {
+                        'title': {'display': True, 'text': 'Precipitation in mm'}
+                    },
+                    'x': {
+                        'title': {'display': True, 'text': 'Month of the Year'}
+                    },
                 },
             },
         )

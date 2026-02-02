@@ -81,7 +81,18 @@ class IntegerField(TableField):
     async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
         value = await super().deserialize(value, action, extra, *args, **kwargs)
         if value and not isinstance(value, int):
-            raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'init'})
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'init'})
+
+        if value is None:
+            if self.min_value is not None:
+                raise FieldError(_('validation.min_value_error') % {'min': self.min_value})
+            return
+
+        if self.min_value is not None and value < self.min_value:
+            raise FieldError(_('validation.min_value_error') % {'min': self.min_value})
+
+        if self.max_value is not None and value > self.max_value:
+            raise FieldError(_('validation.max_value_error') % {'max': self.max_value})
 
         return value
 
@@ -96,6 +107,7 @@ class StringField(TableField):
 
     min_length: int | None = None
     max_length: int | None = None
+    password: bool | None = False
 
     choices: Any | None = None
 
@@ -105,6 +117,7 @@ class StringField(TableField):
         schema.multilined = self.multilined
         schema.ckeditor = self.ckeditor
         schema.tinymce = self.tinymce
+        schema.password = self.password
 
         if self.min_length is not None:
             schema.min_length = self.min_length
@@ -117,7 +130,18 @@ class StringField(TableField):
     async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
         value = await super().deserialize(value, action, extra, *args, **kwargs)
         if value and not isinstance(value, str):
-            raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'string'})
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'string'})
+
+        if value is None:
+            if self.min_length is not None and self.min_length > 0:
+                raise FieldError(_('validation.min_length_error') % {'min': self.min_length})
+            return
+
+        if self.min_length is not None and len(value) < self.min_length:
+            raise FieldError(_('validation.min_length_error') % {'min': self.min_length})
+
+        if self.max_length is not None and len(value) > self.max_length:
+            raise FieldError(_('validation.max_length_error') % {'max': self.max_length})
 
         return value
 
@@ -164,7 +188,7 @@ class DateTimeField(TableField):
             return
 
         if value and not isinstance(value, (str, dict)):
-            raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'datetime'})
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'datetime'})
 
         if isinstance(value, str):
             return _parse_iso(value)
@@ -180,7 +204,7 @@ class DateTimeField(TableField):
                 'to': _parse_iso(value['to']),
             }
 
-        raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'datetime'})
+        raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'datetime'})
 
 
 @dataclass
@@ -194,7 +218,7 @@ class JSONField(TableField):
             return
 
         if not isinstance(value, (dict, list)):
-            raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'JSON'})
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'JSON'})
 
         return value
 
@@ -219,7 +243,7 @@ class ArrayField(TableField):
             return
 
         if not isinstance(value, list):
-            raise FieldError(_('errors.bad_type_error') % {'type': type(value), 'expected': 'Array'})
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'Array'})
 
         return value
 

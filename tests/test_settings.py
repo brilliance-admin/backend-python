@@ -43,7 +43,7 @@ async def test_settings():
     request = Request(scope=SCOPE)
     settings = await admin_schema.get_settings(request)
     s = AdminSettingsData(
-        main_page='/dashboard/dashboard/',
+        main_page='/main/dashboard/',
         title=TranslateText(slug='admin_title'),
         description=TranslateText(slug='admin_description'),
         login_greetings_message=TranslateText(slug='login_greetings_message'),

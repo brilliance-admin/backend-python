@@ -50,7 +50,7 @@ jobs:
           remote_user: deploy
           remote_key: ${{ secrets.SERVER_SSH_KEY }}
 
-      - name: Deploy and configure
+      - name: Deploy containers
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.SERVER_HOST }}
@@ -58,17 +58,27 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             set -e
-
             sudo chown -R deploy:deploy /home/deploy/apps/backend-python
-
             cd /home/deploy/apps/backend-python
             docker compose -f .configs/docker/docker-compose.yml up -d
+            sudo ln -sf /home/deploy/apps/backend-python/.configs/nginx/example.conf /etc/nginx/sites-enabled/example
+            sudo rm -f /etc/nginx/sites-enabled/default
+            sudo nginx -t
+            sudo systemctl reload nginx
 
+      - name: Wait backend healthy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: deploy
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            set -e
             for i in $(seq 1 10); do
               STATUS=$(docker inspect --format='{{.State.Health.Status}}' brilliance-backend-1 2>/dev/null || echo "not found")
               echo "Attempt $i: status=$STATUS"
               if [ "$STATUS" = "healthy" ]; then
-                break
+                exit 0
               fi
               if [ "$i" = "10" ]; then
                 echo "Container logs:"
@@ -77,8 +87,3 @@ jobs:
               fi
               sleep 2
             done
-
-            sudo ln -sf /home/deploy/apps/backend-python/.configs/nginx/example.conf /etc/nginx/sites-enabled/example
-            sudo rm -f /etc/nginx/sites-enabled/default
-            sudo nginx -t
-            sudo systemctl reload nginx

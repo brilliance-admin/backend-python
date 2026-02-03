@@ -1,6 +1,12 @@
 from brilliance_admin import schema
 from brilliance_admin.schema.dashboard.category_dashboard import (
-    ChartData, DashboardContainer, DashboardData, PeriodGraph, SmallGraph, Subcard)
+    ChartData,
+    DashboardContainer,
+    DashboardData,
+    PeriodGraph,
+    SmallGraph,
+    Subcard,
+)
 from brilliance_admin.translations import TranslateText as _
 
 CHART_OPTIONS_BASE = {
@@ -36,7 +42,7 @@ CHART_OPTIONS_BASE = {
 }
 
 
-class GraphsFiltersSchema(schema.FieldsSchema):
+class DasbhoardFiltersSchema(schema.FieldsSchema):
     id = schema.IntegerField(label='ID')
     created_at = schema.DateTimeField(label=_('created_at'))
     _fields = [
@@ -45,11 +51,11 @@ class GraphsFiltersSchema(schema.FieldsSchema):
     ]
 
 
-class GraphsExample(schema.CategoryDashboard):
+class DasbhoardExample(schema.CategoryDashboard):
     slug = 'dashboard'
     title = _('dashboard.title')
     icon = 'mdi-chart-bar-stacked'
-    table_filters = GraphsFiltersSchema()
+    table_filters = DasbhoardFiltersSchema()
 
     async def get_data(self, data: DashboardData, user) -> DashboardContainer:
         chart_1 = ChartData(
@@ -201,7 +207,7 @@ class GraphsExample(schema.CategoryDashboard):
                     },
                     'title': {
                         'display': True,
-                        'text': 'Precipitation in Toronto',
+                        'text': _('dashboard.precipitation_in_toronto'),
                         'font': {'size': 16, 'weight': 'bold'},
                         'padding': {'bottom': 16},
                     },
@@ -254,7 +260,12 @@ class GraphsExample(schema.CategoryDashboard):
         chart_4 = ChartData(
             type='doughnut',
             data={
-                'labels': ['Пополнения', 'Выплаты', 'Комиссия', 'Возвраты'],
+                'labels': [
+                    _('dashboard.deposites'),
+                    _('dashboard.withdraws'),
+                    _('dashboard.fees'),
+                    _('dashboard.refunds'),
+                ],
                 'datasets': [
                     {
                         'data': [45, 30, 15, 10],
@@ -291,7 +302,7 @@ class GraphsExample(schema.CategoryDashboard):
                     },
                     'title': {
                         'display': True,
-                        'text': 'Распределение операций',
+                        'text': _('dashboard.operations_distribution'),
                         'font': {'size': 16, 'weight': 'bold'},
                         'padding': {'bottom': 16},
                     },
@@ -356,28 +367,12 @@ class GraphsExample(schema.CategoryDashboard):
         )
         result = DashboardContainer(
             components=[
-                DashboardContainer(
-                    cols=12,
-                    md=7,
-                    components=[dashboard_period]
-                ),
-                DashboardContainer(
-                    cols=12,
-                    md=5,
-                    components=[wallet_balance, payment_payout_diff]
-                ),
+                DashboardContainer(cols=12, md=7, components=[dashboard_period]),
+                DashboardContainer(cols=12, md=5, components=[wallet_balance, payment_payout_diff]),
                 chart_1,
                 chart_2,
-                DashboardContainer(
-                    cols=12,
-                    md=6,
-                    components=[chart_3]
-                ),
-                DashboardContainer(
-                    cols=12,
-                    md=6,
-                    components=[chart_4]
-                ),
+                DashboardContainer(cols=12, md=6, components=[chart_3]),
+                DashboardContainer(cols=12, md=6, components=[chart_4]),
             ],
         )
         return result

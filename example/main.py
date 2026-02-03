@@ -13,7 +13,7 @@ from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.translations import LanguageManager
 from brilliance_admin.translations import TranslateText as _
 from example.sections.currency import CurrencyAdmin
-from example.sections.graphs import GraphsExample
+from example.sections.dashboard import DasbhoardExample
 from example.sections.merchant import MerchantAdmin
 from example.sections.payments import PaymentsAdmin
 from example.sections.terminal import TerminalAdmin
@@ -75,7 +75,7 @@ admin_schema = schema.AdminSchema(
     logo_image='/static/logo-outline.png',
     favicon_image='/static/favicon.jpg',
 
-    main_page='/dashboard/dashboard/',
+    main_page='/main/dashboard/',
 
     auth=FakeAdminAuthentication(),
     language_manager=LanguageManager(
@@ -100,11 +100,11 @@ admin_schema = schema.AdminSchema(
             link='https://github.com/brilliance-admin/backend-python',
         ),
         schema.CategoryGroup(
-            slug='dashboard',
+            slug='main',
             title=_('dashboard.title'),
             icon='mdi-finance',
             subcategories=[
-                GraphsExample(),
+                DasbhoardExample(),
             ]
         ),
         schema.CategoryGroup(

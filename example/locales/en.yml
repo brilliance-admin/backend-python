@@ -23,6 +23,13 @@ dashboard:
   wallet_balance: 'Total wallet balance'
   payment_payout_diff: 'Payments and payouts difference'
 
+  precipitation_in_toronto: 'Precipitation in Toronto'
+  operations_distribution: 'Operations distribution'
+  deposites: 'Deposits'
+  withdraws: 'Withdrawals'
+  fees: 'Fees'
+  refunds: 'Refunds'
+
 payin: 'PayIn'
 payout: 'PayOut'
 

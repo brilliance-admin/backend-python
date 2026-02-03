@@ -23,6 +23,13 @@ dashboard:
   wallet_balance: 'Общий баланс кошельков'
   payment_payout_diff: 'Разница пополнений и списаний'
 
+  precipitation_in_toronto: 'Осадки в Торонто'
+  operations_distribution: 'Распределение операций'
+  deposites: 'Пополнения'
+  withdraws: 'Выплаты'
+  fees: 'Комиссия'
+  refunds: 'Возвраты'
+
 payin: 'Пополнения'
 payout: 'Выплаты'
 

@@ -28,11 +28,12 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://127.0.0.1:8082/health']
-      interval: 2s
-      timeout: 2s
-      retries: 5
-      start_period: 1s
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 60s
+      start_period: 30s
+      start_interval: 2s
+      timeout: 5s
+      retries: 3
 
   postgres:
     image: postgres:alpine

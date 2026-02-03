@@ -28,7 +28,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:8082/health"]
       interval: 60s
       start_period: 30s
       start_interval: 2s

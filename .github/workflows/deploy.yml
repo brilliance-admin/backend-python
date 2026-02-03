@@ -43,7 +43,7 @@ jobs:
         continue-on-error: true
         uses: burnett01/rsync-deployments@v8
         with:
-          switches: -rltvz --delete --exclude='.venv' --exclude='__pycache__' --exclude='.git' --exclude='*.pyc' --exclude='.pytest_cache'
+          switches: -rltvz --delete --exclude-from='.rsyncignore'
           path: .
           remote_path: /home/deploy/apps/backend-python
           remote_host: ${{ vars.SERVER_HOST }}
@@ -59,20 +59,11 @@ jobs:
           script: |
             set -e
 
-            # Ensure rsync
-            if ! command -v rsync >/dev/null 2>&1; then
-              sudo apt update && sudo apt install -y rsync
-            fi
-
-            # Fix permissions
             sudo chown -R deploy:deploy /home/deploy/apps/backend-python
 
-            # Deploy Docker
             cd /home/deploy/apps/backend-python
-            docker compose -f .configs/docker/docker-compose.yml run --rm backend /bin/bash -c "uv sync --all-groups --all-extras"
             docker compose -f .configs/docker/docker-compose.yml up -d --build
 
-            # Wait for healthy
             for i in $(seq 1 10); do
               STATUS=$(docker inspect --format='{{.State.Health.Status}}' brilliance-backend-1 2>/dev/null || echo "not found")
               echo "Attempt $i: status=$STATUS"
@@ -84,19 +75,9 @@ jobs:
                 docker logs brilliance-backend-1 --tail 50
                 exit 1
               fi
-              sleep 5
+              sleep 2
             done
 
-            # Ensure nginx
-            if ! command -v nginx >/dev/null 2>&1; then
-              sudo apt update && sudo apt install -y nginx
-            fi
-
-            if ! systemctl is-active --quiet nginx; then
-              sudo systemctl start nginx
-            fi
-
-            # Update nginx config
             sudo ln -sf /home/deploy/apps/backend-python/.configs/nginx/example.conf /etc/nginx/sites-enabled/example
             sudo rm -f /etc/nginx/sites-enabled/default
             sudo nginx -t

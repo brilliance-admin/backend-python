@@ -62,7 +62,7 @@ jobs:
             sudo chown -R deploy:deploy /home/deploy/apps/backend-python
 
             cd /home/deploy/apps/backend-python
-            docker compose -f .configs/docker/docker-compose.yml up -d --build
+            docker compose -f .configs/docker/docker-compose.yml up -d
 
             for i in $(seq 1 10); do
               STATUS=$(docker inspect --format='{{.State.Health.Status}}' brilliance-backend-1 2>/dev/null || echo "not found")

@@ -19,6 +19,8 @@ Old repo: https://github.com/Innova-Group-LLC/custom_admin
 
 </div>
 
+> If you found a bug or have a feature request, feel free to open an issue.
+
 >Not production ready, work in progress.
 
 ## What Brilliance Panel Does
@@ -35,6 +37,8 @@ The project does not use templates, except for one that renders this frontend.
 
 All customization is done from Python code: how to display data and where to get it from. \
 If the desired customization is not available out of the box, you can modify the frontend and use your own version, but the goal is to cover all common use cases so that there will be no need for that.
+
+If you have ideas on what should be covered, I'd be happy to hear them in an issue.
 
 ## Installation:
 ``` shell

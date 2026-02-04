@@ -6,54 +6,155 @@
 [![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin/)
 [![CI](https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg)](https://github.com/brilliance-admin/backend-python/actions)
 
-old repo: https://github.com/Innova-Group-LLC/custom_admin
-
 Simple and lightweight data management framework powered by `FastAPI` and `Vue3` `Vuetify` all-in-one. \
 Integrated with `SQLAlchemy`. Inspaired by Django Admin and DRF.\
 _Some call it heavenly in its brilliance._
 
 ### [Live Demo](https://brilliance-admin.com/) | [Demo Sources](https://github.com/brilliance-admin/backend-python/tree/main/example) | [Documentation](https://docs.brilliance-admin.com/)
 
-  <img src="https://github.com/brilliance-admin/backend-python/blob/main/screenshots/websitemockupgenerator.png?raw=true"
+Old repo: https://github.com/Innova-Group-LLC/custom_admin
+
+  <img src="https://raw.githubusercontent.com/brilliance-admin/.github/refs/heads/main/screenshots/04.02.2026/all-devices-black.png"
        alt="Preview">
 
 </div>
 
-### Brilliance Admin provides
+>Not production ready, work in progress.
 
-A quick way to create a data management interface using:
+## Что предоставляет данный проект
+Проект позволяет быстро интегрировать панель управления в ваш ASGI бэкенд.
 
-- Admin page - endpoint with a prebuilt SPA [frontend Vue3 + Vuetify](https://github.com/brilliance-admin/frontend) <br>
-This endpoint can be added to any ASGI compatable backend. For existing project or standalone admin app.
-- API to fetch the UI JSON schema
-- API methods for that UI to work with (to read and modify data)
+Кратко основные возможности:
+- Современный и удобный вывод данных из любого источника.
+- Быстрая настройка управления данными через действия.
+
+Фронтэнд часть работает на заранее собранном фронтэнде - [Repo Vue3 + Vuetify](https://github.com/brilliance-admin/frontend). \
+Проект не использует темплейты, за исключением одного, который рендерит этот фронт.
+
+### Кастомизация:
+
+Вся кастомизация делается из python кода: в каком виде выводить и откуда. \
+Если желаемая кастомизация не предусмотрена из коробки - возможно модифицировать фронт и использовать его, но планируется покрыть все распространенные юзер-кейсы, чтобы этого не потребовалось.
+
+## What This Project Do
+The project allows you to quickly integrate an admin panel into your ASGI backend.
+
+Key features at a glance:
+- Modern and convenient data display from any source.
+- Quick setup of data management through actions.
+
+The frontend runs on a pre-built frontend - [Repo Vue3 + Vuetify](https://github.com/brilliance-admin/frontend). \
+The project does not use templates, except for one that renders this frontend.
+
+### Customization:
+
+All customization is done from Python code: how to display data and where to get it from. \
+If the desired customization is not available out of the box, you can modify the frontend and use your own version, but the goal is to cover all common use cases so that there will be no need for that.
+
+## Installation:
+``` shell
+pip install brilliance-admin
+```
+
+## SQLAlchemy Category Example
+``` python
+class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
+    model = User
+    
+    table_schema = sqlalchemy.SQLAlchemyFieldsSchema(
+        model=User,
+        # Fields would be discovered automaticly if fields is not presented
+        readonly_fields=[
+            "last_login",
+            "created_at",
+        ],
+    )
+    table_filters = sqlalchemy.SQLAlchemyFieldsSchema(
+        model=User,
+        fields=[
+            "id",
+            "username",
+            "email",
+            "is_admin",
+            "created_at",
+        ],
+        created_at=schema.DateTimeField(range=True),
+    )
+```
+
+## Admin Action Example
+```python
+    @admin_action(
+        title=_('change_password'),
+        form_schema=schema.FieldsSchema(
+            new_password=schema.StringField(label=_('new_password'), min_length=6, password=True)
+        ),
+    )
+    async def change_password(self, action_data: ActionData):
+        new_password = action_data.form_data['new_password']
+        users_id = action_data.pks
+        # Here is your logic
+        return ActionResult(message=ActionMessage(_('password_changed')))
+```
+
+Result:
+<div align="center">
+  <img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/04.02.2026/change-password.png?raw=true"
+       alt="Brilliance Admin"
+       width="600">
+</div>
+
+## Panel Instance Example
+
+``` python
+from brilliance_admin import schema
+from apps.users import UserAdmin
+
+async def password_validator(user: User, password: str) -> bool:
+    return await User.verify_password(password, user.password)
+
+auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
+    secret=settings.auth_secret,
+    db_async_session=your_db.async_session,
+    user_model=User,
+    password_validator=password_validator,
+)
+
+admin_schema = schema.AdminSchema(
+    title='Admin Panel',
+    auth=auth,
+    categories=[
+        schema.Category(
+            slug='users',
+            categories=[UserAdmin(db_async_session=your_db.async_session)]
+        ),
+    ],
+)
+
+admin_app = admin_schema.generate_app()
+```
+
+``` python
+# Your FastAPI app (Any ASGI framework can be used)
+app = FastAPI()
+app.mount('/admin', admin_app)
+```
+
+For more details, check out our [how-to-start documentation](https://docs.brilliance-admin.com/how-to-start/)
 
 <details open>
 <summary><h2>Screenshots</h2></summary>
-<div align="center"><img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/login.png?raw=true"/></div>
-<div align="center"><img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/table.png?raw=true"/></div>
-<div align="center"><img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/charts.png?raw=true"/></div>
+<img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/04.02.2026/login-white.png?raw=true"/>
+<img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/04.02.2026/dashboard-white.png?raw=true"/>
+<img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/04.02.2026/dashboard-black.png?raw=true"/>
+<img src="https://github.com/brilliance-admin/.github/blob/main/screenshots/04.02.2026/table-white.png?raw=true"/>
 </details>
-
-## Key ideas
-
-- **API Oriented** <br>
-Data generation/updating API separated from rendering fontend with zero hardcode, this makes it possible to have a single frontend with multiple backend implementations in different languages and makes test coverage easier.
-- **Rich visualization**  <br>
-Providing rich and convenient ways to display and manage data (tables, charts, etc) from any data source.
-- **UI JSON Schema** <br>
-Represents the data describing the structure of entire admin panel UI. <br>
-You only need to specify what should be rendered. The frontend will display it and automatically request data from the backend for rendering or updates.
-- **ORM** <br>
-Automatic generation from ORM for schema UI frontend and backend methods for CRUD operations.
-- **Minimal boilerplate** <br>
-Focused on simplified, but rich configuration.
 
 ## Features
 
+* Dashboards (ChartJS + custom components)
 * Tables with full CRUD support, including filtering, sorting, and pagination.
 * Ability to define custom table actions with forms, response messages, and file downloads.
-* Graphs via ChartJS
 * Localization support
 * Adapted for different screen sizes and mobile devices
 * Auth via any account data source
@@ -64,50 +165,11 @@ Focused on simplified, but rich configuration.
 
 **Planned:**
 
-* Dashboard features
 * Role-based access permissions system via interface
 * Backend interface for storing and viewing action history in the admin interface
 * Nested data support for creation and detail views (inline editing), nested CRUD workflows
 * Django ORM integration
 * Support for Oauth providers
-
-## Installation:
-``` shell
-pip install brilliance-admin
-```
-
-## Usage example
-
-You need to generate `AdminSchema` instance:
-``` python
-from brilliance_admin import schema
-
-
-class CategoryExample(schema.CategoryTable):
-    "Implementation of get_list and retrieve; update and create are optional"
-
-
-admin_schema = schema.AdminSchema(
-    title='Admin Panel',
-    auth=YourAdminAuthentication(),
-    categories=[
-        schema.Category(
-            slug='example',
-            categories=[
-                CategoryExample(),
-            ]
-        ),
-    ],
-)
-
-admin_app = admin_schema.generate_app()
-
-# Your FastAPI app (Any ASGI framework can be used)
-app = FastAPI()
-app.mount('/admin', admin_app)
-```
-
-For more details, check out our [how-to-start documentation](https://docs.brilliance-admin.com/how-to-start/)
 
 ## Comparison of Similar Projects
 

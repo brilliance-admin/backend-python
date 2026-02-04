@@ -21,7 +21,7 @@ Old repo: https://github.com/Innova-Group-LLC/custom_admin
 
 >Not production ready, work in progress.
 
-## What This Project Do
+## What Brilliance Panel Does
 The project allows you to quickly integrate an admin panel into your ASGI backend.
 
 Key features at a glance:

@@ -38,7 +38,7 @@ async def table_list(request: Request, group: str, category: str, list_data: Lis
         return JSONResponse(content=result.model_dump(mode='json', context=context))
     except Exception as e:
         logger.exception('Admin list error: %s; result: %s', e, result)
-        raise HTTPException(status_code=500, detail=f"Content error: {e}") from e
+        raise HTTPException(status_code=500, detail="Content error") from e
 
 
 @router.post(path='/{group}/{category}/retrieve/{pk}/')

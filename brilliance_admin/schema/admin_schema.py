@@ -5,7 +5,9 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import Field
 from pydantic.dataclasses import dataclass
@@ -131,7 +133,7 @@ class AdminSchema:
     def generate_app(
             self,
             debug=False,
-            allow_cors=True,
+            default_cors=True,
 
             include_scalar=False,
             include_docs=False,
@@ -150,13 +152,14 @@ class AdminSchema:
             redoc_url=None,
         )
 
-        if allow_cors:
+        if default_cors:
+            allow_origins = [self.backend_prefix.rstrip('/')] if self.backend_prefix else ["*"]
             app.add_middleware(
                 CORSMiddleware,
-                allow_origins=["*"],
+                allow_origins=allow_origins,
                 allow_credentials=True,
                 allow_methods=["*"],
-                allow_headers=["*"]
+                allow_headers=["*"],
             )
 
         static_dir = resources.files("brilliance_admin").joinpath("static")
@@ -172,7 +175,22 @@ class AdminSchema:
 
         # pylint: disable=import-outside-toplevel
         from brilliance_admin.api.routers import brilliance_admin_router
+        from brilliance_admin.exceptions import APIError, FieldError
         app.include_router(brilliance_admin_router)
+
+        @app.exception_handler(RequestValidationError)
+        async def validation_exception_handler(request: Request, exc: RequestValidationError):
+            language_slug = request.headers.get('Accept-Language')
+            language_context = self.get_language_context(language_slug)
+            context = {'language_context': language_context}
+
+            field_errors = {}
+            for error in exc.errors():
+                field_slug = str(error['loc'][-1]) if error['loc'] else 'unknown'
+                field_errors[field_slug] = FieldError(message=error['msg'], field_slug=field_slug)
+
+            api_error = APIError(code='validation_error', field_errors=field_errors)
+            return JSONResponse(api_error.model_dump(mode='json', context=context), status_code=400)
 
         return app
 

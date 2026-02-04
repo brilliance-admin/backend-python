@@ -11,7 +11,10 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post(
     path='/login/',
-    responses={401: {"model": APIError}},
+    responses={
+        401: {"model": APIError},
+        400: {"model": APIError},
+    },
 )
 async def login(request: Request, auth_data: AuthData) -> AuthResult:
     schema: AdminSchema = request.app.state.schema

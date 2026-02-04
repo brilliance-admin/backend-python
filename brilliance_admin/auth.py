@@ -1,8 +1,11 @@
 import abc
+from typing import Annotated
 
-from pydantic import BaseModel
+from pydantic import BaseModel, StringConstraints
 from pydantic.dataclasses import dataclass
 from brilliance_admin.utils import DataclassBase
+
+Username = Annotated[str, StringConstraints(pattern=r'^[a-zA-Z0-9@._-]{1,150}$')]
 
 
 @dataclass
@@ -11,7 +14,7 @@ class UserABC(DataclassBase, abc.ABC):
 
 
 class AuthData(BaseModel):
-    username: str
+    username: Username
     password: str
 
 

@@ -73,6 +73,9 @@ class AdminSchema:
 
     language_manager: LanguageManager | None = None
 
+    default_theme: str | None = None
+    custom_themes: List[dict] = Field(default_factory=list)
+
     debug: bool = False
 
     def __post_init__(self):
@@ -216,6 +219,8 @@ class AdminSchema:
             'version': importlib.metadata.version('brilliance-admin'),
             'api_timeout_ms': 1000 * 5,
             'logo_image': logo_image,
+            'default_theme': self.default_theme,
+            'custom_themes': self.custom_themes,
         }
         data = AdminIndexContextData(
             title=str(self.title),

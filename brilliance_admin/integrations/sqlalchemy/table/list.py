@@ -123,9 +123,9 @@ class SQLAlchemyAdminListMixin:
                 }
             )
             msg = _('errors.filters_exception') % {
-                'error': str(e) if admin_schema.debug else type(e).__name__,
+                'error_type': str(e) if admin_schema.debug else type(e).__name__,
             }
-            raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=500) from e
+            raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=400) from e
 
         try:
             async with self.db_async_session() as session:

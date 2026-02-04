@@ -27,13 +27,15 @@ SCOPE = {
 async def test_index_context_data():
     request = Request(scope=SCOPE)
     # admin_schema.backend_prefix = 'test'
+    admin_schema.custom_themes = []
     result = await admin_schema.get_index_context_data(request)
     version = importlib.metadata.version('brilliance-admin')
     assert result == {
         'favicon_image': '/static/favicon.jpg',
         'settings_json': '{"backend_prefix": "http://testserver/admin/", "static_prefix": '
         f'"http://testserver/admin/static/", "version": "{version}", "api_timeout_ms": '
-        '5000, "logo_image": "http://testserver/static/logo-outline.png"}',
+        '5000, "logo_image": "http://testserver/static/logo-outline.png", "default_theme": '
+        '"deepPurpleDark", "custom_themes": []}',
         'title': 'Brilliance Admin Demo',
     }
 

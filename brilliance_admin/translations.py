@@ -83,7 +83,11 @@ class LanguageManager(abc.ABC):
 
         translation = self.phrases.get_text(text.slug, language or default_lang, default_lang) or text.slug
         if text.translation_kwargs:
-            translation %= text.translation_kwargs
+            try:
+                translation %= text.translation_kwargs
+            except (KeyError, ValueError, TypeError) as e:
+                logger.warning('get_text error %s text:"%s" and kwargs:%s', e, translation, text.translation_kwargs)
+                pass
 
         return translation
 

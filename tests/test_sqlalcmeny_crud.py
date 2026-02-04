@@ -201,7 +201,7 @@ async def test_create_bad_json(sqlite_sessionmaker, language_context):
             'provider_settings': {
                 'code': None,
                 'field_slug': None,
-                'message': "Некорректный тип данных: <class 'str'>; ожидается JSON",
+                'message': "Некорректный тип данных: str; ожидается JSON",
             },
         },
         'message': 'Validation error',

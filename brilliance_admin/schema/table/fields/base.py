@@ -81,7 +81,7 @@ class IntegerField(TableField):
     async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
         value = await super().deserialize(value, action, extra, *args, **kwargs)
         if value and not isinstance(value, int):
-            raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'init'})
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'init'})
 
         if value is None:
             if self.min_value is not None:
@@ -130,7 +130,7 @@ class StringField(TableField):
     async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
         value = await super().deserialize(value, action, extra, *args, **kwargs)
         if value and not isinstance(value, str):
-            raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'string'})
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'string'})
 
         if value is None:
             if self.min_length is not None and self.min_length > 0:
@@ -188,7 +188,7 @@ class DateTimeField(TableField):
             return
 
         if value and not isinstance(value, (str, dict)):
-            raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'datetime'})
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'datetime'})
 
         if isinstance(value, str):
             return _parse_iso(value)
@@ -204,7 +204,7 @@ class DateTimeField(TableField):
                 'to': _parse_iso(value['to']),
             }
 
-        raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'datetime'})
+        raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'datetime'})
 
 
 @dataclass
@@ -218,7 +218,7 @@ class JSONField(TableField):
             return
 
         if not isinstance(value, (dict, list)):
-            raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'JSON'})
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'JSON'})
 
         return value
 
@@ -243,7 +243,7 @@ class ArrayField(TableField):
             return
 
         if not isinstance(value, list):
-            raise FieldError(_('validation.bad_type_error') % {'type': type(value), 'expected': 'Array'})
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'Array'})
 
         return value
 

@@ -108,7 +108,7 @@ class PaymentsAdmin(schema.CategoryTable):
     )
     async def delete(self, action_data: ActionData):
         await asyncio.sleep(1)
-        return ActionResult(message=ActionMessage(_('deleted_successfully')))
+        return ActionResult(_('deleted_successfully'))
 
     @admin_action(title=_('action_with_exception'), allow_empty_selection=True)
     async def action_with_exception(self, action_data: ActionData):

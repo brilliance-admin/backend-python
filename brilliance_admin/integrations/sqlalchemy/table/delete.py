@@ -1,5 +1,5 @@
-from brilliance_admin.exceptions import APIError, AdminAPIException
-from brilliance_admin.schema.table.admin_action import ActionData, ActionMessage, ActionResult, admin_action
+from brilliance_admin.exceptions import AdminAPIException, APIError
+from brilliance_admin.schema.table.admin_action import ActionData, ActionResult, admin_action
 from brilliance_admin.translations import TranslateText as _
 
 
@@ -15,4 +15,4 @@ class SQLAlchemyDeleteAction:
     async def delete(self, *args, action_data: ActionData, **kwargs):
         if not self.has_delete:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
-        return ActionResult(message=ActionMessage(_('deleted_successfully')))
+        return ActionResult(_('deleted_successfully'))

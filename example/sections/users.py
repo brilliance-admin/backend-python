@@ -41,4 +41,4 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
         ),
     )
     async def change_password(self, action_data: ActionData):
-        return ActionResult(message=ActionMessage(_('password.password_changed')))
+        return ActionResult(_('password.password_changed'))

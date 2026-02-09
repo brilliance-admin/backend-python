@@ -31,6 +31,17 @@ class ActionResult(DataclassBase):
     message: ActionMessage | None = None
     persistent_message: SupportsStr | None = None
 
+    def __init__(
+        self,
+        message: ActionMessage | SupportsStr | None = None,
+        persistent_message: SupportsStr | None = None,
+    ):
+        if isinstance(message, (str, SupportsStr)) and not isinstance(message, ActionMessage):
+            self.message = ActionMessage(text=message)
+        else:
+            self.message = message
+        self.persistent_message = persistent_message
+
 
 # pylint: disable=too-many-arguments
 # pylint: disable=too-many-positional-arguments

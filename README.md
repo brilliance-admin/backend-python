@@ -17,6 +17,7 @@ Old repo: https://github.com/Innova-Group-LLC/custom_admin
   <img src="https://raw.githubusercontent.com/brilliance-admin/.github/refs/heads/main/screenshots/04.02.2026/all-devices-black.png"
        alt="Preview">
 
+  <sub>Every ⭐ - helps to make it even more brilliant!</sub>
 </div>
 
 > [!TIP]

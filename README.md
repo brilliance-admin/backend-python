@@ -26,19 +26,4 @@ Old repo: https://github.com/Innova-Group-LLC/custom_admin
 > [!WARNING]
 >Not production ready, work in progress.
 
-## What Brilliance Panel Does
-The project allows you to quickly integrate an admin panel into your ASGI backend.
-
-Key features at a glance:
-- Modern and convenient data display from any source.
-- Quick setup of data management through actions.
-
-The frontend runs on a pre-built frontend - [Repo Vue3 + Vuetify](https://github.com/brilliance-admin/frontend). \
-The project does not use templates, except for one that renders this frontend.
-
-### Customization:
-
-All customization is done from Python code: how to display data and where to get it from. \
-If the desired customization is not available out of the box, you can modify the frontend and use your own version, but the goal is to cover all common use cases so that there will be no need for that.
-
-If you have ideas on what should be covered, I'd be happy to hear them in an issue.
+Full documentation including project overview, getting started guide, configuration reference, API examples, and component usage is available inside [Documentation](https://docs.brilliance-admin.com/) (GitHub pages hosted)

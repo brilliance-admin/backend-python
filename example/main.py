@@ -19,7 +19,7 @@ from example.sections.payments import PaymentsAdmin
 from example.sections.terminal import TerminalAdmin
 from example.sections.user_session import UserSessionAdmin
 from example.sections.users import UserAdmin
-from example.sqlite import async_sessionmaker_, lifespan
+from example.database import async_sessionmaker_, lifespan
 
 structlog.configure(
     processors=[

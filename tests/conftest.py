@@ -58,7 +58,7 @@ async def async_session(async_engine):
 
 @pytest.fixture
 async def sqlite_sessionmaker():
-    from example.sqlite import ASYNC_ENGINE, async_sessionmaker_, recreate_tables_async
+    from example.database import ASYNC_ENGINE, async_sessionmaker_, recreate_tables_async
     await recreate_tables_async()
     try:
         yield async_sessionmaker_

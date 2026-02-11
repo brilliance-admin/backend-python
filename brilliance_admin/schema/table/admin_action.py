@@ -6,7 +6,7 @@ from pydantic.dataclasses import dataclass
 
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.translations import DataclassBase
-from brilliance_admin.utils import SupportsStr
+from brilliance_admin.utils import SupportsStr, humanize_field_name
 
 
 class ActionData(BaseModel):
@@ -47,7 +47,7 @@ class ActionResult(DataclassBase):
 # pylint: disable=too-many-positional-arguments
 @validate_call
 def admin_action(
-    title: SupportsStr,
+    title: SupportsStr | None = None,
     description: Optional[SupportsStr] = None,
     confirmation_text: Optional[SupportsStr] = None,
 
@@ -67,7 +67,7 @@ def admin_action(
         func.__action__ = True
 
         func.action_info = {
-            'title': title,
+            'title': title or humanize_field_name(func.__name__),
             'description': description,
             'confirmation_text': confirmation_text,
 

@@ -32,6 +32,7 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
         model=User,
         created_at=schema.DateTimeField(range=True),
         last_login=schema.DateTimeField(range=True),
+        exclude_fields=['password'],
     )
 
     @admin_action(

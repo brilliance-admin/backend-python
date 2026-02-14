@@ -8,10 +8,10 @@ from example.sections.models import Currency, CurrencyFactory, MerchantFactory, 
 
 
 @pytest.mark.asyncio
-async def test_list_filter(sqlite_sessionmaker, language_context):
+async def test_list_filter(postgres_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Terminal,
-        db_async_session=sqlite_sessionmaker,
+        db_async_session=postgres_sessionmaker,
         table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
             model=Terminal,
             fields=['id'],
@@ -78,11 +78,11 @@ async def test_list_filter(sqlite_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
-async def test_list_search(sqlite_sessionmaker, language_context):
+async def test_list_search(postgres_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         search_fields=['title'],
         model=Terminal,
-        db_async_session=sqlite_sessionmaker,
+        db_async_session=postgres_sessionmaker,
         table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
             model=Terminal,
             fields=['id'],
@@ -109,10 +109,10 @@ async def test_list_search(sqlite_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
-async def test_filter_related_one(sqlite_sessionmaker, language_context):
+async def test_filter_related_one(postgres_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Currency,
-        db_async_session=sqlite_sessionmaker,
+        db_async_session=postgres_sessionmaker,
         table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
             model=Currency,
             fields=['id'],
@@ -147,10 +147,10 @@ async def test_filter_related_one(sqlite_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
-async def test_filter_related_many(sqlite_sessionmaker, language_context):
+async def test_filter_related_many(postgres_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Terminal,
-        db_async_session=sqlite_sessionmaker,
+        db_async_session=postgres_sessionmaker,
         table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
             model=Terminal,
             fields=['id'],
@@ -182,22 +182,22 @@ async def test_filter_related_many(sqlite_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
-async def test_list_bad_search_field(sqlite_sessionmaker):
+async def test_list_bad_search_field(postgres_sessionmaker):
     with pytest.raises(AttributeError) as e:
         sqlalchemy.SQLAlchemyAdmin(
             search_fields=['no_field'],
             model=Terminal,
-            db_async_session=sqlite_sessionmaker,
+            db_async_session=postgres_sessionmaker,
         )
 
     assert str(e.value) == 'SQLAlchemyAdmin: search field "no_field" not found in model Terminal'
 
 
 @pytest.mark.asyncio
-async def test_ordering(sqlite_sessionmaker, language_context):
+async def test_ordering(postgres_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Terminal,
-        db_async_session=sqlite_sessionmaker,
+        db_async_session=postgres_sessionmaker,
         ordering_fields=['id'],
         table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
             model=Terminal,

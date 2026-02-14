@@ -10,7 +10,7 @@ Simple and lightweight data management framework powered by `FastAPI` and `Vue3`
 Integrated with `SQLAlchemy`. Inspaired by Django Admin and DRF.\
 _Some call it heavenly in its brilliance._
 
-### [Live Demo](https://brilliance-admin.com/) | [Demo Sources](https://github.com/brilliance-admin/backend-python/tree/main/example) | [Documentation](https://docs.brilliance-admin.com/)
+### [Live Demo](https://brilliance-admin.com/) | [Demo Sources](https://github.com/brilliance-admin/backend-python/tree/main/example) | [Schowcase + Documentation](https://docs.brilliance-admin.com/)
 
 Old repo: https://github.com/Innova-Group-LLC/custom_admin
 

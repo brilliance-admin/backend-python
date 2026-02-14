@@ -28,7 +28,7 @@ class ActionMessage(DataclassBase):
 
 @dataclass
 class ActionResult(DataclassBase):
-    message: ActionMessage | None = None
+    message: ActionMessage | SupportsStr | None = None
     persistent_message: SupportsStr | None = None
 
     def __init__(
@@ -80,8 +80,8 @@ def admin_action(
         }
 
         @functools.wraps(func)
-        async def wrapped(*args):
-            return await func(*args)
+        async def wrapped(*args, **kwargs):
+            return await func(*args, **kwargs)
 
         return wrapped
 

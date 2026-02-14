@@ -1,6 +1,7 @@
 from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.integrations.sqlalchemy.fields_schema import SQLAlchemyFieldsSchema
+from brilliance_admin.integrations.sqlalchemy.utils import extract_integrity_detail
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
@@ -154,11 +155,9 @@ class SQLAlchemyAdminListMixin:
                     'list_data': list_data,
                 }
             )
-            orig = e.orig
-            message = orig.args[0] if orig.args else type(orig).__name__
-            raise AdminAPIException(
-                APIError(message=message, code='db_exception'), status_code=500,
-            ) from e
+            detail = extract_integrity_detail(e)
+            msg = _('errors.db_error_list') % {'error_type': detail}
+            raise AdminAPIException(APIError(message=msg, code='db_exception'), status_code=500) from e
 
         except Exception as e:
             logger.exception(

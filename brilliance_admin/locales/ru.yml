@@ -15,6 +15,9 @@ errors:
   filters_exception: 'Произошла неизвестная техническая ошибка при фильтрации данных: %(error_type)s'
   method_not_allowed: 'Ошибка, данный метод недоступен.'
   filter_error: 'Проишла ошибка при фильтрации: %(error)s'
+  items_not_found: "Элементы не найдены: %(ids)s"
+  delete_integrity_error: "Невозможно удалить: существуют связанные записи: %(detail)s"
+  db_integrity_error: "Ошибка целостности базы данных: %(detail)s"
 
   password_exception: 'Произошла неизвестная ошибка при проверке пароля: %(error_type)s'
 

@@ -14,6 +14,8 @@ services:
 
       - ~/.ssh/id_rsa:/root/.ssh/id_rsa:delegated
       - ~/.ssh/known_hosts:/root/.ssh/known_hosts:delegated
+
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       POSTGRES_DB: brilliance
       POSTGRES_USER: brilliance

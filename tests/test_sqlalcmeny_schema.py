@@ -196,11 +196,11 @@ FIELDS = [
 
 
 @pytest.mark.asyncio
-async def test_generate_category_schema(sqlite_sessionmaker, language_context):
+async def test_generate_category_schema(postgres_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         search_fields=['id'],
         model=Terminal,
-        db_async_session=sqlite_sessionmaker,
+        db_async_session=postgres_sessionmaker,
         table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
             model=Terminal,
             fields=FIELDS,

@@ -1,7 +1,7 @@
 import abc
 import copy
 import inspect
-from typing import Awaitable, List
+from typing import Awaitable, Dict, List
 
 from fastapi import HTTPException, Request
 from pydantic import Field
@@ -14,7 +14,9 @@ from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult, ListData, TableListResult
 from brilliance_admin.translations import LanguageContext
-from brilliance_admin.utils import DeserializeAction, SupportsStr
+from brilliance_admin.utils import DeserializeAction, SupportsStr, get_logger
+
+logger = get_logger()
 
 
 class CategoryTable(BaseCategory):
@@ -62,6 +64,18 @@ class CategoryTable(BaseCategory):
         fn = getattr(self, 'update', None)
         return inspect.iscoroutinefunction(fn)
 
+    def get_actions(self) -> Dict[str, Awaitable]:
+        actions = {}
+        for attribute_name in dir(self):
+            if '__' in attribute_name:
+                continue
+
+            attribute = getattr(self, attribute_name)
+            if inspect.iscoroutinefunction(attribute) and getattr(attribute, '__action__', False):
+                actions[attribute.__name__] = attribute
+
+        return actions
+
     def generate_schema(self, user, language_context: LanguageContext) -> dict:
         schema = super().generate_schema(user, language_context)
 
@@ -88,38 +102,26 @@ class CategoryTable(BaseCategory):
             table.table_filters = self.table_filters.generate_schema(user, language_context)
 
         actions = {}
-        for attribute_name in dir(self):
-            if '__' in attribute_name:
-                continue
+        for action_slug, action in self.get_actions().items():
+            action = copy.copy(action.action_info)
 
-            attribute = getattr(self, attribute_name)
-            if inspect.iscoroutinefunction(attribute) and getattr(attribute, '__action__', False):
-                action = copy.copy(attribute.action_info)
+            action['title'] = language_context.get_text(action.get('title'))
+            action['description'] = language_context.get_text(action.get('description'))
+            action['confirmation_text'] = language_context.get_text(action.get('confirmation_text'))
 
-                action['title'] = language_context.get_text(action.get('title'))
-                action['description'] = language_context.get_text(action.get('description'))
-                action['confirmation_text'] = language_context.get_text(action.get('confirmation_text'))
+            form_schema = action['form_schema']
+            if form_schema:
+                try:
+                    action['form_schema'] = form_schema.generate_schema(user, language_context)
+                except Exception as e:
+                    msg = f'Action {action_slug} form schema {form_schema} error: {e}'
+                    raise Exception(msg) from e
 
-                form_schema = action['form_schema']
-                if form_schema:
-                    try:
-                        action['form_schema'] = form_schema.generate_schema(user, language_context)
-                    except Exception as e:
-                        msg = f'Action {attribute} form schema {form_schema} error: {e}'
-                        raise Exception(msg) from e
-
-                actions[attribute_name] = action
+            actions[action_slug] = action
 
         table.actions = actions
         schema.table_info = table
         return schema
-
-    def _get_action_fn(self, action: str) -> Awaitable | None:
-        attribute = getattr(self, action)
-        if not inspect.iscoroutinefunction(attribute) or not getattr(attribute, '__action__', False):
-            return None
-
-        return attribute
 
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-positional-arguments
@@ -132,7 +134,8 @@ class CategoryTable(BaseCategory):
             user: UserABC,
             admin_schema: AdminSchema,
     ) -> ActionResult:
-        action_fn = self._get_action_fn(action)
+        action_fn = self.get_actions().get(action)
+
         if action_fn is None:
             raise HTTPException(status_code=404, detail=f'Action "{action}" is not found')
 
@@ -146,10 +149,11 @@ class CategoryTable(BaseCategory):
                 )
                 action_data.form_data = deserialized_data
 
-            result: ActionResult = await action_fn(action_data)
+            result: ActionResult = await action_fn(action_data=action_data)
         except AdminAPIException as e:
             raise e
         except Exception as e:
+            logger.exception('Admin action %s "%s" exception: %s', type(self).__name__, action, e)
             raise AdminAPIException(
                 APIError(message=str(e), code='user_action_error'),
                 status_code=500,

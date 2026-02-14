@@ -1,6 +1,7 @@
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError
+from brilliance_admin.integrations.sqlalchemy.utils import extract_integrity_detail
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
@@ -51,10 +52,9 @@ class SQLAlchemyAdminCreate:
                 type(self).__name__, self.table_schema.model.__name__, e,
                 extra={'data': data},
             )
-            orig = e.orig
-            message = orig.args[0] if orig.args else type(orig).__name__
+            detail = extract_integrity_detail(e)
             raise AdminAPIException(
-                APIError(message=message, code='db_integrity_error'), status_code=500,
+                APIError(message=_('errors.db_integrity_error') % {'detail': detail}, code='db_integrity_error'), status_code=500,
             ) from e
 
         except Exception as e:

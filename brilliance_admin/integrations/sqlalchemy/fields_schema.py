@@ -74,6 +74,18 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
             elif isinstance(col_type, (sqltypes.BigInteger, sqltypes.Integer)) or py_t is int:
                 field_class = schema.IntegerField
 
+                if isinstance(col_type, sqltypes.SmallInteger):
+                    field_data['min_value'] = -32768
+                    field_data['max_value'] = 32767
+
+                elif isinstance(col_type, sqltypes.Integer):
+                    field_data['min_value'] = -2147483648
+                    field_data['max_value'] = 2147483647
+
+                elif isinstance(col_type, sqltypes.BigInteger):
+                    field_data['min_value'] = -9223372036854775808
+                    field_data['max_value'] = 9223372036854775807
+
             elif isinstance(col_type, sqltypes.Numeric):
                 field_class = schema.IntegerField
                 field_data["inputmode"] = "decimal"

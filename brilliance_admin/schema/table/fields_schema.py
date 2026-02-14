@@ -21,19 +21,52 @@ class DeserializeError(Exception):
 
 
 class FieldsSchema:
-    # Список полей
+    # List of field slugs included in the schema.
+    # Defines the complete set of fields and their order.
+    # If not specified, auto-populated with all discovered TableField attributes.
     fields: List[str] | None = None
 
-    # Список колонок, которые будут отображаться в таблице
+    # List of field slugs displayed as columns in the list page table.
+    # Each slug must be present in fields.
+    # If not specified, matches fields.
     list_display: List[str] | None = None
 
-    # Для передачи параметра read_only = True внутрь поля
+    # List of field slugs that will be marked as read_only = True.
+    # These fields are displayed but excluded from deserialization
+    # during create and update operations.
     readonly_fields: ClassVar[List | None] = None
+
+    # List of field slugs to exclude from the schema.
+    # Fields in this list will not be added even if they appear in fields.
+    exclude_fields: List[str] | None = None
+
+    # Dictionary for overriding attributes on already generated fields.
+    # Key is the field slug, value is a dict of {attribute_name: value}.
+    # Applied after field generation, allowing to change
+    # read_only, label, required and other parameters without creating a custom field.
+    #
+    # Example:
+    #   extra_kwargs = {
+    #       'title': {'required': True, 'max_length': 100},
+    #       'status': {'read_only': True},
+    #   }
+    extra_kwargs: Dict[str, dict] | None = None
 
     # Generated fields
     _generated_fields: dict = None
 
-    def __init__(self, *args, table_schema=None, list_display=None, readonly_fields=None, fields=None, **kwargs):
+    def __init__(
+            self,
+            *args,
+            table_schema=None,
+            list_display=None,
+            readonly_fields=None,
+            fields=None,
+            exclude_fields=None,
+            extra_kwargs=None,
+            **kwargs,
+    ):
+
         if fields:
             self.fields = fields
 
@@ -46,6 +79,12 @@ class FieldsSchema:
 
         if list_display:
             self.list_display = list_display
+
+        if exclude_fields:
+            self.exclude_fields = exclude_fields
+
+        if extra_kwargs:
+            self.extra_kwargs = extra_kwargs
 
         if readonly_fields:
             self.readonly_fields = readonly_fields
@@ -62,6 +101,9 @@ class FieldsSchema:
                 msg = f'{type(self).__name__} field "{field_slug}" must be string'
                 raise AttributeError(msg)
 
+            if self.exclude_fields and field_slug in self.exclude_fields:
+                continue
+
             if field_slug not in generated_fields:
                 msg = NOT_FUND_EXCEPTION.format(
                     field_slug=field_slug,
@@ -71,6 +113,15 @@ class FieldsSchema:
                 raise AttributeError(msg)
 
             self._generated_fields[field_slug] = generated_fields[field_slug]
+
+        for field_slug, kwargs_info in (self.extra_kwargs or {}).items():
+            field = self._generated_fields.get(field_slug)
+            if field is None:
+                msg = f'{type(self).__name__}.extra_kwargs field "{field_slug}" not found as field'
+                raise AttributeError(msg)
+
+            for attr_name, value in kwargs_info.items():
+                setattr(field, attr_name, value)
 
         self.validate_fields(*args, **kwargs)
 

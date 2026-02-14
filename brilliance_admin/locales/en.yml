@@ -14,7 +14,10 @@ errors:
   connection_refused_error: 'Database connection error: %(error)s'
   filters_exception: 'An unknown technical error occurred while filtering data: %(error_type)s'
   method_not_allowed: 'Error, method not allowed. This action is not permitted.'
-  filter_error: 'An error occurred during filtering: {error}'
+  filter_error: 'An error occurred during filtering: %(error)s'
+  items_not_found: "Items not found: %(ids)s"
+  delete_integrity_error: "Cannot delete: related records exist: %(detail)s"
+  db_integrity_error: "Database integrity error: %(detail)s"
 
 serialize_error:
   field_error: 'Field %(field_slug)s serialize error: %(error)s'

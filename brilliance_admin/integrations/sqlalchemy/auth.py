@@ -1,5 +1,4 @@
 import inspect
-from typing import Callable
 
 from brilliance_admin.auth import AdminAuthentication, AuthData, AuthResult, UserABC, UserResult
 from brilliance_admin.exceptions import AdminAPIException, APIError

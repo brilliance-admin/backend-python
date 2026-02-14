@@ -13,10 +13,10 @@ from example.sections.models import (
 from tests.test_sqlalcmeny_schema import FIELDS
 
 
-def get_category(sqlite_sessionmaker):
+def get_category(postgres_sessionmaker):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Terminal,
-        db_async_session=sqlite_sessionmaker,
+        db_async_session=postgres_sessionmaker,
         table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
             model=Terminal,
             fields=FIELDS,
@@ -26,8 +26,8 @@ def get_category(sqlite_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_create(sqlite_sessionmaker, language_context):
-    category = get_category(sqlite_sessionmaker)
+async def test_create(postgres_sessionmaker, language_context):
+    category = get_category(postgres_sessionmaker)
     user = auth.UserABC(username="test")
     merchant = await MerchantFactory()
     currency = await CurrencyFactory()
@@ -40,6 +40,7 @@ async def test_create(sqlite_sessionmaker, language_context):
         'description': 'test',
         'title': 'test',
         'created_at': '2026-01-20T20:33:40.055184Z',
+        'registered_delay': 60,
     }
     create_result: schema.CreateResult = await category.create(
         data=create_data,
@@ -52,8 +53,8 @@ async def test_create(sqlite_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
-async def test_create_bad_fk(sqlite_sessionmaker, language_context):
-    category = get_category(sqlite_sessionmaker)
+async def test_create_bad_fk(postgres_sessionmaker, language_context):
+    category = get_category(postgres_sessionmaker)
     user = auth.UserABC(username="test")
     merchant = await MerchantFactory()
     currency = await CurrencyFactory()
@@ -65,6 +66,7 @@ async def test_create_bad_fk(sqlite_sessionmaker, language_context):
         'status': {'value': 'error', 'title': 'Error'},
         'description': 'test',
         'title': 'test',
+        'registered_delay': 60,
     }
     with pytest.raises(AdminAPIException) as e:
         schema.CreateResult = await category.create(
@@ -73,12 +75,18 @@ async def test_create_bad_fk(sqlite_sessionmaker, language_context):
             language_context=language_context,
             admin_schema=admin_schema,
         )
-    assert e.value.get_error().model_dump() == {'code': 'db_integrity_error', 'field_errors': None, 'message': 'NOT NULL constraint failed: terminal.merchant_id'}
+    expected = {
+        'code': 'db_integrity_error',
+        'field_errors': None,
+        'message': 'Ошибка целостности базы данных: terminal.merchant_id',
+    }
+    context = {'language_context': language_context}
+    assert e.value.get_error().model_dump(context=context) == expected
 
 
 @pytest.mark.asyncio
-async def test_retrieve(sqlite_sessionmaker, language_context):
-    category = get_category(sqlite_sessionmaker)
+async def test_retrieve(postgres_sessionmaker, language_context):
+    category = get_category(postgres_sessionmaker)
     user = auth.UserABC(username="test")
     merchant = await MerchantFactory()
     currency = await CurrencyFactory()
@@ -122,10 +130,10 @@ async def test_retrieve(sqlite_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
-async def test_retrieve_currency(sqlite_sessionmaker, language_context):
+async def test_retrieve_currency(postgres_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Currency,
-        db_async_session=sqlite_sessionmaker,
+        db_async_session=postgres_sessionmaker,
         table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
             model=Currency,
             fields=[
@@ -170,10 +178,10 @@ async def test_retrieve_currency(sqlite_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
-async def test_create_bad_json(sqlite_sessionmaker, language_context):
+async def test_create_bad_json(postgres_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Merchant,
-        db_async_session=sqlite_sessionmaker,
+        db_async_session=postgres_sessionmaker,
         table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
             model=Merchant,
             fields=[
@@ -210,8 +218,8 @@ async def test_create_bad_json(sqlite_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
-async def test_list(sqlite_sessionmaker, language_context):
-    category = get_category(sqlite_sessionmaker)
+async def test_list(postgres_sessionmaker, language_context):
+    category = get_category(postgres_sessionmaker)
     user = auth.UserABC(username="test")
     await TerminalFactory(
         is_h2h=False,
@@ -266,8 +274,8 @@ async def test_list(sqlite_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
-async def test_update_related_one(sqlite_sessionmaker, language_context):
-    category = get_category(sqlite_sessionmaker)
+async def test_update_related_one(postgres_sessionmaker, language_context):
+    category = get_category(postgres_sessionmaker)
     user = auth.UserABC(username="test")
     terminal = await TerminalFactory(
         merchant=await MerchantFactory(title="Test merch"),
@@ -290,10 +298,10 @@ async def test_update_related_one(sqlite_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
-async def test_update_related_many(sqlite_sessionmaker, language_context):
+async def test_update_related_many(postgres_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         model=Currency,
-        db_async_session=sqlite_sessionmaker,
+        db_async_session=postgres_sessionmaker,
         table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
             model=Currency,
             fields=[
@@ -330,7 +338,7 @@ async def test_update_related_many(sqlite_sessionmaker, language_context):
     )
     assert update_result == schema.UpdateResult(pk=currency_rub.id)
 
-    async with sqlite_sessionmaker() as session:
+    async with postgres_sessionmaker() as session:
         updated_rub = (await session.execute(
             select(Currency)
             .options(selectinload(Currency.terminals))
@@ -348,9 +356,50 @@ async def test_update_related_many(sqlite_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
-async def test_autocomplete(sqlite_sessionmaker, language_context):
-    category = get_category(sqlite_sessionmaker)
-    category = sqlalchemy.SQLAlchemyAdmin(model=Terminal, db_async_session=sqlite_sessionmaker)
+async def test_update_bad_value_int16(postgres_sessionmaker, language_context):
+    category = sqlalchemy.SQLAlchemyAdmin(
+        model=Currency,
+        db_async_session=postgres_sessionmaker,
+        table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
+            model=Currency,
+            fields=[
+                'id',
+                'num_code',
+            ],
+        ),
+    )
+    user = auth.UserABC(username="test")
+    currency = await CurrencyFactory(title='RUB')
+
+    update_data = {
+        'num_code': 123123123,
+    }
+    with pytest.raises(AdminAPIException) as e:
+        await category.update(
+            pk=currency.id,
+            data=update_data,
+            user=user,
+            language_context=language_context,
+            admin_schema=admin_schema,
+        )
+    context = {'language_context': language_context}
+    assert e.value.get_error().model_dump(context=context) == {
+        "code": "validation_error",
+        "field_errors": {
+            "num_code": {
+                "code": None,
+                "field_slug": None,
+                "message": "Значение должно быть не больше 32767"
+            }
+        },
+        "message": "Validation error"
+    }
+
+
+@pytest.mark.asyncio
+async def test_autocomplete(postgres_sessionmaker, language_context):
+    category = get_category(postgres_sessionmaker)
+    category = sqlalchemy.SQLAlchemyAdmin(model=Terminal, db_async_session=postgres_sessionmaker)
 
     user = auth.UserABC(username="test")
     autocomplete_result = await category.autocomplete(

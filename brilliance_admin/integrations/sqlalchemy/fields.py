@@ -5,11 +5,10 @@ from pydantic.dataclasses import dataclass
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.schema.category import FieldSchemaData
-from brilliance_admin.schema.table.fields.base import TableField
+from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.table_models import AutocompleteData, Record
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.utils import DeserializeAction
 
 
 def get_pk(obj):
@@ -20,19 +19,7 @@ def get_pk(obj):
 
 
 @dataclass
-class SQLAlchemyRelatedField(TableField):
-    _type: str = 'related'
-
-    # Тип связи.
-    # Откуда берётся:
-    # - из SQLAlchemy relationship.uselist
-    #   rel.uselist == True  -> список связанных объектов
-    #   rel.uselist == False -> одиночная связь
-    #
-    # Зачем нужен:
-    # - чтобы понимать, ожидать list или один объект
-    # - влияет на логику update_related и serialize
-    many: bool = False
+class SQLAlchemyRelatedField(RelatedField):
 
     # Имя relationship-атрибута на модели.
     # Откуда берётся:
@@ -43,7 +30,7 @@ class SQLAlchemyRelatedField(TableField):
     # - для доступа к связи через ORM
     #   getattr(record, rel_name)
     # - для записи и чтения связанных объектов
-    rel_name: str | None
+    rel_name: str | None = None
 
     # Класс связанной SQLAlchemy-модели.
     # Откуда берётся:
@@ -55,14 +42,9 @@ class SQLAlchemyRelatedField(TableField):
     #   select(target_model).where(target_model.id.in_(...))
     target_model: Any | None = None
 
-    # Работает только если many=True
-    dual_list: bool = False
-
     def generate_schema(self, user: UserABC, field_slug, language_context: LanguageContext) -> FieldSchemaData:
         schema = super().generate_schema(user, field_slug, language_context)
-        schema.many = self.many
         schema.rel_name = self.rel_name
-        schema.dual_list = self.dual_list
         return schema
 
     def _get_target_model(self, model, field_slug):
@@ -155,7 +137,7 @@ class SQLAlchemyRelatedField(TableField):
         - ORM-объект доступен через extra["record"]
         """
         if not value:
-            return
+            return None
 
         record = extra.get('record')
         if record is None:
@@ -172,32 +154,6 @@ class SQLAlchemyRelatedField(TableField):
             return None
 
         return {'key': get_pk(related), 'title': str(related)}
-
-    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
-        value = await super().deserialize(value, action, extra, *args, **kwargs)
-        if not value:
-            return None
-
-        if isinstance(value, list):
-            result = []
-            for i in value:
-                i = i.get('key')
-                if not isinstance(i, (int, str)):
-                    raise FieldError(f'Value "{i}" is not supported for related field')
-                result.append(i)
-            return result
-
-        result = None
-        if isinstance(value, dict) and 'key' in value:
-            result = value['key']
-
-        if isinstance(value, (int, str)):
-            result = value
-
-        if not isinstance(result, (int, str)):
-            raise FieldError(f'Value "{result}" is not supported for related field')
-
-        return result
 
     async def update_related(self, record, field_slug, value, session):
         """

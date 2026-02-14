@@ -19,7 +19,7 @@ class AutocompleteData(BaseModel):
     form_data: dict = Field(default_factory=dict)
     existed_choices: List[Any] = Field(default_factory=list)
     action_name: str | None = None
-    limit: int = 25
+    limit: int = Field(default=25, le=250)
 
 
 class Record(BaseModel):
@@ -33,7 +33,7 @@ class AutocompleteResult(BaseModel):
 
 class ListData(BaseModel):
     page: int = 1
-    limit: int = 25
+    limit: int = Field(default=25, le=250)
 
     search: str | None = None
     filters: Dict[str, Any] = Field(default_factory=dict)

@@ -354,3 +354,41 @@ class ChoiceField(TableField):
             )
 
         return value
+
+
+@dataclass
+class RelatedField(TableField):
+    _type = 'related'
+
+    many: bool = False
+    dual_list: bool = False
+    filter_fn: Any | None = None
+
+    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_schema(user, field_slug, language_context)
+        schema.many = self.many
+        schema.dual_list = self.dual_list
+        return schema
+
+    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize(value, action, extra, *args, **kwargs)
+        if not value:
+            return None
+
+        if isinstance(value, list):
+            result = []
+            for i in value:
+                i = i.get('key')
+                if not isinstance(i, (int, str)):
+                    raise FieldError(f'Value "{i}" is not supported for related field')
+                result.append(i)
+            return result
+
+        result = None
+        if isinstance(value, dict) and 'key' in value:
+            result = value['key']
+        if isinstance(value, (int, str)):
+            result = value
+        if not isinstance(result, (int, str)):
+            raise FieldError(f'Value "{result}" is not supported for related field')
+        return result

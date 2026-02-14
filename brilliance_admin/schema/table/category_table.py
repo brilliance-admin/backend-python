@@ -161,11 +161,48 @@ class CategoryTable(BaseCategory):
 
         return result
 
-    async def autocomplete(self, data: AutocompleteData, user: UserABC, schema: AdminSchema) -> AutocompleteResult:
-        """
-        Retrieves list of found options to select.
-        """
-        raise NotImplementedError('autocomplete is not implemented')
+    def get_extra_autocomplete(self) -> dict:
+        return {}
+
+    async def autocomplete(
+            self,
+            data: AutocompleteData,
+            user: UserABC,
+            language_context: LanguageContext,
+            admin_schema: AdminSchema,
+    ) -> AutocompleteResult:
+        form_schema = None
+
+        if data.action_name is not None:
+            action_fn = self._get_action_fn(data.action_name)
+            if not action_fn:
+                raise Exception(f'Action "{data.action_name}" is not found')
+
+            if not action_fn.form_schema:
+                raise Exception(f'Action "{data.action_name}" form_schema is None')
+
+            form_schema = action_fn.form_schema
+
+        elif data.is_filter:
+            if not self.table_filters:
+                raise Exception(f'Action "{data.action_name}" table_filters is None')
+
+            form_schema = self.table_filters
+
+        else:
+            form_schema = self.table_schema
+
+        field = form_schema.get_field(data.field_slug)
+        if not field:
+            raise Exception(f'Field "{data.field_slug}" is not found')
+
+        results = await field.autocomplete(
+            data,
+            user,
+            extra=self.get_extra_autocomplete(),
+        )
+
+        return AutocompleteResult(results=results)
 
     # pylint: disable=too-many-arguments
     @abc.abstractmethod

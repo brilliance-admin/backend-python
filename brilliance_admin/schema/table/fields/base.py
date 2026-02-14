@@ -41,9 +41,6 @@ class TableField(abc.ABC, FieldSchemaData):
 
         return value
 
-    async def autocomplete(self, model, data, user):
-        raise NotImplementedError('autocomplete is not implemented')
-
     # pylint: disable=too-many-arguments
     # pylint: disable=too-many-positional-arguments
     def set_deserialized_value(self, result: dict, field_slug, deserialized_value, action, extra):
@@ -370,8 +367,11 @@ class RelatedField(TableField):
         schema.dual_list = self.dual_list
         return schema
 
-    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
-        value = await super().deserialize(value, action, extra, *args, **kwargs)
+    async def autocomplete(self, data, user, extra):
+        raise NotImplementedError('autocomplete is not implemented')
+
+    async def deserialize(self, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize(action, extra, *args, **kwargs)
         if not value:
             return None
 

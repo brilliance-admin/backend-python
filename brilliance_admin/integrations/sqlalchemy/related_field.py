@@ -78,9 +78,12 @@ class SQLAlchemyRelatedField(RelatedField):
         msg = f'Cannot resolve target model for FK "{field_slug}"'
         raise AttributeError(msg)
 
-    async def autocomplete(self, model, data: AutocompleteData, user, *, extra: dict | None = None) -> List[Record]:
-        # pylint: disable=import-outside-toplevel
-        from sqlalchemy import select
+    async def autocomplete(self, data: AutocompleteData, user, *, extra: dict | None = None) -> List[Record]:
+        if extra is None or extra.get('model') is None:
+            msg = f'SQLAlchemyRelatedField.autocomplete {type(self).__name__} requires extra["model"]'
+            raise AttributeError(msg)
+
+        model = extra['model']
 
         if extra is None or extra.get('db_async_session') is None:
             msg = f'SQLAlchemyRelatedField.autocomplete {type(self).__name__} requires extra["db_async_session"] (AsyncSession)'
@@ -90,6 +93,9 @@ class SQLAlchemyRelatedField(RelatedField):
 
         results = []
 
+        # pylint: disable=import-outside-toplevel
+        from sqlalchemy import select, or_, cast, String
+
         target_model = self._get_target_model(model, data.field_slug)
         limit = min(150, data.limit)
         stmt = select(target_model).limit(limit)
@@ -98,13 +104,24 @@ class SQLAlchemyRelatedField(RelatedField):
         python_pk_type = pk.property.columns[0].type.python_type
 
         if data.search_string:
-            try:
-                value = python_pk_type(data.search_string)
-            except (ValueError, TypeError):
-                # Search string cannot be cast to primary key type, skip id filter
-                value = None
+            search_fields = getattr(target_model, '__search_fields__', None)
 
-            stmt = stmt.where(pk == value)
+            if search_fields:
+                conditions = []
+                for field_name in search_fields:
+                    col = getattr(target_model, field_name, None)
+                    if col is not None:
+                        conditions.append(
+                            cast(col, String).ilike(data.search_string)
+                        )
+                if conditions:
+                    stmt = stmt.where(or_(*conditions))
+            else:
+                try:
+                    value = python_pk_type(data.search_string)
+                except (ValueError, TypeError):
+                    value = None
+                stmt = stmt.where(pk == value)
 
         # Add already selected choices
         if data.existed_choices:
@@ -119,6 +136,13 @@ class SQLAlchemyRelatedField(RelatedField):
                     raise AdminAPIException(APIError(message=msg), status_code=500) from e
 
             stmt = stmt.where(pk.in_(values))
+
+        if self.filter_fn:
+            import inspect as ins
+            if ins.iscoroutinefunction(self.filter_fn):
+                stmt = await self.filter_fn(stmt, data, user)
+            else:
+                stmt = self.filter_fn(stmt, data, user)
 
         async with db_async_session() as session:
             records = (await session.execute(stmt)).scalars().all()

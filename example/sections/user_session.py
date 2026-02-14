@@ -1,7 +1,12 @@
-from brilliance_admin import schema, sqlalchemy
+from brilliance_admin import sqlalchemy
+from brilliance_admin.auth import UserABC
+from brilliance_admin.schema.table.table_models import AutocompleteData
 from brilliance_admin.translations import TranslateText as _
+from example.sections.models import User, UserSession
 
-from example.sections.models import DeviceType, UserSession
+
+async def users_filter(stmt, data: AutocompleteData, user: UserABC):
+    return stmt.where(User.is_active == True)
 
 
 class UserSessionAdmin(sqlalchemy.SQLAlchemyAdmin):
@@ -27,9 +32,10 @@ class UserSessionAdmin(sqlalchemy.SQLAlchemyAdmin):
 
     table_filters = sqlalchemy.SQLAlchemyFieldsSchema(
         model=UserSession,
-        started_at=schema.DateTimeField(range=True),
-        ended_at=schema.DateTimeField(range=True),
-        is_active=schema.BooleanField(),
-        device_type=schema.ChoiceField(choices=DeviceType),
-        country_code=schema.StringField(),
+        exclude_fields=[],
+        extra_kwargs={
+            'user_id': {'filter_fn': users_filter},
+            'started_at': {'range': True},
+            'ended_at': {'range': True},
+        },
     )

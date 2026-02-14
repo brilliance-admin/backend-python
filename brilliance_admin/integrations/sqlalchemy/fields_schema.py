@@ -3,7 +3,7 @@ from typing import Any
 
 from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError
-from brilliance_admin.integrations.sqlalchemy.fields import SQLAlchemyRelatedField
+from brilliance_admin.integrations.sqlalchemy.related_field import SQLAlchemyRelatedField
 from brilliance_admin.schema.table.fields.base import DateTimeField
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction, humanize_field_name

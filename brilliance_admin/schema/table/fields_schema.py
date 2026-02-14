@@ -14,6 +14,9 @@ from brilliance_admin.utils import DeserializeAction
 NOT_FUND_EXCEPTION = '''Field slug "{field_slug}" not found inside generated fields inside {class_name}
 Available options: {available_fields}
 '''
+EXTRA_KWARGS_NOT_FUND = '''{class_name}.extra_kwargs field "{field_slug}" not found inside generated fields
+Available options: {available_fields}
+'''
 
 
 class DeserializeError(Exception):
@@ -117,7 +120,11 @@ class FieldsSchema:
         for field_slug, kwargs_info in (self.extra_kwargs or {}).items():
             field = self._generated_fields.get(field_slug)
             if field is None:
-                msg = f'{type(self).__name__}.extra_kwargs field "{field_slug}" not found as field'
+                msg = EXTRA_KWARGS_NOT_FUND.format(
+                    field_slug=field_slug,
+                    available_fields=available_fields,
+                    class_name=type(self).__name__,
+                )
                 raise AttributeError(msg)
 
             for attr_name, value in kwargs_info.items():
@@ -236,11 +243,11 @@ class FieldsSchema:
                 deserialized_value = await field.deserialize(value, action, extra)
 
                 validate_method = getattr(self, f'validate_{field_slug}', None)
-                if callable(validate_method):
+                if validate_method is not None and callable(validate_method):
                     if not inspect.iscoroutinefunction(validate_method):
                         msg = f'Validate method {type(self).__name__}.{field_slug} must be async'
                         raise AttributeError(msg)
-                    deserialized_value = await validate_method(value)
+                    deserialized_value = await validate_method(value)  # pylint: disable=not-callable
 
                 field.set_deserialized_value(result, field_slug, deserialized_value, action, extra)
             except FieldError as e:
@@ -249,7 +256,6 @@ class FieldsSchema:
         if errors:
             raise AdminAPIException(
                 APIError(
-                    message='Validation error',
                     code='validation_error',
                     field_errors=errors,
                 ),

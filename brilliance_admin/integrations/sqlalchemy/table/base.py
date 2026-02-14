@@ -1,6 +1,5 @@
 from typing import Any
 
-from brilliance_admin.integrations.sqlalchemy.autocomplete import SQLAlchemyAdminAutocompleteMixin
 from brilliance_admin.integrations.sqlalchemy.fields_schema import SQLAlchemyFieldsSchema
 from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.translations import TranslateText as _
@@ -11,7 +10,7 @@ Model fields = {model_attrs}
 '''
 
 
-class SQLAlchemyAdminBase(SQLAlchemyAdminAutocompleteMixin, CategoryTable):
+class SQLAlchemyAdminBase(CategoryTable):
     model: Any
     slug = None
     ordering_fields = []
@@ -89,6 +88,12 @@ class SQLAlchemyAdminBase(SQLAlchemyAdminAutocompleteMixin, CategoryTable):
             self.default_ordering = f'-{self.pk_name}'
 
         super().__init__(*args, **kwargs)
+
+    def get_extra_autocomplete(self) -> dict:
+        extra = super().get_extra_autocomplete()
+        extra['db_async_session'] = self.db_async_session
+        extra['model'] = self.model
+        return extra
 
     def validate_fields(self):
         # pylint: disable=import-outside-toplevel

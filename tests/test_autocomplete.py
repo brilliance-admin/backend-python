@@ -3,26 +3,24 @@ from fastapi.testclient import TestClient
 
 from brilliance_admin.schema.table.table_models import AutocompleteData
 from example.main import app
-from example.sections.models import CurrencyFactory, MerchantFactory, TerminalFactory
+from example.sections.models import UserFactory
 
 client = TestClient(app)
 
 
 @pytest.mark.asyncio
-async def test_exception_handle(mocker):
-    merchant = await MerchantFactory()
-    currency = await CurrencyFactory()
-    await TerminalFactory(title="first", merchant=merchant, currency=currency)
-    await TerminalFactory(title="second", merchant=merchant, currency=currency)
+async def test_autocomplete_filter_fn(mocker):
+    user_1 = await UserFactory(username='active', is_active=True)
+    user_2 = await UserFactory(username='not_active', is_active=False)
 
     url = app.url_path_for(
         'autocomplete',
-        group='payments',
-        category='merchant',
+        group='users',
+        category='usersession',
     )
     request_data = AutocompleteData(
         search_string="",
-        field_slug="terminals",
+        field_slug="user_id",
         is_filter=True,
         form_data={},
         existed_choices=[],
@@ -33,12 +31,8 @@ async def test_exception_handle(mocker):
     response_data = {
         'results': [
             {
-                'key': 1,
-                'title': 'first',
-            },
-            {
-                'key': 2,
-                'title': 'second',
+                'key': user_1.id,
+                'title': 'User #1 "active"',
             },
         ],
     }

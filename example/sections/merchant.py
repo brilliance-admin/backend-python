@@ -3,10 +3,6 @@ from brilliance_admin.translations import TranslateText as _
 from example.sections.models import Merchant
 
 
-async def terminals_filter():
-    return
-
-
 class MerchantAdmin(sqlalchemy.SQLAlchemyAdmin):
     model = Merchant
     title = _('merchants')
@@ -48,7 +44,4 @@ class MerchantAdmin(sqlalchemy.SQLAlchemyAdmin):
             'terminals',
         ],
         created_at=schema.DateTimeField(range=True),
-        extra_kwargs={
-            'terminals': {'filter_fn': terminals_filter}
-        },
     )

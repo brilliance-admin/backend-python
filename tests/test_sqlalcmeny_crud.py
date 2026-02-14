@@ -212,7 +212,7 @@ async def test_create_bad_json(postgres_sessionmaker, language_context):
                 'message': "Некорректный тип данных: str; ожидается JSON",
             },
         },
-        'message': 'Validation error',
+        'message': None,
     }
     assert e.value.get_error().model_dump(context=context) == errors
 
@@ -392,7 +392,7 @@ async def test_update_bad_value_int16(postgres_sessionmaker, language_context):
                 "message": "Значение должно быть не больше 32767"
             }
         },
-        "message": "Validation error"
+        "message": None,
     }
 
 

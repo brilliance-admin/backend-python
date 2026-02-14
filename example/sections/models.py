@@ -31,6 +31,7 @@ class BaseIDModel(ModelBase):
 
 class User(BaseIDModel):
     __tablename__ = "user"
+    __search_fields__ = ['id', 'username', 'email']
 
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     email: Mapped[str] = mapped_column(String(120), unique=True, index=True, nullable=False)
@@ -50,6 +51,9 @@ class User(BaseIDModel):
 
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
+
+    def __str__(self):
+        return f'User #{self.id} "{self.username}"'
 
 
 class UserFactory(SQLAlchemyFactoryBase):

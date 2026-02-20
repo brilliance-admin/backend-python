@@ -87,6 +87,7 @@ class SQLAlchemyJWTAdminAuthentication(AdminAuthentication):
         except AdminAPIException as e:
             raise e
         except Exception as e:
+            logger.exception('Password validator %s exception: %s', self.password_validator, e)
             msg = _('errors.password_exception') % {
                 'error_type': str(e) if debug else type(e).__name__,
             }

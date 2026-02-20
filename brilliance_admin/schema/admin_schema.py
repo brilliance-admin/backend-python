@@ -76,8 +76,6 @@ class AdminSchema:
     default_theme: str | None = None
     custom_themes: List[dict] = Field(default_factory=list)
 
-    debug: bool = False
-
     def __post_init__(self):
         for category in self.categories:
             if not issubclass(category.__class__, BaseCategory):

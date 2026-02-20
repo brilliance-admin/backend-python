@@ -4,11 +4,10 @@ from typing import Any, ClassVar, Dict, List
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 from pydantic_core import core_schema
-from structlog import get_logger
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.translations import LanguageContext
-from brilliance_admin.utils import DataclassBase, KwargsInitMixin, SupportsStr, humanize_field_name
+from brilliance_admin.utils import DataclassBase, KwargsInitMixin, SupportsStr, get_logger, humanize_field_name
 
 logger = get_logger()
 

@@ -25,7 +25,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
 
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import inspect
-        from sqlalchemy.dialects.postgresql import ARRAY
+        from sqlalchemy.dialects.postgresql import ARRAY, UUID
         from sqlalchemy.ext.mutable import Mutable
         from sqlalchemy.sql import sqltypes
         from sqlalchemy.sql.schema import Column
@@ -111,6 +111,10 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                 field_class = schema.ArrayField
                 field_data["array_type"] = type(col_type.item_type).__name__.lower()
                 field_data["read_only"] = is_impl_mutable or isinstance(col_type, Mutable)
+
+            elif isinstance(col_type, UUID):
+                field_class = schema.StringField
+                field_data["max_length"] = 36
 
             elif isinstance(col_type, sqltypes.NullType):
                 continue

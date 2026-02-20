@@ -179,7 +179,7 @@ class SQLAlchemyAdminListMixin:
             for record in records:
                 line = await self.table_schema.serialize(
                     record,
-                    extra={"record": record, "user": user},
+                    extra={"record": record, "user": user, "admin_schema": admin_schema},
                 )
                 data.append(line)
 

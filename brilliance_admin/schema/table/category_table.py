@@ -154,8 +154,9 @@ class CategoryTable(BaseCategory):
             raise e
         except Exception as e:
             logger.exception('Admin action %s "%s" exception: %s', type(self).__name__, action, e)
+            msg = str(e) if admin_schema.debug else type(e).__name__
             raise AdminAPIException(
-                APIError(message=str(e), code='user_action_error'),
+                APIError(message=msg, code='user_action_error'),
                 status_code=500,
             ) from e
 

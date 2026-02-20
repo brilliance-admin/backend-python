@@ -61,7 +61,7 @@ class SQLAlchemyAdminRetrieveMixin:
         try:
             data = await self.table_schema.serialize(
                 record,
-                extra={"record": record, "user": user},
+                extra={"record": record, "user": user, "admin_schema": admin_schema},
             )
         except FieldError as e:
             logger.exception(

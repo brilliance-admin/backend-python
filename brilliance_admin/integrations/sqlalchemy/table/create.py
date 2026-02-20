@@ -63,7 +63,9 @@ class SQLAlchemyAdminCreate:
                 type(self).__name__, self.table_schema.model.__name__, e,
                 extra={'data': data},
             )
-            msg = _('errors.db_error_create') % {'error_type': type(e).__name__}
+            msg = _('errors.db_error_create') % {
+                'error_type': str(e) if admin_schema.debug else type(e).__name__,
+            }
             raise AdminAPIException(
                 APIError(message=msg, code='db_error_create'), status_code=500,
             ) from e

@@ -1,6 +1,6 @@
 [project]
 name = "brilliance-admin"
-version = "0.44.37"
+version = "0.44.38"
 description = 'Simple and lightweight data managment framework powered by FastAPI and Vue3 Vuetify all-in-one. Some call it heavenly in its brilliance.'
 readme = "README.md"
 requires-python = ">=3.10"
@@ -48,9 +48,23 @@ tests = [
     "pyjwt>=2.10.1",
     "testcontainers>=4.14.1",
 ]
+dev = [
+    "ruff>=0.9.0",
+]
 scalar = [
     "scalar-fastapi>=1.5.0",
 ]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401", "F403"]
+"tests/*" = ["F841"]
+"example/*" = ["E712"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

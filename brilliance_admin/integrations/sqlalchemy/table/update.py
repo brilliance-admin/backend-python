@@ -76,7 +76,10 @@ class SQLAlchemyAdminUpdate:
             )
             detail = extract_integrity_detail(e)
             raise AdminAPIException(
-                APIError(message=_('errors.db_integrity_error') % {'detail': detail}, code='db_integrity_error'), status_code=500,
+                APIError(
+                    message=_('errors.db_integrity_error') % {'detail': detail},
+                    code='db_integrity_error',
+                ), status_code=500,
             ) from e
 
         except Exception as e:

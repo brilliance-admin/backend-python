@@ -10,11 +10,31 @@ from brilliance_admin.schema.table.table_models import AutocompleteData, Record
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 
+COMPOSITE_PK_NOT_SUPPORTED = 'Composite primary key is not supported'
+FIELD_NOT_FOUND_ON_MODEL = 'Field "{field_slug}" is not found on model "{model}"'
+FIELD_NOT_RELATIONSHIP_OR_FK = 'Field "{field_slug}" is not a relationship and not a FK column'
+CANNOT_RESOLVE_TARGET_MODEL = 'Cannot resolve target model for FK "{field_slug}"'
+AUTOCOMPLETE_REQUIRES_MODEL = (
+    'SQLAlchemyRelatedField.autocomplete {class_name} requires extra["model"]'
+)
+AUTOCOMPLETE_REQUIRES_SESSION = (
+    'SQLAlchemyRelatedField.autocomplete {class_name}'
+    ' requires extra["db_async_session"] (AsyncSession)'
+)
+INVALID_EXISTED_CHOICES = (
+    'Invalid existed_choices value "{value}"'
+    ' for pk {pk} python_pk_type:{python_pk_type}'
+)
+MISSING_RECORD_IN_CONTEXT = 'Missing record in serialize context in value: {value}'
+MANY_RELATED_MISSING = 'Many Related field "{rel_name}" is missing on record "{record}"'
+EXPECTED_INT_FOR_FILTER = 'Expected int for filter {rel_name}'
+EXPECTED_LIST_FOR_FILTER = 'Expected list[int] for filter {rel_name}'
+
 
 def get_pk(obj):
     pk_cols = obj.__mapper__.primary_key
     if len(pk_cols) != 1:
-        raise NotImplementedError('Composite primary key is not supported')
+        raise NotImplementedError(COMPOSITE_PK_NOT_SUPPORTED)
     return getattr(obj, pk_cols[0].key)
 
 
@@ -54,7 +74,7 @@ class SQLAlchemyRelatedField(RelatedField):
         mapper = inspect(model).mapper
         attr = mapper.attrs.get(field_slug)
         if attr is None:
-            msg = f'Field "{field_slug}" is not found on model "{model}"'
+            msg = FIELD_NOT_FOUND_ON_MODEL.format(field_slug=field_slug, model=model)
             raise AttributeError(msg)
 
         # RelationshipProperty
@@ -64,7 +84,7 @@ class SQLAlchemyRelatedField(RelatedField):
         # ColumnProperty (FK column). Try to resolve from foreign key target table.
         col = getattr(model, field_slug).property.columns[0]
         if not col.foreign_keys:
-            msg = f'Field "{field_slug}" is not a relationship and not a FK column'
+            msg = FIELD_NOT_RELATIONSHIP_OR_FK.format(field_slug=field_slug)
             raise AttributeError(msg)
 
         fk = next(iter(col.foreign_keys))
@@ -75,18 +95,18 @@ class SQLAlchemyRelatedField(RelatedField):
             if getattr(m, 'local_table', None) is target_table:
                 return m.class_
 
-        msg = f'Cannot resolve target model for FK "{field_slug}"'
+        msg = CANNOT_RESOLVE_TARGET_MODEL.format(field_slug=field_slug)
         raise AttributeError(msg)
 
     async def autocomplete(self, data: AutocompleteData, user, *, extra: dict | None = None) -> List[Record]:
         if extra is None or extra.get('model') is None:
-            msg = f'SQLAlchemyRelatedField.autocomplete {type(self).__name__} requires extra["model"]'
+            msg = AUTOCOMPLETE_REQUIRES_MODEL.format(class_name=type(self).__name__)
             raise AttributeError(msg)
 
         model = extra['model']
 
         if extra is None or extra.get('db_async_session') is None:
-            msg = f'SQLAlchemyRelatedField.autocomplete {type(self).__name__} requires extra["db_async_session"] (AsyncSession)'
+            msg = AUTOCOMPLETE_REQUIRES_SESSION.format(class_name=type(self).__name__)
             raise AttributeError(msg)
 
         db_async_session = extra['db_async_session']
@@ -132,7 +152,9 @@ class SQLAlchemyRelatedField(RelatedField):
                 try:
                     values.append(python_pk_type(value))
                 except (ValueError, TypeError) as e:
-                    msg = f'Invalid existed_choices value "{value}" for pk {pk} python_pk_type:{python_pk_type.__name__}'
+                    msg = INVALID_EXISTED_CHOICES.format(
+                        value=value, pk=pk, python_pk_type=python_pk_type.__name__,
+                    )
                     raise AdminAPIException(APIError(message=msg), status_code=500) from e
 
             stmt = stmt.where(pk.in_(values))
@@ -165,13 +187,13 @@ class SQLAlchemyRelatedField(RelatedField):
 
         record = extra.get('record')
         if record is None:
-            raise FieldError(f'Missing record in serialize context in value: {value}')
+            raise FieldError(MISSING_RECORD_IN_CONTEXT.format(value=value))
 
         related = getattr(record, self.rel_name, None)
 
         if self.many:
             if related is None:
-                raise FieldError(f'Many Related field "{self.rel_name}" is missing on record "{record}"')
+                raise FieldError(MANY_RELATED_MISSING.format(rel_name=self.rel_name, record=record))
             return [{'key': get_pk(obj), 'title': str(obj)} for obj in related]
 
         if related is None:
@@ -242,10 +264,10 @@ class SQLAlchemyRelatedField(RelatedField):
         # many=False: FK (many-to-one)
         if not self.many:
             if not isinstance(value, int):
-                raise FieldError(f'Expected int for filter {self.rel_name}')
+                raise FieldError(EXPECTED_INT_FOR_FILTER.format(rel_name=self.rel_name))
             return stmt.where(rel.has(pk_col == value))
 
         # many=True: one-to-many / many-to-many
         if not isinstance(value, list):
-            raise FieldError(f'Expected list[int] for filter {self.rel_name}')
+            raise FieldError(EXPECTED_LIST_FOR_FILTER.format(rel_name=self.rel_name))
         return stmt.where(rel.any(pk_col.in_(value)))

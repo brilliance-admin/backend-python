@@ -14,7 +14,8 @@ router = APIRouter(tags=["Settings"])
 )
 async def get_settings(request: Request) -> AdminSettingsData:
     '''
-    API endpoint for fetching admin panel configuration, including title, description, and the list of supported languages.
+    API endpoint for fetching admin panel configuration,
+    including title, description, and the list of supported languages.
     '''
     schema: AdminSchema = request.app.state.schema
 

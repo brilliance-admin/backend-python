@@ -14,6 +14,12 @@ docker compose -f .configs/docker/docker-compose.yml up
 docker compose -f .configs/docker/docker-compose.yml run --rm backend uv run pytest
 ```
 
+## Linter
+
+```shell
+docker compose -f .configs/docker/docker-compose.yml run --rm backend uv run ruff check .
+```
+
 ## Dependencies
 
 ```shell

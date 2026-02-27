@@ -20,6 +20,15 @@ Available options: {available_fields}
 LIST_DISPLAY_NOT_FUND = '''Field "{field_slug}" inside {class_name}.list_display, but not presented as field;
 Available options: {available_fields}'''
 
+FIELD_NOT_IN_FIELDS_LIST = (
+    'Schema {class_name} attribute "{attribute_name}" {type_name}'
+    ' presented, but not listed inside fields list: {fields}'
+)
+READONLY_FIELD_NOT_FOUND = (
+    '{class_name} field "{field_slug}" from readonly_fields'
+    ' is not found inside fields; available options: {fields}'
+)
+
 
 class DeserializeError(Exception):
     pass
@@ -146,14 +155,23 @@ class FieldsSchema:
 
             attribute = getattr(self, attribute_name)
             if issubclass(attribute.__class__, TableField) and attribute_name not in self.fields:
-                msg = f'Schema {type(self).__name__} attribute "{attribute_name}" {type(attribute).__name__} presented, but not listed inside fields list: {self.fields}'
+                msg = FIELD_NOT_IN_FIELDS_LIST.format(
+                    class_name=type(self).__name__,
+                    attribute_name=attribute_name,
+                    type_name=type(attribute).__name__,
+                    fields=self.fields,
+                )
                 raise AttributeError(msg)
 
         if self.readonly_fields:
             for field_slug in self.readonly_fields:
                 field = self.get_field(field_slug)
                 if not field:
-                    msg = f'{type(self).__name__} field "{field_slug}" from readonly_fields is not found inside fields; available options: {self.fields}'
+                    msg = READONLY_FIELD_NOT_FOUND.format(
+                        class_name=type(self).__name__,
+                        field_slug=field_slug,
+                        fields=self.fields,
+                    )
                     raise AttributeError(msg)
 
                 field.read_only = True

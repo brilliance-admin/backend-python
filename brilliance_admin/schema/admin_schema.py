@@ -14,7 +14,7 @@ from pydantic.dataclasses import dataclass
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.docs import build_redoc_docs, build_scalar_docs
-from brilliance_admin.schema.category import BaseCategory, CategorySchemaData
+from brilliance_admin.schema.category import BaseCategory
 from brilliance_admin.translations import LanguageContext, LanguageManager
 from brilliance_admin.utils import DataclassBase, SupportsStr
 
@@ -27,7 +27,7 @@ DEFAULT_LANGUAGES = {
 @dataclass
 class AdminSchemaData(DataclassBase):
     profile: UserABC | Any
-    categories: Dict[str, CategorySchemaData] = Field(default_factory=dict)
+    categories: Dict[str, dict] = Field(default_factory=dict)
 
     def __post_init__(self):
         if not isinstance(self.profile, UserABC):
@@ -98,7 +98,8 @@ class AdminSchema:
                 raise AttributeError(msg)
 
             try:
-                result.categories[category.slug] = category.generate_schema(user, language_context).to_dict(keep_none=False)
+                category_schema = category.generate_schema(user, language_context)
+                result.categories[category.slug] = category_schema.to_dict(keep_none=False)
             except Exception as e:
                 msg = f'Root category "{category.slug}" generate_schema error: {e}'
                 raise Exception(msg) from e
@@ -114,7 +115,7 @@ class AdminSchema:
 
     async def get_settings(self, request: Request) -> AdminSettingsData:
         language_slug = request.headers.get('Accept-Language')
-        language_context: LanguageContext = self.get_language_context(language_slug)
+        language_context: LanguageContext = self.get_language_context(language_slug)  # noqa: F841
 
         languages = None
         if self.language_manager.languages:

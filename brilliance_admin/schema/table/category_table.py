@@ -217,11 +217,20 @@ class CategoryTable(BaseCategory):
     ) -> TableListResult:
         raise NotImplementedError()
 
-#     async def retrieve(self, pk: Any, user: UserABC, language_context: LanguageContext, admin_schema: AdminSchema) -> RetrieveResult:
+#     async def retrieve(
+#             self, pk: Any, user: UserABC,
+#             language_context: LanguageContext, admin_schema: AdminSchema,
+#     ) -> RetrieveResult:
 #        raise NotImplementedError()
 
-#    async def create(self, data: dict, user: UserABC, language_context: LanguageContext, admin_schema: AdminSchema) -> CreateResult:
+#    async def create(
+#            self, data: dict, user: UserABC,
+#            language_context: LanguageContext, admin_schema: AdminSchema,
+#    ) -> CreateResult:
 #        raise NotImplementedError()
 
-#    async def update(self, pk: Any, data: dict, user: UserABC, language_context: LanguageContext, admin_schema: AdminSchema) -> UpdateResult:
+#    async def update(
+#            self, pk: Any, data: dict, user: UserABC,
+#            language_context: LanguageContext, admin_schema: AdminSchema,
+#    ) -> UpdateResult:
 #        raise NotImplementedError()

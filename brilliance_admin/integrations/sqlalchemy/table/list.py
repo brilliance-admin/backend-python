@@ -7,6 +7,15 @@ from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
 
+ORDERING_NOT_ALLOWED = (
+    'Ordering "{ordering}" is not allowed;'
+    ' available options: {ordering_fields}'
+    ' default_ordering: {default_ordering}'
+)
+ORDERING_FIELD_NOT_FOUND = '{class_name} ordering field "{ordering}" not found in model {model}'
+SEARCH_FIELD_NOT_FOUND = '{class_name} filter "{field_slug}" not found as field inside model {model}'
+TABLE_FILTERS_TYPE_ERROR = '{class_name}.table_filters {filters_type} must be SQLAlchemyFieldsSchema subclass'
+
 logger = get_logger()
 
 
@@ -31,12 +40,18 @@ class SQLAlchemyAdminListMixin:
             direction = desc
 
         if list_data.ordering and ordering not in self.ordering_fields:
-            msg = f'Ordering "{ordering}" is not allowed; available options: {self.ordering_fields} default_ordering: {self.default_ordering}'
+            msg = ORDERING_NOT_ALLOWED.format(
+                ordering=ordering,
+                ordering_fields=self.ordering_fields,
+                default_ordering=self.default_ordering,
+            )
             raise FieldError(message=msg, field_slug='ordering')
 
         column = getattr(self.model, ordering, None)
         if not isinstance(column, InstrumentedAttribute):
-            msg = f'{type(self).__name__} ordering field "{ordering}" not found in model {self.model}'
+            msg = ORDERING_FIELD_NOT_FOUND.format(
+                class_name=type(self).__name__, ordering=ordering, model=self.model,
+            )
             raise FieldError(message=msg, field_slug='ordering')
 
         return stmt.order_by(direction(column))
@@ -55,7 +70,9 @@ class SQLAlchemyAdminListMixin:
         for field_slug in self.search_fields:
             column = getattr(self.model, field_slug, None)
             if not isinstance(column, InstrumentedAttribute):
-                msg = f'{type(self).__name__} filter "{field_slug}" not found as field inside model {self.model}'
+                msg = SEARCH_FIELD_NOT_FOUND.format(
+                    class_name=type(self).__name__, field_slug=field_slug, model=self.model,
+                )
                 raise AttributeError(msg)
 
             conditions.append(cast(column, String).ilike(search))
@@ -70,7 +87,9 @@ class SQLAlchemyAdminListMixin:
             return stmt
 
         if not issubclass(type(self.table_filters), SQLAlchemyFieldsSchema):
-            msg = f'{type(self).__name__}.table_filters {type(self.table_filters)} must be SQLAlchemyFieldsSchema subclass'
+            msg = TABLE_FILTERS_TYPE_ERROR.format(
+                class_name=type(self).__name__, filters_type=type(self.table_filters),
+            )
             raise AttributeError(msg)
 
         return await self.table_filters.apply_filters(stmt, list_data.filters)

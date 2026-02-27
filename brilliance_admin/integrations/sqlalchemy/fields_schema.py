@@ -8,7 +8,14 @@ from brilliance_admin.schema.table.fields.base import DateTimeField
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction, humanize_field_name
 
-FIELD_FILTERS_NOT_FOUND = '{class_name} filter "{field_slug}" not found inside table_filters fields: {available_filters}'
+FIELD_FILTERS_NOT_FOUND = (
+    '{class_name} filter "{field_slug}" not found'
+    ' inside table_filters fields: {available_filters}'
+)
+ORM_FIELD_NOT_SUPPORTED = (
+    'SQLAlchemy autogenerate ORM field {model}.{field_slug}'
+    ' is not supported for type: {col_type}'
+)
 
 
 class SQLAlchemyFieldsSchema(schema.FieldsSchema):
@@ -120,7 +127,11 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                 continue
 
             elif not self.fields:
-                msg = f'SQLAlchemy autogenerate ORM field {self.model.__name__}.{field_slug} is not supported for type: {col_type}'
+                msg = ORM_FIELD_NOT_SUPPORTED.format(
+                    model=self.model.__name__,
+                    field_slug=field_slug,
+                    col_type=col_type,
+                )
                 raise AttributeError(msg)
 
             schema_field = field_class(**field_data)

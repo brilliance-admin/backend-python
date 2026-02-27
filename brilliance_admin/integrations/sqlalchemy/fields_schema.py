@@ -119,14 +119,14 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                 field_data["array_type"] = type(col_type.item_type).__name__.lower()
                 field_data["read_only"] = is_impl_mutable or isinstance(col_type, Mutable)
 
-            elif isinstance(col_type, UUID):
+            elif isinstance(col_type, (UUID, sqltypes.Uuid)):
                 field_class = schema.StringField
                 field_data["max_length"] = 36
 
             elif isinstance(col_type, sqltypes.NullType):
                 continue
 
-            elif not self.fields:
+            else:
                 msg = ORM_FIELD_NOT_SUPPORTED.format(
                     model=self.model.__name__,
                     field_slug=field_slug,

@@ -17,6 +17,8 @@ Available options: {available_fields}
 EXTRA_KWARGS_NOT_FUND = '''{class_name}.extra_kwargs field "{field_slug}" not found inside generated fields
 Available options: {available_fields}
 '''
+LIST_DISPLAY_NOT_FUND = '''Field "{field_slug}" inside {class_name}.list_display, but not presented as field;
+Available options: {available_fields}'''
 
 
 class DeserializeError(Exception):
@@ -162,7 +164,11 @@ class FieldsSchema:
 
         for field_slug in self.list_display:
             if field_slug not in self.fields:
-                msg = f'Field "{field_slug}" inside {type(self).__name__}.list_display, but not presented as field; available options: {self.fields}'
+                msg = LIST_DISPLAY_NOT_FUND.format(
+                    field_slug=field_slug,
+                    available_fields=self.fields,
+                    class_name=type(self).__name__,
+                )
                 raise AttributeError(msg)
 
     def generate_fields(self, kwargs) -> dict:

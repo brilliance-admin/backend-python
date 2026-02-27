@@ -28,6 +28,8 @@ class CategoryTable(BaseCategory):
     table_schema: FieldsSchema = None
     table_filters: FieldsSchema | None = None
 
+    list_display: List[str] | None = None
+
     ordering_fields: List[str] = Field(default_factory=list)
     default_ordering: str | None = None
 
@@ -41,6 +43,13 @@ class CategoryTable(BaseCategory):
 
         if table_filters:
             self.table_filters = table_filters
+
+        if self.list_display and self.table_schema:
+            for field_slug in self.list_display:
+                if field_slug not in self.table_schema.fields:
+                    msg = f'Field "{field_slug}" inside {type(self).__name__}.list_display, but not presented in table_schema fields; available options: {self.table_schema.fields}'
+                    raise AttributeError(msg)
+            self.table_schema.list_display = self.list_display
 
         if self.slug is None:
             msg = f'Category table attribute {type(self).__name__}.slug must be set'

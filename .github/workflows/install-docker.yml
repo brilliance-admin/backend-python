@@ -7,7 +7,7 @@ jobs:
   install-docker:
     runs-on: self-hosted
     steps:
-      - name: Install Docker and fix runner permissions
+      - name: Install Docker and allow runner to use it
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.SERVER_HOST }}
@@ -17,7 +17,7 @@ jobs:
             set -e
 
             sudo apt update
-            sudo apt install -y ca-certificates curl gnupg
+            sudo apt install -y ca-certificates curl gnupg acl
 
             sudo install -m 0755 -d /etc/apt/keyrings
 
@@ -43,8 +43,11 @@ jobs:
             sudo usermod -aG docker "$RUNNER_USER"
             sudo usermod -aG docker deploy || true
 
-            sudo systemctl restart 'actions.runner.*' || true
+            sudo setfacl -m "u:$RUNNER_USER:rw" /var/run/docker.sock
+            sudo setfacl -m "u:deploy:rw" /var/run/docker.sock || true
 
             sudo docker --version
             sudo docker compose version
             ls -l /var/run/docker.sock
+            getfacl /var/run/docker.sock
+

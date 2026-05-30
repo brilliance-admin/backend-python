@@ -30,6 +30,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
+      - name: Ensure rsync on server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ vars.SERVER_HOST }}
+          username: deploy
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            sudo apt update
+            sudo apt install -y rsync
+
       - name: Copy files to server
         uses: burnett01/rsync-deployments@v8
         with:
@@ -66,16 +76,26 @@ jobs:
             set -e
             cd /home/deploy/apps/backend-python
             CONTAINER="$(docker compose -f .configs/docker/docker-compose.yml ps -q backend)"
+
+            if [ -z "$CONTAINER" ]; then
+              echo "Backend container not found"
+              docker compose -f .configs/docker/docker-compose.yml ps
+              exit 1
+            fi
+
             for i in $(seq 1 30); do
               STATUS="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}no healthcheck{{end}}' "$CONTAINER" 2>/dev/null || echo 'not found')"
               echo "Attempt $i: status=$STATUS"
+
               if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "no healthcheck" ]; then
                 exit 0
               fi
+
               if [ "$i" = "30" ]; then
                 echo "Container logs:"
                 docker logs "$CONTAINER" --tail 100
                 exit 1
               fi
+
               sleep 2
             done

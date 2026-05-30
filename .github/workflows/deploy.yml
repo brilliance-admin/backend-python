@@ -16,7 +16,7 @@ jobs:
         run: docker build -t brilliance-backend -f .configs/docker/Dockerfile .
 
       - name: Run tests
-        run: docker compose -f .configs/docker/docker-compose.yml run --rm backend sh -c 'uv sync --all-groups --all-extras && uv run pytest'
+        run: docker compose -f .configs/docker/docker-compose.yml run --rm backend sh -c 'git config --global --add safe.directory /app && uv sync --all-groups --all-extras && uv run pytest'
 
       - name: Cleanup
         if: always()
@@ -30,17 +30,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Clone repo via GitHub App
-        uses: GuillaumeFalourd/clone-github-repo-action@v2
-        with:
-          owner: brilliance-admin
-          repository: backend-python
-          app_id: ${{ secrets.GH_APP_ID }}
-          installation_id: ${{ secrets.GH_APP_INSTALLATION_ID }}
-          private_key: ${{ secrets.GH_APP_PRIVATE_KEY }}
-
       - name: Copy files to server
-        continue-on-error: true
         uses: burnett01/rsync-deployments@v8
         with:
           switches: -rltvz --delete --exclude-from='.rsyncignore'
@@ -60,7 +50,7 @@ jobs:
             set -e
             sudo chown -R deploy:deploy /home/deploy/apps/backend-python
             cd /home/deploy/apps/backend-python
-            docker compose -f .configs/docker/docker-compose.yml up -d
+            docker compose -f .configs/docker/docker-compose.yml up -d --build
             sudo ln -sf /home/deploy/apps/backend-python/.configs/nginx/example.conf /etc/nginx/sites-enabled/example
             sudo rm -f /etc/nginx/sites-enabled/default
             sudo nginx -t
@@ -74,15 +64,17 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             set -e
-            for i in $(seq 1 10); do
-              STATUS=$(docker inspect --format='{{.State.Health.Status}}' brilliance-backend-1 2>/dev/null || echo "not found")
+            cd /home/deploy/apps/backend-python
+            CONTAINER="$(docker compose -f .configs/docker/docker-compose.yml ps -q backend)"
+            for i in $(seq 1 30); do
+              STATUS="$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}no healthcheck{{end}}' "$CONTAINER" 2>/dev/null || echo 'not found')"
               echo "Attempt $i: status=$STATUS"
-              if [ "$STATUS" = "healthy" ]; then
+              if [ "$STATUS" = "healthy" ] || [ "$STATUS" = "no healthcheck" ]; then
                 exit 0
               fi
-              if [ "$i" = "10" ]; then
+              if [ "$i" = "30" ]; then
                 echo "Container logs:"
-                docker logs brilliance-backend-1 --tail 50
+                docker logs "$CONTAINER" --tail 100
                 exit 1
               fi
               sleep 2

@@ -30,15 +30,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Ensure rsync on server
+      - name: Prepare server
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.SERVER_HOST }}
           username: deploy
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            set -e
             sudo apt update
             sudo apt install -y rsync
+            mkdir -p /home/deploy/apps/backend-python
 
       - name: Copy files to server
         uses: burnett01/rsync-deployments@v8
@@ -75,6 +77,7 @@ jobs:
           script: |
             set -e
             cd /home/deploy/apps/backend-python
+
             CONTAINER="$(docker compose -f .configs/docker/docker-compose.yml ps -q backend)"
 
             if [ -z "$CONTAINER" ]; then

@@ -7,20 +7,44 @@ jobs:
   install-docker:
     runs-on: self-hosted
     steps:
-      - name: Ensure Docker installed and deploy in docker group
+      - name: Install Docker and fix runner permissions
         uses: appleboy/ssh-action@master
         with:
           host: ${{ vars.SERVER_HOST }}
           username: ${{ vars.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-            if ! command -v docker >/dev/null 2>&1; then
-              sudo apt update
-              sudo apt install -y ca-certificates curl gnupg
-              sudo install -m 0755 -d /etc/apt/keyrings
+            set -e
+
+            sudo apt update
+            sudo apt install -y ca-certificates curl gnupg
+
+            sudo install -m 0755 -d /etc/apt/keyrings
+
+            if [ ! -f /etc/apt/keyrings/docker.gpg ]; then
               curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
               sudo chmod a+r /etc/apt/keyrings/docker.gpg
-              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-              sudo apt update
-              sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
             fi
+
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+            sudo apt update
+            sudo apt install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+            sudo systemctl enable docker
+            sudo systemctl start docker
+
+            RUNNER_USER="$(ps -eo user,cmd | awk '/Runner.Listener/ && !/awk/ {print $1; exit}')"
+
+            if [ -z "$RUNNER_USER" ]; then
+              RUNNER_USER="${{ vars.SERVER_USER }}"
+            fi
+
+            sudo usermod -aG docker "$RUNNER_USER"
+            sudo usermod -aG docker deploy || true
+
+            sudo systemctl restart 'actions.runner.*' || true
+
+            sudo docker --version
+            sudo docker compose version
+            ls -l /var/run/docker.sock

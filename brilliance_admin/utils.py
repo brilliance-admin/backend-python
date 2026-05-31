@@ -21,6 +21,11 @@ class SupportsStr(Protocol):
 
         return core_schema.no_info_plain_validator_function(validate)
 
+    @classmethod
+    def __get_pydantic_json_schema__(cls, schema, handler):
+        # Expose protocol-backed values as strings in OpenAPI.
+        return handler(core_schema.str_schema())
+
 
 def get_logger():
     try:

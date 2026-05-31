@@ -26,6 +26,9 @@ def build_redoc_docs(app, redoc_url):
 
     @router.get(redoc_url, include_in_schema=False)
     async def redoc(request: Request) -> HTMLResponse:
+        # pylint: disable=unused-variable
+        language_context = request.app.state.schema.get_language_context(language_slug=None)  # noqa: F841
+
         root_path = request.scope.get("root_path", "")
         openapi_url = f"{root_path}{app.openapi_url}"
         return get_redoc_html(

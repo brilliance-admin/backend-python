@@ -14,9 +14,15 @@ logger = get_logger()
 
 
 @router.post(path='/{group}/{category}/')
-async def autocomplete(request: Request, group: str, category: str, data: AutocompleteData):
+async def autocomplete(
+        request: Request,
+        group: str,
+        category: str,
+        data: AutocompleteData,
+        subcategory: str | None = None,
+):
     schema: AdminSchema = request.app.state.schema
-    schema_category, user = await get_category(request, group, category)
+    schema_category, user = await get_category(request, group, category, subcategory)
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)

@@ -1,7 +1,7 @@
 import abc
 import copy
 import inspect
-from typing import Awaitable, Dict, List
+from typing import Any, Awaitable, Dict, List
 
 from fastapi import HTTPException, Request
 from pydantic import Field
@@ -22,6 +22,9 @@ logger = get_logger()
 class CategoryTable(BaseCategory):
     _type_slug: str = 'table'
 
+    # Instances of categories
+    subcategories: List[Any] = Field(default_factory=list)
+
     search_enabled: bool = False
     search_help: SupportsStr | None = None
 
@@ -35,8 +38,15 @@ class CategoryTable(BaseCategory):
 
     pk_name: str | None = None
 
-    def __init__(self, *args, table_schema=None, table_filters=None, **kwargs):
+    def __init__(self, *args, table_schema=None, table_filters=None, subcategories=None, **kwargs):
         super().__init__(*args, **kwargs)
+
+        if subcategories:
+            self.subcategories = subcategories
+
+        for category in self.subcategories:
+            if not issubclass(category.__class__, BaseCategory):
+                raise TypeError(f'{type(self).__name__} subcategory "{category}" is not subclass of BaseCategory')
 
         if table_schema:
             self.table_schema = table_schema
@@ -81,12 +91,18 @@ class CategoryTable(BaseCategory):
 
         return actions
 
+    def get_subcategory(self, subcategory: str):
+        for category in self.subcategories:
+            if category.slug == subcategory:
+                return category
+        return None
+
     def generate_schema(self, user, language_context: LanguageContext) -> dict:
         schema = super().generate_schema(user, language_context)
 
         table_schema = getattr(self, 'table_schema', None)
         if not table_schema or not issubclass(table_schema.__class__, FieldsSchema):
-            raise AttributeError(f'Admin category {self.__class__} must have table_schema instance of FieldsSchema')
+            raise AttributeError(f'Admin category {type(self).__name__} must have table_schema instance of FieldsSchema')
 
         table = TableInfoSchemaData(
             table_schema=self.table_schema.generate_schema(user, language_context),
@@ -126,6 +142,15 @@ class CategoryTable(BaseCategory):
 
         table.actions = actions
         schema.table_info = table
+
+        for category in self.subcategories:
+            if not category.slug:
+                msg = f'{type(self).__name__}.slug subcategory {type(category).__name__}.slug is empty'
+                raise AttributeError(msg)
+
+            category_schema = category.generate_schema(user, language_context)
+            table.subcategories[category.slug] = category_schema.to_dict(keep_none=False)
+
         return schema
 
     # pylint: disable=too-many-arguments

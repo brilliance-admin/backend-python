@@ -14,9 +14,15 @@ logger = get_logger()
 
 
 @router.post(path='/{group}/{category}/')
-async def dashboard_data(request: Request, group: str, category: str, data: DashboardData) -> DashboardContainer:
+async def dashboard_data(
+        request: Request,
+        group: str,
+        category: str,
+        data: DashboardData,
+        subcategory: str | None = None,
+) -> DashboardContainer:
     schema: AdminSchema = request.app.state.schema
-    schema_category, user = await get_category(request, group, category, check_type=CategoryDashboard)
+    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryDashboard)
 
     result: DashboardContainer = await schema_category.get_data(data, user)
 

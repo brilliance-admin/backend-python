@@ -77,6 +77,7 @@ category_schema_data = {
         'pk_name': 'id',
         'search_enabled': True,
         'search_help': mock.ANY,
+        'subcategories': mock.ANY,
         'table_filters': {
             'fields': {
                 'created_at': {

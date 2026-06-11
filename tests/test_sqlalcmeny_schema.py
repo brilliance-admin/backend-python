@@ -34,6 +34,7 @@ category_schema_data = {
         'pk_name': 'id',
         'search_enabled': True,
         'search_help': mock.ANY,
+        'subcategories': mock.ANY,
         'table_filters': None,
         'table_schema': {
             'fields': {
@@ -196,7 +197,7 @@ FIELDS = [
 
 
 @pytest.mark.asyncio
-async def test_generate_category_schema(postgres_sessionmaker, language_context):
+async def test_generate_category_schema_sqlalchemy(postgres_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
         search_fields=['id'],
         model=Terminal,

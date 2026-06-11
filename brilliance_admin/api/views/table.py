@@ -20,10 +20,16 @@ logger = get_logger()
 
 # pylint: disable=too-many-arguments
 @router.post(path='/{group}/{category}/list/')
-async def table_list(request: Request, group: str, category: str, list_data: ListData) -> TableListResult:
+async def table_list(
+        request: Request,
+        group: str,
+        category: str,
+        list_data: ListData,
+        subcategory: str | None = None,
+) -> TableListResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user = await get_category(request, group, category, check_type=CategoryTable)
+    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryTable)
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)
@@ -42,10 +48,16 @@ async def table_list(request: Request, group: str, category: str, list_data: Lis
 
 
 @router.post(path='/{group}/{category}/retrieve/{pk}/')
-async def table_retrieve(request: Request, group: str, category: str, pk: Any) -> RetrieveResult:
+async def table_retrieve(
+        request: Request,
+        group: str,
+        category: str,
+        pk: Any,
+        subcategory: str | None = None,
+) -> RetrieveResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user = await get_category(request, group, category, check_type=CategoryTable)
+    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryTable)
     if not schema_category.has_retrieve:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for retrive")
 
@@ -65,10 +77,15 @@ async def table_retrieve(request: Request, group: str, category: str, pk: Any) -
     path='/{group}/{category}/create/',
     responses={400: {"model": APIError}},
 )
-async def table_create(request: Request, group: str, category: str) -> CreateResult:
+async def table_create(
+        request: Request,
+        group: str,
+        category: str,
+        subcategory: str | None = None,
+) -> CreateResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user = await get_category(request, group, category, check_type=CategoryTable)
+    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryTable)
     if not schema_category.has_create:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for create")
 
@@ -88,10 +105,16 @@ async def table_create(request: Request, group: str, category: str) -> CreateRes
     path='/{group}/{category}/update/{pk}/',
     responses={400: {"model": APIError}},
 )
-async def table_update(request: Request, group: str, category: str, pk: Any) -> UpdateResult:
+async def table_update(
+        request: Request,
+        group: str,
+        category: str,
+        pk: Any,
+        subcategory: str | None = None,
+) -> UpdateResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user = await get_category(request, group, category, check_type=CategoryTable)
+    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryTable)
     if not schema_category.has_update:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for update")
 
@@ -117,10 +140,11 @@ async def table_action(
         category: str,
         action: str,
         action_data: ActionData,
+        subcategory: str | None = None,
 ) -> ActionResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user = await get_category(request, group, category, check_type=CategoryTable)
+    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryTable)
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)

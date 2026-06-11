@@ -65,6 +65,40 @@ class CreatePaymentSchema(schema.FieldsSchema):
         return value
 
 
+class LogsAdmin(schema.CategoryTable):
+    has_update = False
+    has_create = False
+    slug = 'logs'
+
+    table_schema = schema.FieldsSchema(
+        log=schema.StringField(label=_('Log')),
+    )
+
+    # pylint: disable=too-many-arguments
+    async def get_list(
+            self,
+            list_data: schema.ListData,
+            user: auth.UserABC,
+            language_context: LanguageContext,
+            admin_schema: AdminSchema,
+    ) -> schema.TableListResult:
+        await asyncio.sleep(0.2)
+
+        data = []
+        total_count = 5039
+
+        for i in range(0, list_data.limit):
+            pk = total_count - ((list_data.page - 1) * list_data.limit + i)
+            if pk < 0:
+                continue
+
+            line_data = {'log': 'test'}
+            line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
+            data.append(line)
+
+        return schema.TableListResult(data=data, total_count=total_count)
+
+
 class PaymentsAdmin(schema.CategoryTable):
     has_update = False
     has_create = False
@@ -82,6 +116,10 @@ class PaymentsAdmin(schema.CategoryTable):
     pk_name = 'id'
     ordering_fields = [
         'id',
+    ]
+
+    subcategories = [
+        LogsAdmin()
     ]
 
     @admin_action(

@@ -79,7 +79,7 @@ class AdminSchema:
     def __post_init__(self):
         for category in self.categories:
             if not issubclass(category.__class__, BaseCategory):
-                raise TypeError(f'Root category "{category}" is not instance of BaseCategory subclass')
+                raise TypeError(f'Root category "{category}" is not subclass of BaseCategory')
 
         if not self.language_manager:
             self.language_manager = LanguageManager(DEFAULT_LANGUAGES)

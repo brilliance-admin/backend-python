@@ -90,6 +90,8 @@ class TableInfoSchemaData(DataclassBase):
 
     actions: Dict[str, dict] | None = Field(default_factory=dict)
 
+    subcategories: Dict[str, dict] = Field(default_factory=dict)
+
     def __repr__(self):
         return f'<TableInfoSchemaData id={id(self)}>'
 
@@ -210,7 +212,7 @@ class CategoryGroup(BaseCategory):
             try:
                 result.categories[category.slug] = category.generate_schema(user, language_context)
             except Exception as e:
-                msg = f'Category "{category.slug}" {type(category)} generate_schema error: {e}'
+                msg = f'Category "{category.slug}" {type(category).__name__} generate_schema error: {e}'
                 raise Exception(msg) from e
 
         return result

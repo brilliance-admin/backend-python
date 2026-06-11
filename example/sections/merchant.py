@@ -31,9 +31,20 @@ class MerchantAdmin(sqlalchemy.SQLAlchemyAdmin):
             'description',
             'created_at',
             'terminals',
+            'disputes',
         ],
         title=schema.StringField(multilined=True, required=True),
         description=schema.StringField(tinymce=True, required=True),
+        disputes=schema.InlineField(
+            label=_('disputes'),
+            help_text=_('disputes_help_text'),
+            table_schema=schema.FieldsSchema(
+                id=schema.IntegerField(label='ID', read_only=True),
+                reason=schema.StringField(label=_('Name')),
+                manager=schema.RelatedField(label=_('Manager')),
+                created_at=schema.DateTimeField(label=_('created_at'), read_only=True),
+            )
+        ),
     )
     table_filters = sqlalchemy.SQLAlchemyFieldsSchema(
         model=Merchant,

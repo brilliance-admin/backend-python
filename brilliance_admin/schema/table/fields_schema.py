@@ -198,16 +198,7 @@ class FieldsSchema:
                 generated_fields[k] = v
 
         # Autogenerate fields from instance attributes
-        for attribute_name in dir(self):
-            if '__' in attribute_name:
-                continue
-
-            attribute = getattr(self, attribute_name)
-            if issubclass(type(attribute), TableField):
-                generated_fields[attribute_name] = attribute
-
-        # Generation FunctionField
-        for attribute_name in dir(self):
+        for attribute_name, attribute in self.__class__.__dict__.items():
             if '__' in attribute_name:
                 continue
 
@@ -216,6 +207,12 @@ class FieldsSchema:
                 field = FunctionField(fn=attribute, **attribute.__kwargs__)
                 field.read_only = True
                 generated_fields[attribute_name] = field
+                continue
+
+            attribute = getattr(self, attribute_name)
+            if issubclass(type(attribute), TableField):
+                generated_fields[attribute_name] = attribute
+                continue
 
         return generated_fields
 

@@ -27,24 +27,23 @@ class PaymentFiltersSchema(schema.FieldsSchema):
 
 
 class PaymentFieldsSchema(schema.FieldsSchema):
+    list_display = [
+        'id',
+        'amount',
+        'endpoint',
+        'created_at',
+        'get_provider_registry',
+        'get_provider_registry_info',
+    ]
+
     id = schema.IntegerField(label='ID', read_only=True)
-    amount = schema.IntegerField(label=_('amount'))
+    amount = schema.IntegerField(label=_('amount'), read_only=True)
     endpoint = schema.StringField(label=_('endpoint'))
     description = schema.StringField(label=_('description'))
     other_field = schema.StringField(read_only=True)
     whitelist_ips = schema.ArrayField(label=_('whitelist_ips'))
     # image = schema.ImageField(label=_('image'))
     created_at = schema.DateTimeField(label=_('created_at'), read_only=True)
-
-    list_display = [
-        'id',
-        'amount',
-        'endpoint',
-        'description',
-        'created_at',
-        'get_provider_registry',
-        'get_provider_registry_info',
-    ]
 
     @schema.function_field(label=_('registry_checked'), type=schema.BooleanField)
     async def get_provider_registry(self, record, user, **kwargs):
@@ -53,6 +52,17 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     @schema.function_field(label=_('registry_info_checked'), type=schema.BooleanField)
     async def get_provider_registry_info(self, record, user, **kwargs):
         return False
+
+    disputes = schema.InlineField(
+        label=_('disputes'),
+        help_text=_('disputes_help_text'),
+        table_schema=schema.FieldsSchema(
+            id=schema.IntegerField(label='ID', read_only=True),
+            reason=schema.StringField(label=_('Name')),
+            manager=schema.RelatedField(label=_('Manager')),
+            created_at=schema.DateTimeField(label=_('created_at'), read_only=True),
+        )
+    )
 
 
 class CreatePaymentSchema(schema.FieldsSchema):
@@ -112,7 +122,7 @@ class PaymentsAdmin(schema.CategoryTable):
     search_help = _('payments_search_fields')
 
     table_filters = PaymentFiltersSchema()
-    table_schema = PaymentFieldsSchema(readonly_fields=['amount'])
+    table_schema = PaymentFieldsSchema()
     pk_name = 'id'
     ordering_fields = [
         'id',
@@ -162,10 +172,24 @@ class PaymentsAdmin(schema.CategoryTable):
             'amount': 10 * fake.pyint(min_value=0, max_value=100),
             'endpoint': fake.word(),
             'whitelist_ips': ['localhost', '0.0.0.0'],
-            'description': fake.sentence(nb_words=5),
+            'description': fake.sentence(nb_words=50),
             'other_field': fake.word(),
             'image': f'https://picsum.photos/id/{5039-pk+1}/200/300',
             'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
+            'disputes': [
+                {
+                    'id': 1,
+                    'reason': 'Reason title',
+                    'manager': {'key': 1, 'title': 'Manager name'},
+                    'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
+                },
+                {
+                    'id': 2,
+                    'reason': 'Reason title 2',
+                    'manager': {'key': 1, 'title': 'Manager second'},
+                    'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
+                }
+            ],
         }
 
     # pylint: disable=too-many-arguments

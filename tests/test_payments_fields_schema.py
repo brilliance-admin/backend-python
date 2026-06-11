@@ -129,6 +129,7 @@ category_schema_data = {
                     'required': False,
                     'type': 'string',
                 },
+                'disputes': mock.ANY,
                 'endpoint': {
                     'header': {},
                     'label': 'Эндпоинт',
@@ -178,7 +179,6 @@ category_schema_data = {
                 'id',
                 'amount',
                 'endpoint',
-                'description',
                 'created_at',
                 'get_provider_registry',
                 'get_provider_registry_info',

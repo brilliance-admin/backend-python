@@ -142,7 +142,6 @@ class StringField(TableField):
 
         return value
 
-
 @dataclass
 class BooleanField(TableField):
     _type = 'boolean'
@@ -392,3 +391,24 @@ class RelatedField(TableField):
         if not isinstance(result, (int, str)):
             raise FieldError(f'Value "{result}" is not supported for related field')
         return result
+
+
+@dataclass
+class InlineField(TableField):
+    _type = 'inline'
+
+    many: bool = False
+    table_schema: Any = None
+
+    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_schema(user, field_slug, language_context)
+        schema.many = self.many
+
+        # pylint: disable=import-outside-toplevel
+        from brilliance_admin.schema.table.fields_schema import FieldsSchema
+        if not issubclass(type(self.table_schema), FieldsSchema):
+            raise FieldError(f'Inline table_schema "{self.table_schema}" must be subclass of FieldsSchema')
+
+        schema.inline_field_schema = self.table_schema.generate_schema(user, language_context)
+
+        return schema

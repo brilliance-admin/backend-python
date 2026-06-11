@@ -62,6 +62,8 @@ class FieldSchemaData(DataclassBase):
     include_date: bool | None = None
     include_time: bool | None = None
 
+    inline_field_schema: FieldsSchemaData | None = None
+
 
 @dataclass
 class FieldsSchemaData(DataclassBase):

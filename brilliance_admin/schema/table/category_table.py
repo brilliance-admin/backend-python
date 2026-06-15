@@ -207,16 +207,19 @@ class CategoryTable(BaseCategory):
         if data.action_name is not None:
             action_fn = self._get_action_fn(data.action_name)
             if not action_fn:
-                raise Exception(f'Action "{data.action_name}" is not found')
+                msg = f'Autocomplete: action "{data.action_name}" is not found'
+                raise Exception(msg)
 
             if not action_fn.form_schema:
-                raise Exception(f'Action "{data.action_name}" form_schema is None')
+                msg = f'Autocomplete: action "{data.action_name}" form_schema is None'
+                raise Exception(msg)
 
             form_schema = action_fn.form_schema
 
         elif data.is_filter:
             if not self.table_filters:
-                raise Exception(f'Action "{data.action_name}" table_filters is None')
+                msg = f'Autocomplete: action "{data.action_name}" table_filters is None'
+                raise Exception(msg)
 
             form_schema = self.table_filters
 
@@ -225,7 +228,8 @@ class CategoryTable(BaseCategory):
 
         field = form_schema.get_field(data.field_slug)
         if not field:
-            raise Exception(f'Field "{data.field_slug}" is not found')
+            msg = f'Autocomplete: field "{data.field_slug}" is not found'
+            raise Exception(msg)
 
         results = await field.autocomplete(
             data,

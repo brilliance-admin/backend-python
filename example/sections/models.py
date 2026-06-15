@@ -225,7 +225,8 @@ class Fee(BaseIDModel):
     __tablename__ = "fee"
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    terminals: Mapped[list["Terminal"]] = relationship(back_populates="fee")
+    terminal_id: Mapped[int | None] = mapped_column(ForeignKey("terminal.id"), nullable=True)
+    terminal: Mapped["Terminal"] = relationship(back_populates="fees")
 
     def __repr__(self):
         return f"<Fee(id={self.id}, title='{self.title}')>"
@@ -302,8 +303,7 @@ class Terminal(BaseIDModel):
     currency_id: Mapped[int] = mapped_column(ForeignKey("currency.id"), index=True)
     currency: Mapped["Currency"] = relationship(back_populates="terminals")  # noqa F821
 
-    fee_id: Mapped[int] = mapped_column(ForeignKey("fee.id"), nullable=True)
-    fee: Mapped["Fee"] = relationship(back_populates="terminals")
+    fees: Mapped[list["Fee"]] = relationship(back_populates="terminal")
 
     is_h2h: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=expression.true())
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=expression.true())

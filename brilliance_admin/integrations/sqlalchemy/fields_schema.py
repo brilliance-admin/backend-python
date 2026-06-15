@@ -16,6 +16,10 @@ ORM_FIELD_NOT_SUPPORTED = (
     'SQLAlchemy autogenerate ORM field {model}.{field_slug}'
     ' is not supported for type: {col_type}'
 )
+INLINE_FIELD_NOT_SUPPORTED = (
+    '{class_name} field "{field_slug}" has unsupported type "{field_type}". '
+    'Use sqlalchemy.SQLAlchemyInlineField instead of schema.InlineField'
+)
 
 
 class SQLAlchemyFieldsSchema(schema.FieldsSchema):
@@ -31,6 +35,18 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
         generated_fields = super().generate_fields(kwargs)
 
         # pylint: disable=import-outside-toplevel
+        from brilliance_admin.integrations.sqlalchemy.inline_field import SQLAlchemyInlineField
+
+        for field_slug, field in generated_fields.items():
+            if isinstance(field, schema.InlineField) and not isinstance(field, SQLAlchemyInlineField):
+                msg = INLINE_FIELD_NOT_SUPPORTED.format(
+                    class_name=type(self).__name__,
+                    field_slug=field_slug,
+                    field_type=type(field).__name__,
+                )
+                raise AttributeError(msg)
+
+        # pylint: disable=import-outside-toplevel
         from sqlalchemy import inspect
         from sqlalchemy.dialects.postgresql import ARRAY, UUID
         from sqlalchemy.ext.mutable import Mutable
@@ -38,6 +54,9 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
         from sqlalchemy.sql.schema import Column
 
         mapper = inspect(self.model).mapper
+
+        for field_slug, field in self.generate_related_fields():
+            generated_fields = {field_slug: field, **generated_fields}
 
         for attr in mapper.column_attrs:
             col: Column = attr.columns[0]
@@ -135,14 +154,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                 raise AttributeError(msg)
 
             schema_field = field_class(**field_data)
-
-            if col.primary_key:
-                generated_fields = {field_slug: schema_field, **generated_fields}
-            else:
-                generated_fields[field_slug] = schema_field
-
-        for field_slug, field in self.generate_related_fields():
-            generated_fields[field_slug] = field
+            generated_fields = {field_slug: schema_field, **generated_fields}
 
         return generated_fields
 

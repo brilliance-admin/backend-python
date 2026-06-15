@@ -1,11 +1,35 @@
 from brilliance_admin import sqlalchemy
 from brilliance_admin.translations import TranslateText as _
-from example.sections.models import Terminal
+from example.sections.models import Fee, Terminal
+
+
+class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
+    model = Terminal
+    list_display = [
+        'id',
+        'status',
+        'manager_id',
+        'merchant_id',
+        'public_id',
+        'currency_id',
+        'title',
+        'is_h2h',
+        'imitation_api',
+        'test_mode',
+        'is_active',
+    ]
+    readonly_fields = ['errors']
+
+    fees = sqlalchemy.SQLAlchemyInlineField(
+        label=_('fees'),
+        help_text=_('fees_help_text'),
+        many=True,
+        table_schema=sqlalchemy.SQLAlchemyFieldsSchema(model=Fee),
+    )
 
 
 class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
     has_create = False
-    has_update = False
     has_delete = False
 
     model = Terminal
@@ -20,23 +44,7 @@ class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
         'title',
     ]
 
-    table_schema = sqlalchemy.SQLAlchemyFieldsSchema(
-        model=Terminal,
-        list_display=[
-            'id',
-            'status',
-            'manager_id',
-            'merchant_id',
-            'public_id',
-            'currency_id',
-            'title',
-            'is_h2h',
-            'imitation_api',
-            'test_mode',
-            'is_active',
-        ],
-        readonly_fields=['errors'],
-    )
+    table_schema = TerminalFieldsSchema()
     table_filters = sqlalchemy.SQLAlchemyFieldsSchema(
         model=Terminal,
         fields=[
@@ -44,5 +52,5 @@ class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
             'created_at',
             'merchant_id',
             'currency_id',
-        ]
+        ],
     )

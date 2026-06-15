@@ -11,7 +11,7 @@ from brilliance_admin.schema.table.fields.function_field import FunctionField
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import DeserializeAction
 
-NOT_FUND_EXCEPTION = '''Field slug "{field_slug}" not found inside generated fields inside {class_name}
+NOT_FUND_EXCEPTION = '''{class_name}: field "{field_slug}" not found inside generated fields
 Available options: {available_fields}
 '''
 EXTRA_KWARGS_NOT_FUND = '''{class_name}.extra_kwargs field "{field_slug}" not found inside generated fields

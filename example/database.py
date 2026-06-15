@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from sqlalchemy import event
+from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from example.config import settings
 
@@ -33,7 +33,11 @@ async def recreate_tables_async():
     from example.sections.models import ModelBase
 
     async with ASYNC_ENGINE.begin() as conn:
-        await conn.run_sync(ModelBase.metadata.drop_all)
+        if ASYNC_ENGINE.sync_engine.dialect.name == 'postgresql':
+            await conn.execute(text("DROP SCHEMA public CASCADE"))
+            await conn.execute(text("CREATE SCHEMA public"))
+        else:
+            await conn.run_sync(ModelBase.metadata.drop_all)
         await conn.run_sync(ModelBase.metadata.create_all)
 
 

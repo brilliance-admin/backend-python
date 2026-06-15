@@ -114,7 +114,6 @@ async def test_retrieve(postgres_sessionmaker, language_context):
             'key': currency.id,
             'title': mock.ANY,
         },
-        'fee_id': None,
         'status': {
             'title': TranslateText('statuses.process'),
             'value': 'process',
@@ -125,6 +124,7 @@ async def test_retrieve(postgres_sessionmaker, language_context):
         'merchant_id': {'key': merchant.id, 'title': mock.ANY},
         'registered_delay': None,
         'secret_key': mock.ANY,
+        'fees': mock.ANY,
     }
     assert retrieve_result.data == expected_data
 
@@ -253,7 +253,7 @@ async def test_list(postgres_sessionmaker, language_context):
                 'title': TranslateText('statuses.process'),
                 'value': 'process',
             },
-            'fee_id': None,
+            'fees': mock.ANY,
             'description': 'description',
             'id': 1,
             'is_h2h': False,

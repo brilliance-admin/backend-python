@@ -412,3 +412,17 @@ class InlineField(TableField):
         schema.inline_field_schema = self.table_schema.generate_schema(user, language_context)
 
         return schema
+
+    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize(value, action, extra, *args, **kwargs)
+
+        if value is None:
+            return
+
+        if not isinstance(value, list):
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'Array'})
+
+        if self.required and len(value) == 0:
+            raise FieldError('Field is required', 'field_required')
+
+        return value

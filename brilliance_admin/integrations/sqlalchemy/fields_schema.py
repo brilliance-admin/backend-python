@@ -31,6 +31,13 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
 
         super().__init__(*args, **kwargs)
 
+        # pylint: disable=import-outside-toplevel
+        from brilliance_admin.integrations.sqlalchemy.inline_field import SQLAlchemyInlineField
+
+        for field in self.get_fields().values():
+            if isinstance(field, SQLAlchemyInlineField):
+                field.remove_reverse_fk_field(self.model)
+
     def generate_fields(self, kwargs) -> dict:
         generated_fields = super().generate_fields(kwargs)
 

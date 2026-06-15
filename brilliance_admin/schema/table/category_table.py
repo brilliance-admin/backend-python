@@ -229,7 +229,7 @@ class CategoryTable(BaseCategory):
         field = form_schema.get_field(data.field_slug)
         if not field:
             msg = f'Autocomplete: field "{data.field_slug}" is not found'
-            raise Exception(msg)
+            raise AdminAPIException(APIError(message=msg), status_code=500)
 
         results = await field.autocomplete(
             data,

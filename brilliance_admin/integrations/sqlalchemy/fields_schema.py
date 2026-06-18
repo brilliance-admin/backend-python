@@ -3,6 +3,7 @@ from typing import Any
 
 from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationError
+from brilliance_admin.integrations.sqlalchemy.inline_field import SQLAlchemyInlineField
 from brilliance_admin.integrations.sqlalchemy.related_field import SQLAlchemyRelatedField
 from brilliance_admin.schema.table.fields.base import DateTimeField
 from brilliance_admin.translations import TranslateText as _
@@ -324,13 +325,40 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                     status_code=400,
                 )
 
+    async def create_from_deserialized(self, deserialized_data, session):
+        record = self.model()
+
+        # сначала простые поля
+        for field_slug, value in deserialized_data.items():
+            field = self.get_field(field_slug)
+
+            if isinstance(field, (SQLAlchemyRelatedField, SQLAlchemyInlineField)):
+                continue
+
+            setattr(record, field_slug, value)
+
+        session.add(record)
+
+        # затем related под no_autoflush
+        for field_slug, value in deserialized_data.items():
+            field = self.get_field(field_slug)
+
+            if isinstance(field, SQLAlchemyRelatedField):
+                with session.no_autoflush:
+                    await field.update_related(record, field_slug, value, session)
+
+        # inline создаются в той же транзакции; при любой ошибке откатится и родитель, и дети
+        for field_slug, value in deserialized_data.items():
+            field = self.get_field(field_slug)
+
+            if isinstance(field, SQLAlchemyInlineField):
+                with session.no_autoflush:
+                    await field.create_inline(record, field_slug, value, session)
+
+        return record
+
     async def create(self, user, data, session):
         self.validate_incoming_data(data)
-
-        # pylint: disable=import-outside-toplevel
-        from brilliance_admin.integrations.sqlalchemy.inline_field import SQLAlchemyInlineField
-
-        record = self.model()
 
         try:
             deserialized_data = await self.deserialize_fields(
@@ -347,37 +375,30 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                 status_code=400,
             ) from e
 
-        # сначала простые поля
+        try:
+            record = await self.create_from_deserialized(deserialized_data, session)
+            await session.commit()
+            await session.refresh(record)
+            return record
+        except Exception:
+            await session.rollback()
+            raise
+
+    async def update_from_deserialized(self, record, deserialized_data, session, user):
         for field_slug, value in deserialized_data.items():
             field = self.get_field(field_slug)
 
             if isinstance(field, SQLAlchemyRelatedField):
+                await field.update_related(record, field_slug, value, session)
                 continue
 
             if isinstance(field, SQLAlchemyInlineField):
-                if value is None:
-                    continue
-
-                msg = (
-                    f'Inline field "{field_slug}" create is not implemented for '
-                    f'{type(self).__name__}.'
-                )
-                raise NotImplementedError(msg)
+                with session.no_autoflush:
+                    await field.update_inline(record, field_slug, value, session, user)
+                continue
 
             setattr(record, field_slug, value)
 
-        session.add(record)
-
-        # затем related под no_autoflush
-        for field_slug, value in deserialized_data.items():
-            field = self.get_field(field_slug)
-
-            if isinstance(field, SQLAlchemyRelatedField):
-                with session.no_autoflush:
-                    await field.update_related(record, field_slug, value, session)
-
-        await session.commit()
-        await session.refresh(record)
         return record
 
     async def update(self, record, user, data, session):
@@ -398,14 +419,10 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                 status_code=400,
             ) from e
 
-        for field_slug, value in deserialized_data.items():
-            field = self.get_field(field_slug)
-
-            if isinstance(field, SQLAlchemyRelatedField):
-                await field.update_related(record, field_slug, value, session)
-                continue
-
-            setattr(record, field_slug, value)
-
-        await session.commit()
-        return record
+        try:
+            await self.update_from_deserialized(record, deserialized_data, session, user)
+            await session.commit()
+            return record
+        except Exception:
+            await session.rollback()
+            raise

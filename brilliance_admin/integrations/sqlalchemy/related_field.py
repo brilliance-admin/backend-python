@@ -4,13 +4,13 @@ from pydantic.dataclasses import dataclass
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
+from brilliance_admin.integrations.sqlalchemy.utils import get_pk
 from brilliance_admin.schema.category import FieldSchemaData
 from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.table_models import AutocompleteData, Record
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 
-COMPOSITE_PK_NOT_SUPPORTED = 'Composite primary key is not supported'
 FIELD_NOT_FOUND_ON_MODEL = 'Field "{field_slug}" is not found on model "{model}"'
 FIELD_NOT_RELATIONSHIP_OR_FK = 'Field "{field_slug}" is not a relationship and not a FK column'
 CANNOT_RESOLVE_TARGET_MODEL = 'Cannot resolve target model for FK "{field_slug}"'
@@ -33,13 +33,6 @@ RELATED_MISSING_ON_RECORD = (
 )
 EXPECTED_INT_FOR_FILTER = 'Expected int for filter {rel_name}'
 EXPECTED_LIST_FOR_FILTER = 'Expected list[int] for filter {rel_name}'
-
-
-def get_pk(obj):
-    pk_cols = obj.__mapper__.primary_key
-    if len(pk_cols) != 1:
-        raise NotImplementedError(COMPOSITE_PK_NOT_SUPPORTED)
-    return getattr(obj, pk_cols[0].key)
 
 
 @dataclass
@@ -118,7 +111,7 @@ class SQLAlchemyRelatedField(RelatedField):
         results = []
 
         # pylint: disable=import-outside-toplevel
-        from sqlalchemy import select, or_, cast, String
+        from sqlalchemy import String, cast, or_, select
 
         target_model = self._get_target_model(model, data.field_slug)
         limit = min(150, data.limit)
@@ -259,6 +252,16 @@ class SQLAlchemyRelatedField(RelatedField):
             return
 
         obj = await session.get(self.target_model, value)
+        if obj is None:
+            msg = _('related_not_found') % {
+                'model': self.target_model.__name__,
+                'pk': value,
+                'field_slug': field_slug,
+            }
+            raise AdminAPIException(
+                APIError(message=msg, code='related_not_found'),
+                status_code=400,
+            )
         setattr(record, rel_attr, obj)
 
     async def apply_filter(self, stmt, value, model, column):

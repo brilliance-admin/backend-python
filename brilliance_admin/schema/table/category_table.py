@@ -7,10 +7,11 @@ from fastapi import HTTPException, Request
 from pydantic import Field
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.exceptions import AdminAPIException, APIError
+from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationError
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.category import BaseCategory, TableInfoSchemaData
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
+from brilliance_admin.schema.table.fields.base import InlineField
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult, ListData, TableListResult
 from brilliance_admin.translations import LanguageContext
@@ -172,7 +173,7 @@ class CategoryTable(BaseCategory):
         try:
             form_schema = action_fn.action_info['form_schema']
             if form_schema:
-                deserialized_data = await form_schema.deserialize(
+                deserialized_data = await form_schema.deserialize_fields(
                     action_data.form_data,
                     action=DeserializeAction.TABLE_ACTION,
                     extra={'user': user, 'request': request}
@@ -180,8 +181,19 @@ class CategoryTable(BaseCategory):
                 action_data.form_data = deserialized_data
 
             result: ActionResult = await action_fn(action_data=action_data)
-        except AdminAPIException as e:
-            raise e
+
+        except ValidationError as e:
+            raise AdminAPIException(
+                APIError(
+                    code='validation_error',
+                    field_errors=e.data,
+                ),
+                status_code=400,
+            ) from e
+
+        except AdminAPIException:
+            raise
+
         except Exception as e:
             logger.exception('Admin action %s "%s" exception: %s', type(self).__name__, action, e)
             msg = str(e) if admin_schema.debug else type(e).__name__
@@ -192,7 +204,7 @@ class CategoryTable(BaseCategory):
 
         return result
 
-    def get_extra_autocomplete(self) -> dict:
+    def get_extra_autocomplete(self, data: AutocompleteData) -> dict:
         return {}
 
     async def autocomplete(
@@ -208,33 +220,46 @@ class CategoryTable(BaseCategory):
             action_fn = self._get_action_fn(data.action_name)
             if not action_fn:
                 msg = f'Autocomplete: action "{data.action_name}" is not found'
-                raise Exception(msg)
+                raise AdminAPIException(APIError(message=msg), status_code=500)
 
             if not action_fn.form_schema:
                 msg = f'Autocomplete: action "{data.action_name}" form_schema is None'
-                raise Exception(msg)
+                raise AdminAPIException(APIError(message=msg), status_code=500)
 
             form_schema = action_fn.form_schema
 
         elif data.is_filter:
             if not self.table_filters:
                 msg = f'Autocomplete: action "{data.action_name}" table_filters is None'
-                raise Exception(msg)
+                raise AdminAPIException(APIError(message=msg), status_code=500)
 
             form_schema = self.table_filters
 
         else:
             form_schema = self.table_schema
 
+        # Inline fields
+        if data.inline_field_slug:
+            inline_field = form_schema.get_field(data.inline_field_slug)
+            if not inline_field:
+                msg = f'Autocomplete: inline field "{data.inline_field_slug}" is not found inside {type(form_schema).__name__}'
+                raise AdminAPIException(APIError(message=msg), status_code=500)
+
+            if not issubclass(type(inline_field), InlineField):
+                msg = f'Autocomplete: inline field "{data.inline_field_slug}" is not subclass of InlineField: {type(inline_field).__name__}'
+                raise AdminAPIException(APIError(message=msg), status_code=500)
+
+            form_schema = inline_field.table_schema
+
         field = form_schema.get_field(data.field_slug)
         if not field:
-            msg = f'Autocomplete: field "{data.field_slug}" is not found'
+            msg = f'Autocomplete: field "{data.field_slug}" is not found inside {type(form_schema).__name__}'
             raise AdminAPIException(APIError(message=msg), status_code=500)
 
         results = await field.autocomplete(
             data,
             user,
-            extra=self.get_extra_autocomplete(),
+            extra=self.get_extra_autocomplete(data),
         )
 
         return AutocompleteResult(results=results)

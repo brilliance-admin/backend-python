@@ -3,6 +3,13 @@ from brilliance_admin.translations import TranslateText as _
 from example.sections.models import Fee, Terminal
 
 
+class FeeFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
+    model = Fee
+    extra_kwargs = {
+        'fix_amount': {'min_value': 1},
+    }
+
+
 class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
     model = Terminal
     list_display = [
@@ -24,7 +31,7 @@ class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
         label=_('fees'),
         help_text=_('fees_help_text'),
         many=True,
-        table_schema=sqlalchemy.SQLAlchemyFieldsSchema(model=Fee),
+        table_schema=FeeFieldsSchema(),
     )
 
 

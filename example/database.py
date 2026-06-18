@@ -47,6 +47,7 @@ async def lifespan(app):
 
     from example.sections import models
 
+    await models.FeeTypeFactory.create_batch_async(5)
     await models.CurrencyFactory.create_batch_async(5)
     await models.MerchantFactory.create_batch_async(10)
     await models.TerminalFactory.create_batch_async(15)

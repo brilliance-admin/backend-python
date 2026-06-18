@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any
 
 import factory
-from sqlalchemy import JSON, BigInteger, Boolean, DateTime, ForeignKey, Integer, SmallInteger, String, func
+from sqlalchemy import JSON, BigInteger, Boolean, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, func, select
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -221,12 +221,130 @@ class MerchantFactory(SQLAlchemyFactoryBase):
         return self.title
 
 
+class FeeType(BaseIDModel):
+    __tablename__ = "fee_type"
+
+    title: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
+    fees: Mapped[list["Fee"]] = relationship(back_populates="fee_type")
+
+    def __repr__(self):
+        return f"<FeeType(id={self.id}, title='{self.title}')>"
+
+    def __str__(self):
+        return self.title
+
+
+class FeeTypeFactory(SQLAlchemyFactoryBase):
+    class Meta:
+        model = FeeType
+        sqlalchemy_session_factory = async_sessionmaker_
+        sqlalchemy_session_persistence = "commit"
+
+    title = factory.Iterator([
+        "payplanet",
+        "provider",
+        "other",
+        "refund",
+        "chargeback",
+    ])
+
+
+class FeeAccrualType(Enum):
+    ABOVE = "above"
+    BELLOW = "bellow"
+    OTHER = "other"
+
+    @property
+    def label(self):
+        labels = {
+            self.ABOVE: "Above (from user)",
+            self.BELLOW: "Below (from merchant)",
+            self.OTHER: "Other",
+        }
+        return labels[self]
+
+
+class FeeFixType(Enum):
+    MINIMAL = "minimal"
+    MAXIMAL = "maximal"
+    ADDITIONAL = "additional"
+
+    @property
+    def label(self):
+        labels = {
+            self.MINIMAL: "Minimal",
+            self.MAXIMAL: "Maximal",
+            self.ADDITIONAL: "Additional",
+        }
+        return labels[self]
+
+
+class FeeSourceType(Enum):
+    PAYPLANET = "payplanet"
+    PROVIDER = "provider"
+    OTHER = "other"
+
+    @property
+    def label(self):
+        labels = {
+            self.PAYPLANET: "Payplanet fee",
+            self.PROVIDER: "Provider fee",
+            self.OTHER: "Other fee",
+        }
+        return labels[self]
+
+
+class FeeOperationType(Enum):
+    BY_SETTINGS = "by_settings"
+    REFUND = "refund"
+    CHARGEBACK = "chargeback"
+
+    @property
+    def label(self):
+        labels = {
+            self.BY_SETTINGS: "By settings",
+            self.REFUND: "Refund",
+            self.CHARGEBACK: "Chargeback",
+        }
+        return labels[self]
+
+
 class Fee(BaseIDModel):
     __tablename__ = "fee"
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
+    accrual_type: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default=FeeAccrualType.BELLOW.value,
+        info={"choices": FeeAccrualType},
+    )
+    percent_part: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    percent: Mapped[float] = mapped_column(Numeric(7, 3), nullable=False, default=0)
+    fix_part: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    fix_type: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default=FeeFixType.MINIMAL.value,
+        info={"choices": FeeFixType},
+    )
+    fix_amount: Mapped[int] = mapped_column(BigInteger, nullable=False, default=0)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    source: Mapped[str | None] = mapped_column(
+        String(32),
+        nullable=True,
+        info={"choices": FeeSourceType},
+    )
+    operation_type: Mapped[str] = mapped_column(
+        String(32),
+        nullable=False,
+        default=FeeOperationType.BY_SETTINGS.value,
+        info={"choices": FeeOperationType},
+    )
     terminal_id: Mapped[int | None] = mapped_column(ForeignKey("terminal.id"), nullable=True)
     terminal: Mapped["Terminal"] = relationship(back_populates="fees")
+    fee_type_id: Mapped[int] = mapped_column(ForeignKey("fee_type.id"), nullable=False, index=True)
+    fee_type: Mapped["FeeType"] = relationship(back_populates="fees")
 
     def __repr__(self):
         return f"<Fee(id={self.id}, title='{self.title}')>"
@@ -242,10 +360,17 @@ class FeeFactory(SQLAlchemyFactoryBase):
         sqlalchemy_session_persistence = "commit"
 
     title = factory.Faker("word")
+    accrual_type = FeeAccrualType.BELLOW.value
+    percent_part = True
+    percent = 0
+    fix_part = False
+    fix_type = FeeFixType.MINIMAL.value
+    fix_amount = 0
+    active = True
+    operation_type = FeeOperationType.BY_SETTINGS.value
 
     def __str__(self):
         return self.title
-
 
 class TerminalStatuses(Enum):
     PROCESS = 'process'
@@ -369,3 +494,20 @@ class TerminalFactory(SQLAlchemyFactoryBase):
         "random_element",
         elements=[None, 5, 10, 30, 60],
     )
+
+    @classmethod
+    async def create_async(cls, **kwargs):
+        instance = await super().create_async(**kwargs)
+
+        async with async_sessionmaker_() as session:
+            fee_type = await session.scalar(select(FeeType).order_by(FeeType.id))
+
+        if fee_type is None:
+            fee_type = await FeeTypeFactory.create_async()
+
+        await FeeFactory.create_async(
+            terminal=instance,
+            fee_type=fee_type,
+        )
+
+        return instance

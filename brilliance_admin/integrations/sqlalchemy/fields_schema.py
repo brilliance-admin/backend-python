@@ -2,7 +2,7 @@ import datetime
 from typing import Any
 
 from brilliance_admin import schema
-from brilliance_admin.exceptions import AdminAPIException, APIError
+from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationError
 from brilliance_admin.integrations.sqlalchemy.related_field import SQLAlchemyRelatedField
 from brilliance_admin.schema.table.fields.base import DateTimeField
 from brilliance_admin.translations import TranslateText as _
@@ -120,7 +120,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                     field_data['max_value'] = 9223372036854775807
 
             elif isinstance(col_type, sqltypes.Numeric):
-                field_class = schema.IntegerField
+                field_class = schema.DecimalField
                 field_data["inputmode"] = "decimal"
                 field_data["precision"] = col_type.precision
                 field_data["scale"] = col_type.scale
@@ -254,11 +254,20 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                 )
                 raise AttributeError(msg)
 
-        deserialized_filters = await self.deserialize(
-            filters,
-            DeserializeAction.FILTERS,
-            extra={'model': self.model},
-        )
+        try:
+            deserialized_filters = await self.deserialize_fields(
+                filters,
+                DeserializeAction.FILTERS,
+                extra={'model': self.model},
+            )
+        except ValidationError as e:
+            raise AdminAPIException(
+                APIError(
+                    code='validation_error',
+                    field_errors=e.data,
+                ),
+                status_code=400,
+            ) from e
 
         for field_slug, value in deserialized_filters.items():
             field = self.get_field(field_slug)
@@ -320,11 +329,20 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
 
         record = self.model()
 
-        deserialized_data = await self.deserialize(
-            data,
-            DeserializeAction.CREATE,
-            extra={'model': self.model},
-        )
+        try:
+            deserialized_data = await self.deserialize_fields(
+                data,
+                DeserializeAction.CREATE,
+                extra={'model': self.model},
+            )
+        except ValidationError as e:
+            raise AdminAPIException(
+                APIError(
+                    code='validation_error',
+                    field_errors=e.data,
+                ),
+                status_code=400,
+            ) from e
 
         # сначала простые поля
         for field_slug, value in deserialized_data.items():
@@ -352,11 +370,20 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
     async def update(self, record, user, data, session):
         self.validate_incoming_data(data)
 
-        deserialized_data = await self.deserialize(
-            data,
-            DeserializeAction.UPDATE,
-            extra={'model': self.model},
-        )
+        try:
+            deserialized_data = await self.deserialize_fields(
+                data,
+                DeserializeAction.UPDATE,
+                extra={'model': self.model},
+            )
+        except ValidationError as e:
+            raise AdminAPIException(
+                APIError(
+                    code='validation_error',
+                    field_errors=e.data,
+                ),
+                status_code=400,
+            ) from e
 
         for field_slug, value in deserialized_data.items():
             field = self.get_field(field_slug)

@@ -8,8 +8,10 @@ from brilliance_admin import auth, schema, sqlalchemy
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.schema import admin_schema
 from brilliance_admin.translations import TranslateText
+from example.sections.terminal import TerminalFieldsSchema
 from example.sections.models import (
-    Currency, CurrencyFactory, Merchant, MerchantFactory, Terminal, TerminalFactory, TerminalStatuses)
+    Currency, CurrencyFactory, FeeAccrualType, FeeFactory, FeeFixType, FeeOperationType, FeeSourceType, FeeTypeFactory,
+    Merchant, MerchantFactory, Terminal, TerminalFactory, TerminalStatuses)
 from tests.test_sqlalcmeny_schema import FIELDS
 
 
@@ -86,10 +88,15 @@ async def test_create_bad_fk(postgres_sessionmaker, language_context):
 
 @pytest.mark.asyncio
 async def test_retrieve(postgres_sessionmaker, language_context):
-    category = get_category(postgres_sessionmaker)
+    category = sqlalchemy.SQLAlchemyAdmin(
+        model=Terminal,
+        db_async_session=postgres_sessionmaker,
+        table_schema=TerminalFieldsSchema(),
+    )
     user = auth.UserABC(username="test")
     merchant = await MerchantFactory()
     currency = await CurrencyFactory()
+    fee_type = await FeeTypeFactory()
     terminal = await TerminalFactory(
         title="test",
         description='test',
@@ -98,6 +105,20 @@ async def test_retrieve(postgres_sessionmaker, language_context):
         registered_delay=None,
         merchant=merchant,
         currency=currency,
+    )
+    await FeeFactory(
+        terminal=terminal,
+        fee_type=fee_type,
+        title='Terminal fee',
+        accrual_type=FeeAccrualType.ABOVE.value,
+        percent_part=True,
+        percent='1.500',
+        fix_part=True,
+        fix_type=FeeFixType.ADDITIONAL.value,
+        fix_amount=100,
+        active=True,
+        source=FeeSourceType.PAYPLANET.value,
+        operation_type=FeeOperationType.REFUND.value,
     )
 
     retrieve_result = await category.retrieve(
@@ -124,7 +145,37 @@ async def test_retrieve(postgres_sessionmaker, language_context):
         'merchant_id': {'key': merchant.id, 'title': mock.ANY},
         'registered_delay': None,
         'secret_key': mock.ANY,
-        'fees': mock.ANY,
+        'fees': [
+            {
+                'id': mock.ANY,
+                'title': 'Terminal fee',
+                'accrual_type': {
+                    'title': 'Above (from user)',
+                    'value': 'above',
+                },
+                'percent_part': True,
+                'percent': mock.ANY,
+                'fix_part': True,
+                'fix_type': {
+                    'title': 'Additional',
+                    'value': 'additional',
+                },
+                'fix_amount': 100,
+                'active': True,
+                'source': {
+                    'title': 'Payplanet fee',
+                    'value': 'payplanet',
+                },
+                'operation_type': {
+                    'title': 'Refund',
+                    'value': 'refund',
+                },
+                'fee_type_id': {
+                    'key': fee_type.id,
+                    'title': fee_type.title,
+                },
+            },
+        ],
     }
     assert retrieve_result.data == expected_data
 

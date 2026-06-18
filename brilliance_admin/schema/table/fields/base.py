@@ -1,11 +1,12 @@
 import abc
 import datetime
+from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import Any, ClassVar
 
 from pydantic.dataclasses import dataclass
 
-from brilliance_admin.exceptions import FieldError
+from brilliance_admin.exceptions import FieldError, ValidationError
 from brilliance_admin.schema.category import FieldSchemaData
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
@@ -35,7 +36,7 @@ class TableField(abc.ABC, FieldSchemaData):
     async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
         return value
 
-    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
         if self.required and value is None:
             raise FieldError('Field is required', 'field_required')
 
@@ -75,8 +76,8 @@ class IntegerField(TableField):
 
         return schema
 
-    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
-        value = await super().deserialize(value, action, extra, *args, **kwargs)
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
         if value and not isinstance(value, int):
             raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'init'})
 
@@ -92,6 +93,67 @@ class IntegerField(TableField):
             raise FieldError(_('validation.max_value_error') % {'max': self.max_value})
 
         return value
+
+
+@dataclass
+class DecimalField(TableField):
+    _type = 'decimal'
+
+    max_value: Decimal | int | float | None = None
+    min_value: Decimal | int | float | None = None
+
+    inputmode: str | None = None
+    precision: int | None = None
+    scale: int | None = None
+
+    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_schema(user, field_slug, language_context)
+
+        if self.max_value is not None:
+            schema.max_value = float(self.max_value)
+
+        if self.min_value is not None:
+            schema.min_value = float(self.min_value)
+
+        schema.inputmode = self.inputmode
+        schema.precision = self.precision
+        schema.scale = self.scale
+
+        return schema
+
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
+
+        if value is None:
+            if self.min_value is not None:
+                raise FieldError(_('validation.min_value_error') % {'min': self.min_value})
+            return
+
+        if isinstance(value, bool):
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'decimal'})
+
+        if isinstance(value, dict) and 'value' in value:
+            value = value['value']
+
+        if isinstance(value, Decimal):
+            decimal_value = value
+        elif isinstance(value, (int, float, str)):
+            try:
+                decimal_value = Decimal(str(value))
+            except (InvalidOperation, ValueError):
+                raise FieldError(
+                    _('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'decimal'}
+                ) from None
+        else:
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'decimal'})
+
+        if self.min_value is not None and decimal_value < Decimal(str(self.min_value)):
+            raise FieldError(_('validation.min_value_error') % {'min': self.min_value})
+
+        if self.max_value is not None and decimal_value > Decimal(str(self.max_value)):
+            raise FieldError(_('validation.max_value_error') % {'max': self.max_value})
+
+        return decimal_value
 
 
 @dataclass
@@ -124,8 +186,8 @@ class StringField(TableField):
 
         return schema
 
-    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
-        value = await super().deserialize(value, action, extra, *args, **kwargs)
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
         if value and not isinstance(value, str):
             raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'string'})
 
@@ -177,8 +239,8 @@ class DateTimeField(TableField):
 
         return schema
 
-    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
-        value = await super().deserialize(value, action, extra, *args, **kwargs)
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
 
         if not value:
             return
@@ -207,8 +269,8 @@ class DateTimeField(TableField):
 class JSONField(TableField):
     _type = 'json'
 
-    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
-        value = await super().deserialize(value, action, extra, *args, **kwargs)
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
 
         if value is None:
             return
@@ -232,8 +294,8 @@ class ArrayField(TableField):
 
         return schema
 
-    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
-        value = await super().deserialize(value, action, extra, *args, **kwargs)
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
 
         if value is None:
             return
@@ -325,8 +387,8 @@ class ChoiceField(TableField):
             'title': choice.get('title') or value if choice else value.capitalize(),
         }
 
-    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
-        value = await super().deserialize(value, action, extra, *args, **kwargs)
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
 
         if value is None:
             return
@@ -369,8 +431,8 @@ class RelatedField(TableField):
     async def autocomplete(self, data, user, extra):
         raise NotImplementedError('autocomplete is not implemented')
 
-    async def deserialize(self, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
-        value = await super().deserialize(action, extra, *args, **kwargs)
+    async def deserialize_field(self, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(action, extra, *args, **kwargs)
         if not value:
             return None
 
@@ -413,8 +475,21 @@ class InlineField(TableField):
 
         return schema
 
-    async def deserialize(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
-        value = await super().deserialize(value, action, extra, *args, **kwargs)
+    async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
+        if value is None:
+            return
+
+        if not isinstance(value, list):
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'Array'})
+
+        result = []
+        for line_value in value:
+            result.append(await self.table_schema.serialize(line_value, extra))
+
+        return result
+
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
 
         if value is None:
             return
@@ -425,4 +500,22 @@ class InlineField(TableField):
         if self.required and len(value) == 0:
             raise FieldError('Field is required', 'field_required')
 
-        return value
+        data = []
+
+        # Nested validation
+        errors = []
+        has_any_error = False
+        for line_value in value:
+            try:
+                form_data = await self.table_schema.deserialize_fields(line_value, action, extra)
+                data.append(form_data)
+            except ValidationError as e:
+                has_any_error = True
+                errors.append(e.data)
+            else:
+                errors.append(None)
+
+        if has_any_error:
+            raise FieldError(errors, 'inline_nested')
+
+        return data

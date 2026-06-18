@@ -15,11 +15,14 @@ class TableListResult(DataclassBase):
 class AutocompleteData(BaseModel):
     field_slug: str
     search_string: str = ''
-    is_filter: bool = False
     form_data: dict = Field(default_factory=dict)
     existed_choices: List[Any] = Field(default_factory=list)
-    action_name: str | None = None
     limit: int = Field(default=25, le=250)
+
+    # Type of autocomplete:
+    is_filter: bool = False
+    action_name: str | None = None
+    inline_field_slug: str | None = None
 
 
 class Record(BaseModel):

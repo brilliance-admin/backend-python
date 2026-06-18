@@ -2,6 +2,7 @@ from typing import Any
 
 from brilliance_admin.integrations.sqlalchemy.fields_schema import SQLAlchemyFieldsSchema
 from brilliance_admin.schema.table.category_table import CategoryTable
+from brilliance_admin.schema.table.table_models import AutocompleteData
 from brilliance_admin.translations import TranslateText as _
 
 EXCEPTION_REL_NAME = '''
@@ -89,10 +90,17 @@ class SQLAlchemyAdminBase(CategoryTable):
 
         super().__init__(*args, **kwargs)
 
-    def get_extra_autocomplete(self) -> dict:
-        extra = super().get_extra_autocomplete()
+    def get_extra_autocomplete(self, data: AutocompleteData) -> dict:
+        extra = super().get_extra_autocomplete(data)
         extra['db_async_session'] = self.db_async_session
         extra['model'] = self.model
+
+        # Inline model
+        if data.inline_field_slug:
+            inline_field = self.table_schema.get_field(data.inline_field_slug)
+            form_schema = inline_field.table_schema
+            extra['model'] = form_schema.model
+
         return extra
 
     def validate_fields(self):

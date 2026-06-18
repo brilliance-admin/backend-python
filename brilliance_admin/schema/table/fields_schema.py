@@ -4,7 +4,7 @@ from typing import Any, ClassVar, Dict, List
 from pydantic_core import core_schema
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
+from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError, ValidationError
 from brilliance_admin.schema.category import FieldSchemaData, FieldsSchemaData
 from brilliance_admin.schema.table.fields.base import TableField
 from brilliance_admin.schema.table.fields.function_field import FunctionField
@@ -247,7 +247,7 @@ class FieldsSchema:
 
         return result
 
-    async def deserialize(self, data: dict, action: DeserializeAction, extra) -> dict:
+    async def deserialize_fields(self, data: dict, action: DeserializeAction, extra) -> dict:
         result = {}
         errors = {}
         for field_slug, field in self.get_fields().items():
@@ -261,7 +261,7 @@ class FieldsSchema:
 
             value = data.get(field_slug)
             try:
-                deserialized_value = await field.deserialize(value, action, extra)
+                deserialized_value = await field.deserialize_field(value, action, extra)
 
                 validate_method = getattr(self, f'validate_{field_slug}', None)
                 if validate_method is not None and callable(validate_method):
@@ -275,13 +275,7 @@ class FieldsSchema:
                 errors[field_slug] = e
 
         if errors:
-            raise AdminAPIException(
-                APIError(
-                    code='validation_error',
-                    field_errors=errors,
-                ),
-                status_code=400,
-            )
+            raise ValidationError(data=errors)
         return result
 
     @classmethod

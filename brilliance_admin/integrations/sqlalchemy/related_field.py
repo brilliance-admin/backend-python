@@ -27,6 +27,10 @@ INVALID_EXISTED_CHOICES = (
 )
 MISSING_RECORD_IN_CONTEXT = 'Missing record in serialize context in value: {value}'
 MANY_RELATED_MISSING = 'Many Related field "{rel_name}" is missing on record "{record}"'
+RELATED_MISSING_ON_RECORD = (
+    'Inline related field "{rel_name}" cannot be serialized from record "{record_type}". '
+    'Expected inline row model to contain this relation.'
+)
 EXPECTED_INT_FOR_FILTER = 'Expected int for filter {rel_name}'
 EXPECTED_LIST_FOR_FILTER = 'Expected list[int] for filter {rel_name}'
 
@@ -188,6 +192,12 @@ class SQLAlchemyRelatedField(RelatedField):
         record = extra.get('record')
         if record is None:
             raise FieldError(MISSING_RECORD_IN_CONTEXT.format(value=value))
+
+        if not hasattr(record, self.rel_name):
+            raise FieldError(RELATED_MISSING_ON_RECORD.format(
+                rel_name=self.rel_name,
+                record_type=type(record).__name__,
+            ))
 
         related = getattr(record, self.rel_name, None)
 

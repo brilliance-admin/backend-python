@@ -34,6 +34,6 @@ async def autocomplete(
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
     except Exception as e:
         logger.exception('Autocomplete %s.%s exceptoin: %s', e, group, category, extra={'data': data})
-        return JSONResponse({}, status_code=500)
+        return JSONResponse({'message': 'Internal autocomplete exception'}, status_code=500)
 
     return JSONResponse(result.model_dump(mode='json', context=context))

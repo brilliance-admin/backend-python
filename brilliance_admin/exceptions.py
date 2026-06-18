@@ -7,6 +7,11 @@ from brilliance_admin.utils import DataclassBase, SupportsStr
 
 
 @dataclass
+class ValidationError(DataclassBase, Exception):
+    data: dict
+
+
+@dataclass
 class FieldError(DataclassBase, Exception):
     message: SupportsStr = None
     code: str | None = None

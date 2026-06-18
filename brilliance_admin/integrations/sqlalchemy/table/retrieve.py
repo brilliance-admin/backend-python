@@ -3,7 +3,6 @@ from typing import Any
 from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.integrations.sqlalchemy.fields_schema import SQLAlchemyFieldsSchema
-from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
@@ -21,7 +20,7 @@ class SQLAlchemyAdminRetrieveMixin:
             pk: Any,
             user: auth.UserABC,
             language_context: LanguageContext,
-            admin_schema: AdminSchema,
+            debug: bool,
     ) -> schema.RetrieveResult:
         if not self.has_retrieve:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -45,7 +44,7 @@ class SQLAlchemyAdminRetrieveMixin:
                 type(self).__name__, self.model.__name__, pk, e,
             )
             msg = _('errors.db_error_retrieve') % {
-                'error_type': str(e) if admin_schema.debug else type(e).__name__,
+                'error_type': str(e) if debug else type(e).__name__,
             }
             raise AdminAPIException(
                 APIError(message=msg, code='db_error_retrieve'), status_code=500,
@@ -61,7 +60,7 @@ class SQLAlchemyAdminRetrieveMixin:
         try:
             data = await self.table_schema.serialize(
                 record,
-                extra={"record": record, "user": user, "admin_schema": admin_schema},
+                extra={"record": record, "user": user, "debug": debug},
             )
         except FieldError as e:
             logger.exception(
@@ -80,7 +79,7 @@ class SQLAlchemyAdminRetrieveMixin:
                 type(self).__name__, self.model.__name__, pk, e,
             )
             msg = _('serialize_error.unexpected_error') % {
-                'error': str(e) if admin_schema.debug else type(e).__name__,
+                'error': str(e) if debug else type(e).__name__,
             }
             raise AdminAPIException(APIError(message=msg, code='unexpected_error'), status_code=500) from e
 

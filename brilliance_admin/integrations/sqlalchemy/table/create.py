@@ -2,7 +2,6 @@ from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.integrations.sqlalchemy.utils import extract_integrity_detail
-from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
@@ -18,7 +17,7 @@ class SQLAlchemyAdminCreate:
             data: dict,
             user: UserABC,
             language_context: LanguageContext,
-            admin_schema: AdminSchema,
+            debug: bool,
     ) -> schema.CreateResult:
         if not self.has_create:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -67,7 +66,7 @@ class SQLAlchemyAdminCreate:
                 extra={'data': data},
             )
             msg = _('errors.db_error_create') % {
-                'error_type': str(e) if admin_schema.debug else type(e).__name__,
+                'error_type': str(e) if debug else type(e).__name__,
             }
             raise AdminAPIException(
                 APIError(message=msg, code='db_error_create'), status_code=500,

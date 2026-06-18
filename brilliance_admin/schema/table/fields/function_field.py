@@ -60,8 +60,7 @@ class FunctionField(TableField):
                 self.fn,
                 e,
             )
-            admin_schema = extra.get('admin_schema')
-            debug = admin_schema.debug if admin_schema else False
+            debug = extra.get('debug', False)
             msg = str(e) if debug else type(e).__name__
             raise AdminAPIException(
                 APIError(message=f'Error: {msg}', code='function_field_error'), status_code=400,

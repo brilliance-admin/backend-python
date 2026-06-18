@@ -327,6 +327,9 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
     async def create(self, user, data, session):
         self.validate_incoming_data(data)
 
+        # pylint: disable=import-outside-toplevel
+        from brilliance_admin.integrations.sqlalchemy.inline_field import SQLAlchemyInlineField
+
         record = self.model()
 
         try:
@@ -350,6 +353,16 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
 
             if isinstance(field, SQLAlchemyRelatedField):
                 continue
+
+            if isinstance(field, SQLAlchemyInlineField):
+                if value is None:
+                    continue
+
+                msg = (
+                    f'Inline field "{field_slug}" create is not implemented for '
+                    f'{type(self).__name__}.'
+                )
+                raise NotImplementedError(msg)
 
             setattr(record, field_slug, value)
 

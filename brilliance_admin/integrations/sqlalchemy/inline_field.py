@@ -2,6 +2,21 @@ from brilliance_admin.schema.table.fields.base import InlineField
 
 
 class SQLAlchemyInlineField(InlineField):
+    async def serialize(self, value, extra: dict, *args, **kwargs):
+        if value is None:
+            return
+
+        if not isinstance(value, list):
+            msg = f'{type(self).__name__} value must be list, got {type(value).__name__}'
+            raise TypeError(msg)
+
+        result = []
+        for line_value in value:
+            line_extra = {**extra, 'model': self.table_schema.model, 'record': line_value}
+            result.append(await self.table_schema.serialize(line_value, line_extra))
+
+        return result
+
     def remove_reverse_fk_field(self, owner_model):
         # pylint: disable=import-outside-toplevel
         from brilliance_admin.integrations.sqlalchemy.fields_schema import SQLAlchemyFieldsSchema

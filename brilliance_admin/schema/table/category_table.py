@@ -8,7 +8,6 @@ from pydantic import Field
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationError
-from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.category import BaseCategory, TableInfoSchemaData
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields.base import InlineField
@@ -163,7 +162,7 @@ class CategoryTable(BaseCategory):
             action_data: ActionData,
             language_context: LanguageContext,
             user: UserABC,
-            admin_schema: AdminSchema,
+            debug: bool,
     ) -> ActionResult:
         action_fn = self.get_actions().get(action)
 
@@ -196,7 +195,7 @@ class CategoryTable(BaseCategory):
 
         except Exception as e:
             logger.exception('Admin action %s "%s" exception: %s', type(self).__name__, action, e)
-            msg = str(e) if admin_schema.debug else type(e).__name__
+            msg = str(e) if debug else type(e).__name__
             raise AdminAPIException(
                 APIError(message=msg, code='user_action_error'),
                 status_code=500,
@@ -212,7 +211,7 @@ class CategoryTable(BaseCategory):
             data: AutocompleteData,
             user: UserABC,
             language_context: LanguageContext,
-            admin_schema: AdminSchema,
+            debug: bool,
     ) -> AutocompleteResult:
         form_schema = None
 
@@ -267,24 +266,24 @@ class CategoryTable(BaseCategory):
     # pylint: disable=too-many-arguments
     @abc.abstractmethod
     async def get_list(
-            self, list_data: ListData, user: UserABC, language_context: LanguageContext, admin_schema: AdminSchema
+            self, list_data: ListData, user: UserABC, language_context: LanguageContext, debug: bool
     ) -> TableListResult:
         raise NotImplementedError()
 
 #     async def retrieve(
 #             self, pk: Any, user: UserABC,
-#             language_context: LanguageContext, admin_schema: AdminSchema,
+#             language_context: LanguageContext, debug: bool,
 #     ) -> RetrieveResult:
 #        raise NotImplementedError()
 
 #    async def create(
 #            self, data: dict, user: UserABC,
-#            language_context: LanguageContext, admin_schema: AdminSchema,
+#            language_context: LanguageContext, debug: bool,
 #    ) -> CreateResult:
 #        raise NotImplementedError()
 
 #    async def update(
 #            self, pk: Any, data: dict, user: UserABC,
-#            language_context: LanguageContext, admin_schema: AdminSchema,
+#            language_context: LanguageContext, debug: bool,
 #    ) -> UpdateResult:
 #        raise NotImplementedError()

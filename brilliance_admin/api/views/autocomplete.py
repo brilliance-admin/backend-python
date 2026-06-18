@@ -29,7 +29,7 @@ async def autocomplete(
     context = {'language_context': language_context}
 
     try:
-        result: AutocompleteResult = await schema_category.autocomplete(data, user, language_context, schema)
+        result: AutocompleteResult = await schema_category.autocomplete(data, user, language_context, schema.debug)
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
     except Exception as e:

@@ -36,7 +36,7 @@ async def table_list(
     context = {'language_context': language_context}
 
     try:
-        result: TableListResult = await schema_category.get_list(list_data, user, language_context, schema)
+        result: TableListResult = await schema_category.get_list(list_data, user, language_context, schema.debug)
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -66,7 +66,7 @@ async def table_retrieve(
     context = {'language_context': language_context}
 
     try:
-        result: RetrieveResult = await schema_category.retrieve(pk, user, language_context, schema)
+        result: RetrieveResult = await schema_category.retrieve(pk, user, language_context, schema.debug)
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -94,7 +94,7 @@ async def table_create(
     context = {'language_context': language_context}
 
     try:
-        result: CreateResult = await schema_category.create(await request.json(), user, language_context, schema)
+        result: CreateResult = await schema_category.create(await request.json(), user, language_context, schema.debug)
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -123,7 +123,7 @@ async def table_update(
     context = {'language_context': language_context}
 
     try:
-        result: UpdateResult = await schema_category.update(pk, await request.json(), user, language_context, schema)
+        result: UpdateResult = await schema_category.update(pk, await request.json(), user, language_context, schema.debug)
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -153,7 +153,7 @@ async def table_action(
     try:
         # pylint: disable=protected-access
         result: ActionResult = await schema_category._perform_action(
-            request, action, action_data, language_context, user, schema,
+            request, action, action_data, language_context, user, schema.debug,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)

@@ -7,7 +7,6 @@ from faker import Faker
 
 from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import FieldError
-from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult, admin_action
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
@@ -90,7 +89,7 @@ class LogsAdmin(schema.CategoryTable):
             list_data: schema.ListData,
             user: auth.UserABC,
             language_context: LanguageContext,
-            admin_schema: AdminSchema,
+            debug: bool,
     ) -> schema.TableListResult:
         await asyncio.sleep(0.2)
 
@@ -198,7 +197,7 @@ class PaymentsAdmin(schema.CategoryTable):
             list_data: schema.ListData,
             user: auth.UserABC,
             language_context: LanguageContext,
-            admin_schema: AdminSchema,
+            debug: bool,
     ) -> schema.TableListResult:
         await asyncio.sleep(0.2)
 
@@ -221,7 +220,7 @@ class PaymentsAdmin(schema.CategoryTable):
             pk: Any,
             user: auth.UserABC,
             language_context: LanguageContext,
-            admin_schema: AdminSchema,
+            debug: bool,
     ) -> schema.RetrieveResult:
         line_data = self._get_data(int(pk))
         line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
@@ -233,7 +232,7 @@ class PaymentsAdmin(schema.CategoryTable):
             data: dict,
             user: auth.UserABC,
             language_context: LanguageContext,
-            admin_schema: AdminSchema,
+            debug: bool,
     ) -> schema.UpdateResult:
         logger.info('Updated pk=%s data=%s', pk, data)
         await asyncio.sleep(0.5)
@@ -244,7 +243,7 @@ class PaymentsAdmin(schema.CategoryTable):
             data: dict,
             user: auth.UserABC,
             language_context: LanguageContext,
-            admin_schema: AdminSchema,
+            debug: bool,
     ) -> schema.CreateResult:
         logger.info('Create data=%s', data)
         return schema.CreateResult(pk=0)

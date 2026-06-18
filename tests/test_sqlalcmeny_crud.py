@@ -6,13 +6,18 @@ from sqlalchemy.orm import selectinload
 
 from brilliance_admin import auth, schema, sqlalchemy
 from brilliance_admin.exceptions import AdminAPIException
-from brilliance_admin.schema import admin_schema
-from brilliance_admin.translations import TranslateText
-from example.sections.terminal import TerminalFieldsSchema
+from brilliance_admin.translations import TranslateText as _
 from example.sections.models import (
-    Currency, CurrencyFactory, FeeAccrualType, FeeFactory, FeeFixType, FeeOperationType, FeeSourceType, FeeTypeFactory,
-    Merchant, MerchantFactory, Terminal, TerminalFactory, TerminalStatuses)
+    Currency, CurrencyFactory, Fee, FeeAccrualType, FeeFactory, FeeFixType, FeeOperationType, FeeSourceType,
+    FeeTypeFactory, Merchant, MerchantFactory, Terminal, TerminalFactory, TerminalStatuses)
 from tests.test_sqlalcmeny_schema import FIELDS
+
+
+class FeeFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
+    model = Fee
+    extra_kwargs = {
+        'fix_amount': {'min_value': 1},
+    }
 
 
 def get_category(postgres_sessionmaker):
@@ -22,6 +27,12 @@ def get_category(postgres_sessionmaker):
         table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
             model=Terminal,
             fields=FIELDS,
+            fees=sqlalchemy.SQLAlchemyInlineField(
+                label=_('fees'),
+                help_text=_('fees_help_text'),
+                many=True,
+                table_schema=FeeFieldsSchema(),
+            ),
         ),
     )
     return category
@@ -48,7 +59,7 @@ async def test_create(postgres_sessionmaker, language_context):
         data=create_data,
         user=user,
         language_context=language_context,
-        admin_schema=admin_schema,
+        debug=True,
     )
 
     assert create_result.pk == 1
@@ -75,7 +86,7 @@ async def test_create_bad_fk(postgres_sessionmaker, language_context):
             data=create_data,
             user=user,
             language_context=language_context,
-            admin_schema=admin_schema,
+            debug=True,
         )
     expected = {
         'code': 'db_integrity_error',
@@ -88,11 +99,7 @@ async def test_create_bad_fk(postgres_sessionmaker, language_context):
 
 @pytest.mark.asyncio
 async def test_retrieve(postgres_sessionmaker, language_context):
-    category = sqlalchemy.SQLAlchemyAdmin(
-        model=Terminal,
-        db_async_session=postgres_sessionmaker,
-        table_schema=TerminalFieldsSchema(),
-    )
+    category = get_category(postgres_sessionmaker)
     user = auth.UserABC(username="test")
     merchant = await MerchantFactory()
     currency = await CurrencyFactory()
@@ -125,7 +132,7 @@ async def test_retrieve(postgres_sessionmaker, language_context):
         pk=terminal.id,
         user=user,
         language_context=language_context,
-        admin_schema=admin_schema,
+        debug=True,
     )
     expected_data = {
         'manager_id': mock.ANY,
@@ -136,7 +143,7 @@ async def test_retrieve(postgres_sessionmaker, language_context):
             'title': mock.ANY,
         },
         'status': {
-            'title': TranslateText('statuses.process'),
+            'title': _('statuses.process'),
             'value': 'process',
         },
         'title': 'test',
@@ -216,7 +223,7 @@ async def test_retrieve_currency(postgres_sessionmaker, language_context):
         pk=currency.id,
         user=user,
         language_context=language_context,
-        admin_schema=admin_schema,
+        debug=True,
     )
     expected_data = {
         'id': currency.id,
@@ -251,7 +258,7 @@ async def test_create_bad_json(postgres_sessionmaker, language_context):
             data=create_data,
             user=user,
             language_context=language_context,
-            admin_schema=admin_schema,
+            debug=True,
         )
     context = {'language_context': language_context}
     errors = {
@@ -290,7 +297,7 @@ async def test_list(postgres_sessionmaker, language_context):
         ),
         user=user,
         language_context=language_context,
-        admin_schema=admin_schema,
+        debug=True,
     )
     data = [
         {
@@ -301,7 +308,7 @@ async def test_list(postgres_sessionmaker, language_context):
                 'title': mock.ANY,
             },
             'status': {
-                'title': TranslateText('statuses.process'),
+                'title': _('statuses.process'),
                 'value': 'process',
             },
             'fees': mock.ANY,
@@ -343,7 +350,7 @@ async def test_update_related_one(postgres_sessionmaker, language_context):
         data=update_data,
         user=user,
         language_context=language_context,
-        admin_schema=admin_schema,
+        debug=True,
     )
     assert update_result == schema.UpdateResult(pk=terminal.id)
 
@@ -385,7 +392,7 @@ async def test_update_related_many(postgres_sessionmaker, language_context):
         data=update_data,
         user=user,
         language_context=language_context,
-        admin_schema=admin_schema,
+        debug=True,
     )
     assert update_result == schema.UpdateResult(pk=currency_rub.id)
 
@@ -431,7 +438,7 @@ async def test_update_bad_value_int16(postgres_sessionmaker, language_context):
             data=update_data,
             user=user,
             language_context=language_context,
-            admin_schema=admin_schema,
+            debug=True,
         )
     context = {'language_context': language_context}
     assert e.value.get_error().model_dump(context=context) == {
@@ -459,6 +466,6 @@ async def test_autocomplete(postgres_sessionmaker, language_context):
         ),
         user=user,
         language_context=language_context,
-        admin_schema=admin_schema,
+        debug=True,
     )
     assert autocomplete_result == schema.AutocompleteResult()

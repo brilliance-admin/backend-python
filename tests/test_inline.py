@@ -9,7 +9,7 @@ from brilliance_admin.utils import DeserializeAction
 class InlineRowSchema(FieldsSchema):
     fields = ["name"]
 
-    name = StringField()
+    name = StringField(required=True)
 
     async def validate_name(self, value):
         if value != "test":
@@ -65,6 +65,36 @@ async def test_inline_deserialize_fields_nested_error():
                     "name": FieldError(
                         message="Only 'test' is allowed",
                         code="only_test",
+                    ),
+                },
+            ],
+            code="inline_nested",
+        ),
+    }
+
+
+@pytest.mark.asyncio
+async def test_inline_deserialize_fields_empty():
+    with pytest.raises(ValidationError) as exc_info:
+        await InlineFormSchema().deserialize_fields(
+            {
+                "inline": [
+                    {"name": "test"},
+                    {},
+                ],
+            },
+            DeserializeAction.CREATE,
+            extra={},
+        )
+
+    assert exc_info.value.data == {
+        "inline": FieldError(
+            message=[
+                None,
+                {
+                    "name": FieldError(
+                        message="Field is required",
+                        code="field_required",
                     ),
                 },
             ],

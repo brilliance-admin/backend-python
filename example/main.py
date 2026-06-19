@@ -12,14 +12,14 @@ from brilliance_admin.auth import AdminAuthentication, AuthData, AuthResult, Use
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.translations import LanguageManager
 from brilliance_admin.translations import TranslateText as _
+from example.database import async_sessionmaker_, lifespan
 from example.sections.currency import CurrencyAdmin
 from example.sections.dashboard import DasbhoardExample
 from example.sections.merchant import MerchantAdmin
 from example.sections.payments import PaymentsAdmin
-from example.sections.terminal import TerminalAdmin
+from example.sections.terminal import FeeAdmin, TerminalAdmin
 from example.sections.user_session import UserSessionAdmin
 from example.sections.users import UserAdmin
-from example.database import async_sessionmaker_, lifespan
 
 structlog.configure(
     processors=[
@@ -168,8 +168,18 @@ admin_schema = schema.AdminSchema(
             icon='mdi-folder-account-outline',
             subcategories=[
                 PaymentsAdmin(),
-                MerchantAdmin(db_async_session=async_sessionmaker_),
-                TerminalAdmin(db_async_session=async_sessionmaker_),
+                MerchantAdmin(
+                    db_async_session=async_sessionmaker_,
+                    subcategories=[
+                        TerminalAdmin(db_async_session=async_sessionmaker_),
+                    ],
+                ),
+                TerminalAdmin(
+                    db_async_session=async_sessionmaker_,
+                    subcategories=[
+                        FeeAdmin(db_async_session=async_sessionmaker_),
+                    ],
+                ),
             ]
         ),
         schema.CategoryGroup(

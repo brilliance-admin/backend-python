@@ -18,6 +18,8 @@ class SQLAlchemyAdminCreate:
             user: UserABC,
             language_context: LanguageContext,
             debug: bool,
+            parent_category=None,
+            parent_pk=None,
     ) -> schema.CreateResult:
         if not self.has_create:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)

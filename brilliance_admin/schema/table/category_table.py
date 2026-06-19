@@ -163,6 +163,8 @@ class CategoryTable(BaseCategory):
             language_context: LanguageContext,
             user: UserABC,
             debug: bool,
+            parent_category: BaseCategory | None = None,
+            parent_pk: Any | None = None,
     ) -> ActionResult:
         action_fn = self.get_actions().get(action)
 
@@ -212,6 +214,8 @@ class CategoryTable(BaseCategory):
             user: UserABC,
             language_context: LanguageContext,
             debug: bool,
+            parent_category: BaseCategory | None = None,
+            parent_pk: Any | None = None,
     ) -> AutocompleteResult:
         form_schema = None
 
@@ -258,7 +262,10 @@ class CategoryTable(BaseCategory):
         results = await field.autocomplete(
             data,
             user,
-            extra=self.get_extra_autocomplete(data),
+            extra=self.get_extra_autocomplete(data) | {
+                'parent_category': parent_category,
+                'parent_pk': parent_pk if parent_pk is not None else data.parent_pk,
+            },
         )
 
         return AutocompleteResult(results=results)
@@ -266,7 +273,13 @@ class CategoryTable(BaseCategory):
     # pylint: disable=too-many-arguments
     @abc.abstractmethod
     async def get_list(
-            self, list_data: ListData, user: UserABC, language_context: LanguageContext, debug: bool
+            self,
+            list_data: ListData,
+            user: UserABC,
+            language_context: LanguageContext,
+            debug: bool,
+            parent_category: BaseCategory | None = None,
+            parent_pk: Any | None = None,
     ) -> TableListResult:
         raise NotImplementedError()
 

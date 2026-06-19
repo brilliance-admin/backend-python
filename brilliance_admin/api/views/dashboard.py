@@ -1,10 +1,12 @@
+from typing import Any
+
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from brilliance_admin.api.utils import get_category
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.schema.admin_schema import AdminSchema
-from brilliance_admin.schema.dashboard.category_dashboard import CategoryDashboard, DashboardData, DashboardContainer
+from brilliance_admin.schema.dashboard.category_dashboard import CategoryDashboard, DashboardContainer, DashboardData
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
 
@@ -20,11 +22,17 @@ async def dashboard_data(
         category: str,
         data: DashboardData,
         subcategory: str | None = None,
+        parent_pk: Any | None = None,
 ) -> DashboardContainer:
     schema: AdminSchema = request.app.state.schema
-    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryDashboard)
+    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryDashboard)
 
-    result: DashboardContainer = await schema_category.get_data(data, user)
+    result: DashboardContainer = await schema_category.get_data(
+        data,
+        user,
+        parent_category,
+        parent_pk,
+    )
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)

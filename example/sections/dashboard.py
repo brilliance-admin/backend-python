@@ -57,7 +57,13 @@ class DasbhoardExample(schema.CategoryDashboard):
     icon = 'mdi-chart-bar-stacked'
     table_filters = DasbhoardFiltersSchema()
 
-    async def get_data(self, data: DashboardData, user) -> DashboardContainer:
+    async def get_data(
+            self,
+            data: DashboardData,
+            user,
+            parent_category=None,
+            parent_pk=None,
+    ) -> DashboardContainer:
         chart_1 = ChartData(
             type='line',
             data={

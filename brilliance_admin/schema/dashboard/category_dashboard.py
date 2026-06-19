@@ -83,5 +83,11 @@ class CategoryDashboard(BaseCategory):
         schema.dashboard_info = dashboard_info
         return schema
 
-    async def get_data(self, data: DashboardData, user) -> DashboardContainer:
+    async def get_data(
+            self,
+            data: DashboardData,
+            user,
+            parent_category=None,
+            parent_pk=None,
+    ) -> DashboardContainer:
         raise NotImplementedError('get_data is not implemented')

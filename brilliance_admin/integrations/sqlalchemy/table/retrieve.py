@@ -21,6 +21,8 @@ class SQLAlchemyAdminRetrieveMixin:
             user: auth.UserABC,
             language_context: LanguageContext,
             debug: bool,
+            parent_category=None,
+            parent_pk=None,
     ) -> schema.RetrieveResult:
         if not self.has_retrieve:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)

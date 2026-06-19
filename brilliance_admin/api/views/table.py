@@ -26,17 +26,25 @@ async def table_list(
         category: str,
         list_data: ListData,
         subcategory: str | None = None,
+        parent_pk: Any | None = None,
 ) -> TableListResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryTable)
+    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryTable)
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)
     context = {'language_context': language_context}
 
     try:
-        result: TableListResult = await schema_category.get_list(list_data, user, language_context, schema.debug)
+        result: TableListResult = await schema_category.get_list(
+            list_data,
+            user,
+            language_context,
+            schema.debug,
+            parent_category,
+            parent_pk,
+        )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -54,10 +62,11 @@ async def table_retrieve(
         category: str,
         pk: Any,
         subcategory: str | None = None,
+        parent_pk: Any | None = None,
 ) -> RetrieveResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryTable)
+    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryTable)
     if not schema_category.has_retrieve:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for retrive")
 
@@ -66,7 +75,14 @@ async def table_retrieve(
     context = {'language_context': language_context}
 
     try:
-        result: RetrieveResult = await schema_category.retrieve(pk, user, language_context, schema.debug)
+        result: RetrieveResult = await schema_category.retrieve(
+            pk,
+            user,
+            language_context,
+            schema.debug,
+            parent_category,
+            parent_pk,
+        )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -82,10 +98,11 @@ async def table_create(
         group: str,
         category: str,
         subcategory: str | None = None,
+        parent_pk: Any | None = None,
 ) -> CreateResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryTable)
+    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryTable)
     if not schema_category.has_create:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for create")
 
@@ -94,7 +111,14 @@ async def table_create(
     context = {'language_context': language_context}
 
     try:
-        result: CreateResult = await schema_category.create(await request.json(), user, language_context, schema.debug)
+        result: CreateResult = await schema_category.create(
+            await request.json(),
+            user,
+            language_context,
+            schema.debug,
+            parent_category,
+            parent_pk,
+        )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -111,10 +135,11 @@ async def table_update(
         category: str,
         pk: Any,
         subcategory: str | None = None,
+        parent_pk: Any | None = None,
 ) -> UpdateResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryTable)
+    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryTable)
     if not schema_category.has_update:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for update")
 
@@ -123,7 +148,15 @@ async def table_update(
     context = {'language_context': language_context}
 
     try:
-        result: UpdateResult = await schema_category.update(pk, await request.json(), user, language_context, schema.debug)
+        result: UpdateResult = await schema_category.update(
+            pk,
+            await request.json(),
+            user,
+            language_context,
+            schema.debug,
+            parent_category,
+            parent_pk,
+        )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -141,10 +174,11 @@ async def table_action(
         action: str,
         action_data: ActionData,
         subcategory: str | None = None,
+        parent_pk: Any | None = None,
 ) -> ActionResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user = await get_category(request, group, category, subcategory, check_type=CategoryTable)
+    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryTable)
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)
@@ -153,7 +187,13 @@ async def table_action(
     try:
         # pylint: disable=protected-access
         result: ActionResult = await schema_category._perform_action(
-            request, action, action_data, language_context, user, schema.debug,
+            request,
+            action, action_data,
+            language_context,
+            user,
+            schema.debug,
+            parent_category,
+            parent_pk,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)

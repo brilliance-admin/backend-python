@@ -10,6 +10,21 @@ class FeeFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
     }
 
 
+class FeeAdmin(sqlalchemy.SQLAlchemyAdmin):
+    model = Fee
+    title = _('fees')
+
+    ordering_fields = [
+        'id',
+    ]
+    search_fields = [
+        'id',
+        'title',
+    ]
+
+    table_schema = FeeFieldsSchema()
+
+
 class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
     model = Terminal
     list_display = [

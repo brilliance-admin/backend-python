@@ -20,16 +20,24 @@ async def autocomplete(
         category: str,
         data: AutocompleteData,
         subcategory: str | None = None,
+        parent_pk: str | None = None,
 ):
     schema: AdminSchema = request.app.state.schema
-    schema_category, user = await get_category(request, group, category, subcategory)
+    schema_category, user, parent_category = await get_category(request, group, category, subcategory)
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)
     context = {'language_context': language_context}
 
     try:
-        result: AutocompleteResult = await schema_category.autocomplete(data, user, language_context, schema.debug)
+        result: AutocompleteResult = await schema_category.autocomplete(
+            data,
+            user,
+            language_context,
+            schema.debug,
+            parent_category,
+            parent_pk,
+        )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
     except Exception as e:

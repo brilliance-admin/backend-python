@@ -90,6 +90,8 @@ class LogsAdmin(schema.CategoryTable):
             user: auth.UserABC,
             language_context: LanguageContext,
             debug: bool,
+            parent_category=None,
+            parent_pk=None,
     ) -> schema.TableListResult:
         await asyncio.sleep(0.2)
 
@@ -198,6 +200,8 @@ class PaymentsAdmin(schema.CategoryTable):
             user: auth.UserABC,
             language_context: LanguageContext,
             debug: bool,
+            parent_category=None,
+            parent_pk=None,
     ) -> schema.TableListResult:
         await asyncio.sleep(0.2)
 
@@ -221,6 +225,8 @@ class PaymentsAdmin(schema.CategoryTable):
             user: auth.UserABC,
             language_context: LanguageContext,
             debug: bool,
+            parent_category=None,
+            parent_pk=None,
     ) -> schema.RetrieveResult:
         line_data = self._get_data(int(pk))
         line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
@@ -233,6 +239,8 @@ class PaymentsAdmin(schema.CategoryTable):
             user: auth.UserABC,
             language_context: LanguageContext,
             debug: bool,
+            parent_category=None,
+            parent_pk=None,
     ) -> schema.UpdateResult:
         logger.info('Updated pk=%s data=%s', pk, data)
         await asyncio.sleep(0.5)
@@ -244,6 +252,8 @@ class PaymentsAdmin(schema.CategoryTable):
             user: auth.UserABC,
             language_context: LanguageContext,
             debug: bool,
+            parent_category=None,
+            parent_pk=None,
     ) -> schema.CreateResult:
         logger.info('Create data=%s', data)
         return schema.CreateResult(pk=0)

@@ -23,6 +23,7 @@ class AutocompleteData(BaseModel):
     is_filter: bool = False
     action_name: str | None = None
     inline_field_slug: str | None = None
+    parent_pk: Any | None = None
 
 
 class Record(BaseModel):
@@ -42,6 +43,7 @@ class ListData(BaseModel):
     filters: Dict[str, Any] = Field(default_factory=dict)
 
     ordering: str | None = None
+    parent_pk: Any | None = None
 
 
 class RetrieveResult(BaseModel):

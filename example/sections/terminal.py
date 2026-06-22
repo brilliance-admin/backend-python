@@ -40,7 +40,7 @@ class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
         'test_mode',
         'is_active',
     ]
-    readonly_fields = ['errors']
+    readonly_fields = ['errors', 'created_at']
 
     fees = sqlalchemy.SQLAlchemyInlineField(
         label=_('fees'),

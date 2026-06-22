@@ -74,6 +74,14 @@ class CreatePaymentSchema(schema.FieldsSchema):
         return value
 
 
+class ChangeAmountSchema(schema.FieldsSchema):
+    amount = schema.IntegerField(label=_('amount'), required=True)
+
+
+class UpdateStatusSchema(schema.FieldsSchema):
+    status = schema.StringField(label='Status', required=True)
+
+
 class LogsAdmin(schema.CategoryTable):
     has_update = False
     has_create = False
@@ -152,7 +160,7 @@ class PaymentsAdmin(schema.CategoryTable):
     @admin_action(
         title=_('delete'),
         confirmation_text=_('delete_confirmation_text'),
-        base_color='red-lighten-2',
+        base_color='red-lighten-1',
         variant='outlined',
     )
     async def delete(self, action_data: ActionData):
@@ -163,6 +171,39 @@ class PaymentsAdmin(schema.CategoryTable):
     async def action_with_exception(self, action_data: ActionData):
         await asyncio.sleep(0.5)
         raise Exception(_('exception_example'))
+
+    @admin_action(title='Set success', base_color='green-darken-1')
+    async def set_success(self, action_data: ActionData):
+        await asyncio.sleep(0.2)
+        return ActionResult('Success status set')
+
+    @admin_action(title='Set canceled', base_color='red-darken-1')
+    async def set_canceled(self, action_data: ActionData):
+        await asyncio.sleep(0.2)
+        return ActionResult('Canceled status set')
+
+    @admin_action(
+        title='Change amount',
+        base_color='orange-darken-1',
+        form_schema=ChangeAmountSchema(),
+    )
+    async def change_amount(self, action_data: ActionData):
+        await asyncio.sleep(0.2)
+        return ActionResult(f'Amount changed to {action_data.form_data["amount"]}')
+
+    @admin_action(
+        title='Update status',
+        base_color='grey-darken-1',
+        form_schema=UpdateStatusSchema(),
+    )
+    async def update_status(self, action_data: ActionData):
+        await asyncio.sleep(0.2)
+        return ActionResult(f'Status updated to {action_data.form_data["status"]}')
+
+    @admin_action(title='Send callback', base_color='grey-darken-2')
+    async def send_callback(self, action_data: ActionData):
+        await asyncio.sleep(0.2)
+        return ActionResult('Callback sent')
 
     def _get_data(self, pk):
         fake = Faker()

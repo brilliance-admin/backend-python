@@ -448,6 +448,7 @@ class Terminal(BaseIDModel):
     errors: Mapped[list[Any]] = mapped_column(
         MutableList.as_mutable(ARRAY(JSONB).with_variant(JSON(), 'sqlite')),
         nullable=True,
+        info={"label": _("terminal_errors")},
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -488,7 +489,10 @@ class TerminalFactory(SQLAlchemyFactoryBase):
     imitation_api = factory.Faker("random_element", elements=[None, "sandbox", "mock"])
     test_mode = factory.Faker("boolean")
 
-    errors = [{"code": "exception", "message": "Insufficient funds", "provider_code": "insufficient-funds"}]
+    errors = [
+        {"code": "exception", "message": "Insufficient funds", "provider_code": "insufficient-funds"},
+        {"code": "exception", "message": "Other error", "provider_code": "other"},
+    ]
 
     registered_delay = factory.Faker(
         "random_element",

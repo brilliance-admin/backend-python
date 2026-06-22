@@ -158,7 +158,12 @@ admin_schema = schema.AdminSchema(
             title=_('users'),
             icon='mdi-account',
             subcategories=[
-                UserAdmin(db_async_session=async_sessionmaker_),
+                UserAdmin(
+                    db_async_session=async_sessionmaker_,
+                    subcategories=[
+                        UserSessionAdmin(db_async_session=async_sessionmaker_),
+                    ],
+                ),
                 UserSessionAdmin(db_async_session=async_sessionmaker_),
             ]
         ),

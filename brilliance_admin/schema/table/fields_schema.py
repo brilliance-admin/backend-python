@@ -198,7 +198,7 @@ class FieldsSchema:
                 generated_fields[k] = v
 
         # Autogenerate fields from instance attributes
-        for attribute_name, attribute in self.__class__.__dict__.items():
+        for attribute_name, attribute in type(self).__dict__.items():
             if '__' in attribute_name:
                 continue
 

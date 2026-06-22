@@ -103,6 +103,7 @@ related_not_found: 'Error updating related field %(field_slug)s: %(model)s recor
 
 disputes: 'Disputes'
 disputes_help_text: 'Contains information about disputes associated with the payment. A dispute may be created when a payer challenges a transaction through their bank, card issuer, or payment provider.'
+terminal_errors: 'Errors'
 
 statuses:
   process: 'Process'

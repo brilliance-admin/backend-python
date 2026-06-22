@@ -6,7 +6,7 @@ from brilliance_admin import schema, sqlalchemy
 from brilliance_admin.auth import UserABC
 from example.sections.models import Terminal
 
-category_schema_data = {
+CATEGORY_SCHEMA_DATA = {
     'dashboard_info': None,
     'icon': None,
     'description': None,
@@ -209,4 +209,4 @@ async def test_generate_category_schema_sqlalchemy(postgres_sessionmaker, langua
         ),
     )
     new_schema = category.generate_category_schema(UserABC(username="test"), language_context)
-    assert new_schema.model_dump() == category_schema_data, new_schema.model_dump()
+    assert new_schema.model_dump() == CATEGORY_SCHEMA_DATA, new_schema.model_dump()

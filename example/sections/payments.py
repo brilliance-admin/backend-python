@@ -172,16 +172,6 @@ class PaymentsAdmin(schema.CategoryTable):
         await asyncio.sleep(0.5)
         raise Exception(_('exception_example'))
 
-    @admin_action(title='Set success', base_color='green-darken-1')
-    async def set_success(self, action_data: ActionData):
-        await asyncio.sleep(0.2)
-        return ActionResult('Success status set')
-
-    @admin_action(title='Set canceled', base_color='red-darken-1')
-    async def set_canceled(self, action_data: ActionData):
-        await asyncio.sleep(0.2)
-        return ActionResult('Canceled status set')
-
     @admin_action(
         title='Change amount',
         base_color='orange-darken-1',
@@ -199,11 +189,6 @@ class PaymentsAdmin(schema.CategoryTable):
     async def update_status(self, action_data: ActionData):
         await asyncio.sleep(0.2)
         return ActionResult(f'Status updated to {action_data.form_data["status"]}')
-
-    @admin_action(title='Send callback', base_color='grey-darken-2')
-    async def send_callback(self, action_data: ActionData):
-        await asyncio.sleep(0.2)
-        return ActionResult('Callback sent')
 
     def _get_data(self, pk):
         fake = Faker()

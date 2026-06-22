@@ -23,6 +23,29 @@ category_schema_data = {
                 'title': 'Действие с ошибкой',
                 'variant': None,
             },
+            'change_amount': {
+                'allow_empty_selection': False,
+                'base_color': 'orange-darken-1',
+                'confirmation_text': None,
+                'description': None,
+                'form_schema': {
+                    'fields': {
+                        'amount': {
+                            'header': {},
+                            'label': 'Сумма',
+                            'read_only': False,
+                            'required': True,
+                            'type': 'integer',
+                        },
+                    },
+                    'list_display': [
+                        'amount',
+                    ],
+                },
+                'icon': None,
+                'title': 'Change amount',
+                'variant': None,
+            },
             'create_payment': {
                 'allow_empty_selection': True,
                 'base_color': None,
@@ -57,7 +80,7 @@ category_schema_data = {
             },
             'delete': {
                 'allow_empty_selection': False,
-                'base_color': 'red-lighten-2',
+                'base_color': 'red-lighten-1',
                 'confirmation_text': 'Вы уверены, что хотите удалить данные записи?\n'
                 'Данное действие нельзя отменить.',
                 'description': None,
@@ -65,6 +88,30 @@ category_schema_data = {
                 'icon': None,
                 'title': 'Удалить',
                 'variant': 'outlined',
+            },
+            'update_status': {
+                'allow_empty_selection': False,
+                'base_color': 'grey-darken-1',
+                'confirmation_text': None,
+                'description': None,
+                'form_schema': {
+                    'fields': {
+                        'status': {
+                            'header': {},
+                            'label': 'Status',
+                            'password': False,
+                            'read_only': False,
+                            'required': True,
+                            'type': 'string',
+                        },
+                    },
+                    'list_display': [
+                        'status',
+                    ],
+                },
+                'icon': None,
+                'title': 'Update status',
+                'variant': None,
             },
         },
         'can_create': False,

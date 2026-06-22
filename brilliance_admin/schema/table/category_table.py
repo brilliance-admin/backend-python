@@ -81,12 +81,14 @@ class CategoryTable(BaseCategory):
 
     def get_actions(self) -> Dict[str, Awaitable]:
         actions = {}
-        for attribute_name, attribute in type(self).__dict__.items():
-            if '__' in attribute_name:
-                continue
+        for cls in reversed(type(self).mro()):
+            for attribute_name, attribute in cls.__dict__.items():
+                if '__' in attribute_name:
+                    continue
 
-            if inspect.iscoroutinefunction(attribute) and getattr(attribute, '__action__', False):
-                actions[attribute.__name__] = attribute
+                bound_attribute = getattr(self, attribute_name, None)
+                if inspect.iscoroutinefunction(bound_attribute) and getattr(bound_attribute, '__action__', False):
+                    actions[attribute_name] = bound_attribute
 
         return actions
 

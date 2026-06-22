@@ -97,15 +97,19 @@ class CategoryTable(BaseCategory):
                 return category
         return None
 
-    def generate_schema(self, user, language_context: LanguageContext) -> dict:
-        schema = super().generate_schema(user, language_context)
+    def _get_form_schema(self, user, language_context: LanguageContext, parent_category=None):
+        return self.table_schema.generate_form_schema(user, language_context)
+
+    def generate_category_schema(self, user, language_context: LanguageContext, parent_category=None) -> dict:
+        schema = super().generate_category_schema(user, language_context, parent_category)
 
         table_schema = getattr(self, 'table_schema', None)
         if not table_schema or not issubclass(table_schema.__class__, FieldsSchema):
-            raise AttributeError(f'Admin category {type(self).__name__} must have table_schema instance of FieldsSchema')
+            msg = f'Admin category {type(self).__name__} must have table_schema instance of FieldsSchema'
+            raise AttributeError(msg)
 
         table = TableInfoSchemaData(
-            table_schema=self.table_schema.generate_schema(user, language_context),
+            table_schema=self._get_form_schema(user, language_context, parent_category),
             ordering_fields=self.ordering_fields,
             default_ordering=self.default_ordering,
 
@@ -120,7 +124,7 @@ class CategoryTable(BaseCategory):
         )
 
         if self.table_filters:
-            table.table_filters = self.table_filters.generate_schema(user, language_context)
+            table.table_filters = self.table_filters.generate_form_schema(user, language_context)
 
         actions = {}
         for action_slug, action in self.get_actions().items():
@@ -133,7 +137,7 @@ class CategoryTable(BaseCategory):
             form_schema = action['form_schema']
             if form_schema:
                 try:
-                    action['form_schema'] = form_schema.generate_schema(user, language_context)
+                    action['form_schema'] = form_schema.generate_form_schema(user, language_context)
                 except Exception as e:
                     msg = f'Action {action_slug} form schema {form_schema} error: {e}'
                     raise Exception(msg) from e
@@ -143,12 +147,13 @@ class CategoryTable(BaseCategory):
         table.actions = actions
         schema.table_info = table
 
+        # Подвкладки subtab
         for category in self.subcategories:
             if not category.slug:
                 msg = f'{type(self).__name__}.slug subcategory {type(category).__name__}.slug is empty'
                 raise AttributeError(msg)
 
-            category_schema = category.generate_schema(user, language_context)
+            category_schema = category.generate_category_schema(user, language_context, parent_category=self)
             table.subcategories[category.slug] = category_schema.to_dict(keep_none=False)
 
         return schema

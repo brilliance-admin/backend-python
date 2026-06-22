@@ -87,7 +87,7 @@ class AdminSchema:
     def get_language_context(self, language_slug: str | None) -> LanguageContext:
         return LanguageContext(language_slug, language_manager=self.language_manager)
 
-    def generate_schema(self, user: UserABC, language_slug: str | None) -> AdminSchemaData:
+    def generate_admin_schema(self, user: UserABC, language_slug: str | None) -> AdminSchemaData:
         language_context: LanguageContext = self.get_language_context(language_slug)
 
         result = AdminSchemaData(profile=user)
@@ -98,7 +98,7 @@ class AdminSchema:
                 raise AttributeError(msg)
 
             try:
-                category_schema = category.generate_schema(user, language_context)
+                category_schema = category.generate_category_schema(user, language_context)
                 result.categories[category.slug] = category_schema.to_dict(keep_none=False)
             except Exception as e:
                 msg = f'Root category "{category.slug}" generate_schema error: {e}'

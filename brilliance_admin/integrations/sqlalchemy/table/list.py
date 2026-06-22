@@ -22,54 +22,6 @@ class SQLAlchemyAdminListMixin:
     table_schema: SQLAlchemyFieldsSchema
     table_filters: SQLAlchemyFieldsSchema | None
 
-    def get_parent_fk_field_name(self, parent_category):
-        if parent_category is None:
-            return None
-
-        parent_model = getattr(parent_category, 'model', None)
-        if parent_model is None:
-            return None
-
-        # pylint: disable=import-outside-toplevel
-        from sqlalchemy import inspect
-
-        mapper = inspect(self.model).mapper
-        parent_table = parent_model.__table__
-        matched_fields = []
-
-        for attr in mapper.column_attrs:
-            col = attr.columns[0]
-            for fk in col.foreign_keys:
-                if fk.column.table is parent_table:
-                    matched_fields.append(attr.key)
-
-        if not matched_fields:
-            raise RuntimeError(
-                f'{type(self).__name__}: no FK from {self.model.__name__} '
-                f'to parent model {parent_model.__name__}'
-            )
-
-        if len(matched_fields) > 1:
-            raise RuntimeError(
-                f'{type(self).__name__}: multiple FKs from {self.model.__name__} '
-                f'to parent model {parent_model.__name__}: {matched_fields}'
-            )
-
-        return matched_fields[0]
-
-    def apply_parent_filter(self, stmt, parent_category=None, parent_pk=None):
-        if parent_category is None or parent_pk is None:
-            return stmt
-
-        fk_field_name = self.get_parent_fk_field_name(parent_category)
-        # pylint: disable=import-outside-toplevel
-        from sqlalchemy import inspect
-
-        fk_column = inspect(self.model).mapper.columns[fk_field_name]
-        python_type = fk_column.type.python_type
-
-        return stmt.where(getattr(self.model, fk_field_name) == python_type(parent_pk))
-
     def apply_ordering(self, stmt, list_data):
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import asc, desc

@@ -34,7 +34,9 @@ class SQLAlchemyAdminRetrieveMixin:
         python_type = col.type.python_type
 
         assert self.pk_name
-        stmt = self.get_queryset().where(getattr(self.model, self.pk_name) == python_type(pk))
+        stmt = self.get_queryset()
+        stmt = self.apply_parent_filter(stmt, parent_category, parent_pk)
+        stmt = stmt.where(getattr(self.model, self.pk_name) == python_type(pk))
 
         try:
             async with self.db_async_session() as session:

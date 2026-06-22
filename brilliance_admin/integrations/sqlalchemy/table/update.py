@@ -21,6 +21,8 @@ class SQLAlchemyAdminUpdate:
             user: auth.UserABC,
             language_context: LanguageContext,
             debug: bool,
+            parent_category=None,
+            parent_pk=None,
     ) -> schema.UpdateResult:
         if not self.has_update:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -38,7 +40,9 @@ class SQLAlchemyAdminUpdate:
         col = inspect(self.table_schema.model).mapper.columns[self.pk_name]
         python_type = col.type.python_type
 
-        stmt = self.get_queryset().where(getattr(self.model, self.pk_name) == python_type(pk))
+        stmt = self.get_queryset()
+        stmt = self.apply_parent_filter(stmt, parent_category, parent_pk)
+        stmt = stmt.where(getattr(self.model, self.pk_name) == python_type(pk))
 
         try:
             async with self.db_async_session() as session:

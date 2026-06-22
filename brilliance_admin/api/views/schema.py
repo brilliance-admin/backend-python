@@ -25,5 +25,5 @@ async def schema_handler(request: Request) -> AdminSchemaData:
         return JSONResponse(e.get_error().model_dump(mode='json'), status_code=e.status_code)
 
     language_slug = request.headers.get('Accept-Language')
-    admin_schema = schema.generate_schema(user, language_slug)
+    admin_schema = schema.generate_admin_schema(user, language_slug)
     return admin_schema

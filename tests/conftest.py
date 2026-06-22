@@ -25,7 +25,7 @@ async def async_engine(postgres_container):
     url = postgres_container.get_connection_url().replace("psycopg2", "asyncpg")
     engine = create_async_engine(
         url,
-        echo=True,
+        echo=False,
         poolclass=NullPool,
         pool_pre_ping=True,
         future=True,

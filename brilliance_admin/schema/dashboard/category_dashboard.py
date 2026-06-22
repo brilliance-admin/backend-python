@@ -70,15 +70,15 @@ class CategoryDashboard(BaseCategory):
 
     table_filters: FieldsSchema | None = None
 
-    def generate_schema(self, user, language_context: LanguageContext) -> DashboardInfoSchemaData:
-        schema = super().generate_schema(user, language_context)
+    def generate_category_schema(self, user, language_context: LanguageContext, parent_category=None) -> DashboardInfoSchemaData:
+        schema = super().generate_category_schema(user, language_context, parent_category)
         dashboard_info = DashboardInfoSchemaData(
             search_enabled=self.search_enabled,
             search_help=language_context.get_text(self.search_help),
         )
 
         if self.table_filters:
-            dashboard_info.table_filters = self.table_filters.generate_schema(user, language_context)
+            dashboard_info.table_filters = self.table_filters.generate_form_schema(user, language_context)
 
         schema.dashboard_info = dashboard_info
         return schema

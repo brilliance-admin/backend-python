@@ -222,14 +222,27 @@ class FieldsSchema:
     def get_fields(self) -> Dict[str, TableField]:
         return self._generated_fields
 
-    def generate_schema(self, user: UserABC, language_context: LanguageContext) -> FieldsSchemaData:
+    def generate_form_schema(
+            self,
+            user: UserABC,
+            language_context: LanguageContext,
+            exclude_fields=None,
+    ) -> FieldsSchemaData:
+        exclude_fields = exclude_fields or []
+        schema_list_display = [
+            field_slug
+            for field_slug in self.list_display
+            if field_slug not in exclude_fields
+        ]
         fields_schema = FieldsSchemaData(
-            list_display=self.list_display,
+            list_display=schema_list_display,
         )
 
         context = {'language_context': language_context}
         for field_slug, field in self.get_fields().items():
-            field_schema: FieldSchemaData = field.generate_schema(user, field_slug, language_context)
+            if exclude_fields and field_slug in exclude_fields:
+                continue
+            field_schema: FieldSchemaData = field.generate_field_schema(user, field_slug, language_context)
             fields_schema.fields[field_slug] = field_schema.to_dict(keep_none=False, context=context)
 
         return fields_schema

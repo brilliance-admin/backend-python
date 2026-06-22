@@ -103,6 +103,23 @@ class SQLAlchemyAdminBase(CategoryTable):
 
         return extra
 
+    def _get_form_schema(self, user, language_context, parent_category=None):
+        exclude_fields = []
+
+        if isinstance(parent_category, SQLAlchemyAdminBase):
+            assert parent_category.model is not None
+            fk_field_name = self.get_parent_fk_field_name(parent_category)
+            assert fk_field_name in self.table_schema.get_fields(), (
+                'Subcategory schema must contain parent FK before exclusion'
+            )
+            exclude_fields.append(fk_field_name)
+
+        return self.table_schema.generate_form_schema(
+            user,
+            language_context,
+            exclude_fields=exclude_fields,
+        )
+
     def validate_fields(self):
         # pylint: disable=import-outside-toplevel
         from sqlalchemy.orm import InstrumentedAttribute
@@ -152,3 +169,51 @@ class SQLAlchemyAdminBase(CategoryTable):
                 stmt = stmt.options(selectinload(getattr(self.model, field.rel_name)))
 
         return stmt
+
+    def get_parent_fk_field_name(self, parent_category):
+        if parent_category is None:
+            return None
+
+        parent_model = getattr(parent_category, 'model', None)
+        if parent_model is None:
+            return None
+
+        # pylint: disable=import-outside-toplevel
+        from sqlalchemy import inspect
+
+        mapper = inspect(self.model).mapper
+        parent_table = parent_model.__table__
+        matched_fields = []
+
+        for attr in mapper.column_attrs:
+            col = attr.columns[0]
+            for fk in col.foreign_keys:
+                if fk.column.table is parent_table:
+                    matched_fields.append(attr.key)
+
+        if not matched_fields:
+            raise RuntimeError(
+                f'{type(self).__name__}: no FK from {self.model.__name__} '
+                f'to parent model {parent_model.__name__}'
+            )
+
+        if len(matched_fields) > 1:
+            raise RuntimeError(
+                f'{type(self).__name__}: multiple FKs from {self.model.__name__} '
+                f'to parent model {parent_model.__name__}: {matched_fields}'
+            )
+
+        return matched_fields[0]
+
+    def apply_parent_filter(self, stmt, parent_category=None, parent_pk=None):
+        if parent_category is None or parent_pk is None:
+            return stmt
+
+        fk_field_name = self.get_parent_fk_field_name(parent_category)
+        # pylint: disable=import-outside-toplevel
+        from sqlalchemy import inspect
+
+        fk_column = inspect(self.model).mapper.columns[fk_field_name]
+        python_type = fk_column.type.python_type
+
+        return stmt.where(getattr(self.model, fk_field_name) == python_type(parent_pk))

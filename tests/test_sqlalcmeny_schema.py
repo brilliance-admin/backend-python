@@ -208,5 +208,5 @@ async def test_generate_category_schema_sqlalchemy(postgres_sessionmaker, langua
             created_at=schema.DateTimeField(range=True),
         ),
     )
-    new_schema = category.generate_schema(UserABC(username="test"), language_context)
+    new_schema = category.generate_category_schema(UserABC(username="test"), language_context)
     assert new_schema.model_dump() == category_schema_data, new_schema.model_dump()

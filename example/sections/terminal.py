@@ -6,7 +6,7 @@ from example.sections.models import Fee, Terminal
 class FeeFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
     model = Fee
     extra_kwargs = {
-        'fix_amount': {'min_value': 1},
+        'fix_amount': {'min_value': 0},
     }
 
 

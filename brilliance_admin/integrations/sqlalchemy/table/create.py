@@ -12,6 +12,21 @@ logger = get_logger()
 class SQLAlchemyAdminCreate:
     has_create: bool = True
 
+    def apply_parent_data(self, data: dict, parent_category=None, parent_pk=None) -> dict:
+        if parent_category is None or parent_pk is None:
+            return data
+
+        fk_field_name = self.get_parent_fk_field_name(parent_category)
+        # pylint: disable=import-outside-toplevel
+        from sqlalchemy import inspect
+
+        fk_column = inspect(self.model).mapper.columns[fk_field_name]
+        python_type = fk_column.type.python_type
+
+        result = dict(data)
+        result[fk_field_name] = python_type(parent_pk)
+        return result
+
     async def create(
             self,
             data: dict,
@@ -23,6 +38,8 @@ class SQLAlchemyAdminCreate:
     ) -> schema.CreateResult:
         if not self.has_create:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
+
+        data = self.apply_parent_data(data, parent_category, parent_pk)
 
         # pylint: disable=import-outside-toplevel
         from sqlalchemy.exc import IntegrityError

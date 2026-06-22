@@ -134,7 +134,7 @@ class BaseCategory(KwargsInitMixin, abc.ABC):
 
     _type_slug: ClassVar[str]
 
-    def generate_schema(self, user: UserABC, language_context: LanguageContext) -> CategorySchemaData:
+    def generate_category_schema(self, user: UserABC, language_context: LanguageContext, parent_category=None) -> CategorySchemaData:
         type_slug = getattr(type(self), '_type_slug', None)
         if not type_slug:
             msg = f'{type(self).__name__}._type_slug must be set!'
@@ -179,8 +179,8 @@ class CategoryLink(BaseCategory):
 
     link: str
 
-    def generate_schema(self, user: UserABC, language_context: LanguageContext) -> CategorySchemaData:
-        result = super().generate_schema(user, language_context)
+    def generate_category_schema(self, user: UserABC, language_context: LanguageContext, parent_category=None) -> CategorySchemaData:
+        result = super().generate_category_schema(user, language_context, parent_category)
         result.link = self.link
         return result
 
@@ -197,8 +197,8 @@ class CategoryGroup(BaseCategory):
             if not isinstance(category, BaseCategory):
                 raise TypeError(f'Category "{category}" is not instance of BaseCategory subclass')
 
-    def generate_schema(self, user: UserABC, language_context: LanguageContext) -> CategorySchemaData:
-        result = super().generate_schema(user, language_context)
+    def generate_category_schema(self, user: UserABC, language_context: LanguageContext, parent_category=None) -> CategorySchemaData:
+        result = super().generate_category_schema(user, language_context, parent_category)
 
         for category in self.subcategories:
 
@@ -212,9 +212,13 @@ class CategoryGroup(BaseCategory):
                 raise KeyError(msg)
 
             try:
-                result.categories[category.slug] = category.generate_schema(user, language_context)
+                result.categories[category.slug] = category.generate_category_schema(
+                    user,
+                    language_context,
+                    parent_category=self,
+                )
             except Exception as e:
-                msg = f'Category "{category.slug}" {type(category).__name__} generate_schema error: {e}'
+                msg = f'Category "{category.slug}" {type(category).__name__} generate_category_schema error: {e}'
                 raise Exception(msg) from e
 
         return result

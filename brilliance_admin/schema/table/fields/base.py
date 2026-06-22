@@ -20,7 +20,7 @@ class TableField(abc.ABC, FieldSchemaData):
     label: SupportsStr | None = None
     help_text: SupportsStr | None = None
 
-    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+    def generate_field_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
         schema = FieldSchemaData(
             type=self._type,
             label=language_context.get_text(self.label) or humanize_field_name(field_slug),
@@ -61,8 +61,8 @@ class IntegerField(TableField):
     precision: int | None = None
     scale: int | None = None
 
-    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_context)
+    def generate_field_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context)
 
         if self.max_value is not None:
             schema.max_value = self.max_value
@@ -106,8 +106,8 @@ class DecimalField(TableField):
     precision: int | None = None
     scale: int | None = None
 
-    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_context)
+    def generate_field_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context)
 
         if self.max_value is not None:
             schema.max_value = float(self.max_value)
@@ -170,8 +170,8 @@ class StringField(TableField):
 
     choices: Any | None = None
 
-    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_context)
+    def generate_field_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context)
 
         schema.multilined = self.multilined
         schema.ckeditor = self.ckeditor
@@ -230,8 +230,8 @@ class DateTimeField(TableField):
     include_date: bool | None = True
     include_time: bool | None = True
 
-    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_context)
+    def generate_field_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context)
 
         schema.range = self.range
         schema.include_date = self.include_date
@@ -287,8 +287,8 @@ class ArrayField(TableField):
 
     array_type: str | None
 
-    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_context)
+    def generate_field_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context)
 
         schema.array_type = self.array_type
 
@@ -318,8 +318,8 @@ class ImageField(TableField):
     preview_max_height: int = 100
     preview_max_width: int = 100
 
-    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_context)
+    def generate_field_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context)
 
         if self.preview_max_height is not None:
             schema.preview_max_height = self.preview_max_height
@@ -367,8 +367,8 @@ class ChoiceField(TableField):
 
         return next((c for c in self.choices if c.get('value') == value), None)
 
-    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_context)
+    def generate_field_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context)
 
         schema.choices = self.choices
 
@@ -422,8 +422,8 @@ class RelatedField(TableField):
     dual_list: bool = False
     filter_fn: Any | None = None
 
-    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_context)
+    def generate_field_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context)
         schema.many = self.many
         schema.dual_list = self.dual_list
         return schema
@@ -462,8 +462,8 @@ class InlineField(TableField):
     many: bool = False
     table_schema: Any = None
 
-    def generate_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_context)
+    def generate_field_schema(self, user, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context)
         schema.many = self.many
 
         # pylint: disable=import-outside-toplevel
@@ -471,7 +471,7 @@ class InlineField(TableField):
         if not issubclass(type(self.table_schema), FieldsSchema):
             raise FieldError(f'Inline table_schema "{self.table_schema}" must be subclass of FieldsSchema')
 
-        schema.inline_field_schema = self.table_schema.generate_schema(user, language_context)
+        schema.inline_field_schema = self.table_schema.generate_form_schema(user, language_context)
 
         return schema
 

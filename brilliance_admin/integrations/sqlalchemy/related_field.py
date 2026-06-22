@@ -59,8 +59,8 @@ class SQLAlchemyRelatedField(RelatedField):
     #   select(target_model).where(target_model.id.in_(...))
     target_model: Any | None = None
 
-    def generate_schema(self, user: UserABC, field_slug, language_context: LanguageContext) -> FieldSchemaData:
-        schema = super().generate_schema(user, field_slug, language_context)
+    def generate_field_schema(self, user: UserABC, field_slug, language_context: LanguageContext) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context)
         schema.rel_name = self.rel_name
         return schema
 

@@ -6,6 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from brilliance_admin import auth, schema, sqlalchemy
 from brilliance_admin.exceptions import AdminAPIException
+from brilliance_admin.schema.table.admin_action import ActionData
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction
 from example.sections.models import (
@@ -511,7 +512,7 @@ async def test_delete(postgres_sessionmaker, language_context):
         user=user,
         language_context=language_context,
         debug=True,
-        action_data=schema.ActionData(
+        action_data=ActionData(
             pks=[terminal.id],
             send_to_all=False,
             form_data={},

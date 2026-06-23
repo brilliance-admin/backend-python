@@ -37,6 +37,7 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
 
     @admin_action(
         title=_('password.change_password'),
+        icon='mdi-lock-reset',
         form_schema=schema.FieldsSchema(
             new_password=schema.StringField(label=_('password.new_password'), min_length=6, password=True)
         ),

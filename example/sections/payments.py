@@ -145,6 +145,7 @@ class PaymentsAdmin(schema.CategoryTable):
     @admin_action(
         title=_('create_payment'),
         description=_('create_payment_description'),
+        icon='mdi-cash-plus',
         form_schema=CreatePaymentSchema(),
         allow_empty_selection=True,
     )
@@ -162,13 +163,14 @@ class PaymentsAdmin(schema.CategoryTable):
         title=_('delete'),
         confirmation_text=_('delete_confirmation_text'),
         base_color='red-lighten-1',
+        icon='mdi-delete-outline',
         variant='outlined',
     )
     async def delete(self, action_data: ActionData):
         await asyncio.sleep(1)
         return ActionResult(_('deleted_successfully'))
 
-    @admin_action(title=_('action_with_exception'), allow_empty_selection=True)
+    @admin_action(title=_('action_with_exception'), allow_empty_selection=True, icon='mdi-alert-circle-outline')
     async def action_with_exception(self, action_data: ActionData):
         await asyncio.sleep(0.5)
         raise Exception(_('exception_example'))
@@ -176,6 +178,7 @@ class PaymentsAdmin(schema.CategoryTable):
     @admin_action(
         title='Change amount',
         base_color='orange-darken-1',
+        icon='mdi-pencil-circle-outline',
         form_schema=ChangeAmountSchema(),
     )
     async def change_amount(self, action_data: ActionData):
@@ -185,6 +188,7 @@ class PaymentsAdmin(schema.CategoryTable):
     @admin_action(
         title='Update status',
         base_color='grey-darken-1',
+        icon='mdi-sync-circle',
         form_schema=UpdateStatusSchema(),
     )
     async def update_status(self, action_data: ActionData):

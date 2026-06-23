@@ -6,6 +6,7 @@ from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.integrations.sqlalchemy.utils import get_pk
 from brilliance_admin.schema.category import FieldSchemaData
+from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.table_models import AutocompleteData, Record
 from brilliance_admin.translations import LanguageContext
@@ -59,8 +60,14 @@ class SQLAlchemyRelatedField(RelatedField):
     #   select(target_model).where(target_model.id.in_(...))
     target_model: Any | None = None
 
-    def generate_field_schema(self, user: UserABC, field_slug, language_context: LanguageContext) -> FieldSchemaData:
-        schema = super().generate_field_schema(user, field_slug, language_context)
+    def generate_field_schema(
+            self,
+            user: UserABC,
+            field_slug,
+            language_context: LanguageContext,
+            schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
         schema.rel_name = self.rel_name
         return schema
 

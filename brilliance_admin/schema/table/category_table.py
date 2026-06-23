@@ -12,6 +12,7 @@ from brilliance_admin.schema.category import BaseCategory, TableInfoSchemaData
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields.base import InlineField
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
+from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult, ListData, TableListResult
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import DeserializeAction, SupportsStr, get_logger
@@ -99,7 +100,11 @@ class CategoryTable(BaseCategory):
         return None
 
     def _get_form_schema(self, user, language_context: LanguageContext, parent_category=None):
-        return self.table_schema.generate_form_schema(user, language_context)
+        return self.table_schema.generate_form_schema(
+            user,
+            language_context,
+            schema_type=SchemaType.TABLE,
+        )
 
     def generate_category_schema(self, user, language_context: LanguageContext, parent_category=None) -> dict:
         schema = super().generate_category_schema(user, language_context, parent_category)
@@ -125,7 +130,11 @@ class CategoryTable(BaseCategory):
         )
 
         if self.table_filters:
-            table.table_filters = self.table_filters.generate_form_schema(user, language_context)
+            table.table_filters = self.table_filters.generate_form_schema(
+                user,
+                language_context,
+                schema_type=SchemaType.FILTERS,
+            )
 
         actions = {}
         for action_slug, action in self.get_actions().items():
@@ -138,7 +147,11 @@ class CategoryTable(BaseCategory):
             form_schema = action['form_schema']
             if form_schema:
                 try:
-                    action['form_schema'] = form_schema.generate_form_schema(user, language_context)
+                    action['form_schema'] = form_schema.generate_form_schema(
+                        user,
+                        language_context,
+                        schema_type=SchemaType.ACTION,
+                    )
                 except Exception as e:
                     msg = f'Action {action_slug} form schema {form_schema} error: {e}'
                     raise Exception(msg) from e

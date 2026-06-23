@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, field_serializer
 
 from brilliance_admin.schema.category import BaseCategory, DashboardInfoSchemaData
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
+from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import SupportsStr
 
@@ -78,7 +79,11 @@ class CategoryDashboard(BaseCategory):
         )
 
         if self.table_filters:
-            dashboard_info.table_filters = self.table_filters.generate_form_schema(user, language_context)
+            dashboard_info.table_filters = self.table_filters.generate_form_schema(
+                user,
+                language_context,
+                schema_type=SchemaType.FILTERS,
+            )
 
         schema.dashboard_info = dashboard_info
         return schema

@@ -17,6 +17,7 @@ class SQLAlchemyDeleteAction:
         title=_('delete'),
         confirmation_text=_('delete_confirmation_text'),
         base_color='red-lighten-2',
+        icon='mdi-delete-outline',
         variant='outlined',
     )
     async def delete(self, *args, action_data: ActionData, **kwargs):

@@ -2,6 +2,7 @@ from typing import Any
 
 from brilliance_admin.integrations.sqlalchemy.fields_schema import SQLAlchemyFieldsSchema
 from brilliance_admin.schema.table.category_table import CategoryTable
+from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_models import AutocompleteData
 from brilliance_admin.translations import TranslateText as _
 
@@ -117,6 +118,7 @@ class SQLAlchemyAdminBase(CategoryTable):
         return self.table_schema.generate_form_schema(
             user,
             language_context,
+            schema_type=SchemaType.TABLE,
             exclude_fields=exclude_fields,
         )
 

@@ -521,7 +521,7 @@ async def test_delete(postgres_sessionmaker, language_context):
         ),
     )
 
-    assert result.message.text == _('deleted_successfully')
+    assert result.message == _('deleted_successfully')
 
     async with postgres_sessionmaker() as session:
         deleted_terminal = await session.get(Terminal, terminal.id)

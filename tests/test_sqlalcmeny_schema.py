@@ -21,7 +21,7 @@ CATEGORY_SCHEMA_DATA = {
                 'Данное действие нельзя отменить.',
                 'description': None,
                 'form_schema': None,
-                'icon': None,
+                'icon': 'mdi-delete-outline',
                 'title': 'Удалить',
                 'variant': 'outlined',
             },

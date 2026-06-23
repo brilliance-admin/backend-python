@@ -8,6 +8,7 @@ from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError,
 from brilliance_admin.schema.category import FieldSchemaData, FieldsSchemaData
 from brilliance_admin.schema.table.fields.base import TableField
 from brilliance_admin.schema.table.fields.function_field import FunctionField
+from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import DeserializeAction
 
@@ -226,6 +227,7 @@ class FieldsSchema:
             self,
             user: UserABC,
             language_context: LanguageContext,
+            schema_type: SchemaType = SchemaType.TABLE,
             exclude_fields=None,
     ) -> FieldsSchemaData:
         exclude_fields = exclude_fields or []
@@ -242,7 +244,12 @@ class FieldsSchema:
         for field_slug, field in self.get_fields().items():
             if exclude_fields and field_slug in exclude_fields:
                 continue
-            field_schema: FieldSchemaData = field.generate_field_schema(user, field_slug, language_context)
+            field_schema: FieldSchemaData = field.generate_field_schema(
+                user,
+                field_slug,
+                language_context,
+                schema_type=schema_type,
+            )
             fields_schema.fields[field_slug] = field_schema.to_dict(keep_none=False, context=context)
 
         return fields_schema

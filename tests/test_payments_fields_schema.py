@@ -97,12 +97,14 @@ category_schema_data = {
                 'form_schema': {
                     'fields': {
                         'status': {
+                            'choices': mock.ANY,
                             'header': {},
                             'label': 'Status',
-                            'password': False,
                             'read_only': False,
                             'required': True,
-                            'type': 'string',
+                            'size': 'default',
+                            'type': 'choice',
+                            'variant': 'elevated',
                         },
                     },
                     'list_display': [

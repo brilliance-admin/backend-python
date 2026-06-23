@@ -499,6 +499,36 @@ async def test_list(postgres_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
+async def test_delete(postgres_sessionmaker, language_context):
+    category = get_category(postgres_sessionmaker)
+    user = auth.UserABC(username="test")
+    terminal = await TerminalFactory(
+        merchant=await MerchantFactory(title="Test merch"),
+        currency=await CurrencyFactory(),
+    )
+
+    result = await category.delete(
+        user=user,
+        language_context=language_context,
+        debug=True,
+        action_data=schema.ActionData(
+            pks=[terminal.id],
+            send_to_all=False,
+            form_data={},
+            filters={},
+            search=None,
+        ),
+    )
+
+    assert result.message.text == _('deleted_successfully')
+
+    async with postgres_sessionmaker() as session:
+        deleted_terminal = await session.get(Terminal, terminal.id)
+
+    assert deleted_terminal is None
+
+
+@pytest.mark.asyncio
 async def test_update_related_one(postgres_sessionmaker, language_context):
     category = get_category(postgres_sessionmaker)
     user = auth.UserABC(username="test")

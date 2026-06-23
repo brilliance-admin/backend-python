@@ -11,6 +11,7 @@ from brilliance_admin.schema.table.admin_action import ActionData, ActionResult,
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
+from example.sections.models import TerminalStatuses
 
 logger = get_logger()
 
@@ -79,7 +80,7 @@ class ChangeAmountSchema(schema.FieldsSchema):
 
 
 class UpdateStatusSchema(schema.FieldsSchema):
-    status = schema.StringField(label='Status', required=True)
+    status = schema.ChoiceField(label='Status', required=True, choices=TerminalStatuses)
 
 
 class LogsAdmin(schema.CategoryTable):

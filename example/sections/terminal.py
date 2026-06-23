@@ -52,7 +52,6 @@ class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
 
 class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
     has_create = False
-    has_delete = False
 
     model = Terminal
     title = _('terminals')

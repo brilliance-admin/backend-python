@@ -113,6 +113,16 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 field_data["max_length"] = model_field.max_length
             return schema.StringField(**field_data)
 
+        if isinstance(model_field, models.Field) and model_field.get_internal_type() == "ArrayField":
+            base_field = model_field.base_field
+            if isinstance(base_field, (models.CharField, models.TextField)):
+                field_data["array_type"] = "string"
+                return schema.ArrayField(**field_data)
+
+            if isinstance(base_field, (models.AutoField, models.BigAutoField, models.IntegerField)):
+                field_data["array_type"] = "integer"
+                return schema.ArrayField(**field_data)
+
         if isinstance(model_field, models.BooleanField):
             field_data["required"] = False
             return schema.BooleanField(**field_data)

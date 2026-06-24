@@ -41,6 +41,7 @@ async def test_create(language_context):
     record = await DjangoExample.objects.aget(pk=result.pk)
 
     assert record.title == 'test title'
+    assert record.allowed_ips == []
     assert record.description == 'test description'
     assert record.is_active is False
     assert record.count == 5
@@ -84,6 +85,7 @@ async def test_update(language_context):
     updated = await DjangoExample.objects.aget(pk=record.pk)
 
     assert updated.title == 'after'
+    assert updated.allowed_ips == []
     assert updated.description == 'after description'
     assert updated.is_active is False
     assert updated.count == 7
@@ -115,6 +117,7 @@ async def test_retrieve(language_context):
 
     assert result.data['id'] == record.pk
     assert result.data['title'] == 'retrieve title'
+    assert result.data['allowed_ips'] == []
     assert result.data['description'] == 'retrieve description'
     assert result.data['is_active'] is True
     assert result.data['count'] == 9
@@ -139,6 +142,7 @@ async def test_list(language_context):
             {
                 'id': second.pk,
                 'title': 'second',
+                'allowed_ips': [],
                 'description': 'b',
                 'is_active': True,
                 'count': 0,
@@ -155,6 +159,7 @@ async def test_list(language_context):
             {
                 'id': first.pk,
                 'title': 'first',
+                'allowed_ips': [],
                 'description': 'a',
                 'is_active': True,
                 'count': 0,

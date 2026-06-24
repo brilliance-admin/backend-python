@@ -22,6 +22,14 @@ FORM_SCHEMA_DATA = {
             'max_length': 255,
             'password': False,
         },
+        'allowed_ips': {
+            'type': 'array',
+            'label': 'Allowed Ips',
+            'header': {},
+            'read_only': False,
+            'required': False,
+            'array_type': 'string',
+        },
         'description': {
             'type': 'string',
             'label': 'Description',
@@ -126,6 +134,7 @@ FORM_SCHEMA_DATA = {
     'list_display': [
         'id',
         'title',
+        'allowed_ips',
         'description',
         'is_active',
         'count',

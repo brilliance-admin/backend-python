@@ -1,10 +1,12 @@
 import uuid
 
+from django.contrib.postgres.fields import ArrayField
 from django.db import models
 
 
 class DjangoExample(models.Model):
     title = models.CharField(max_length=255)
+    allowed_ips = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     description = models.CharField(max_length=255, blank=True)
     is_active = models.BooleanField(default=True)
     count = models.IntegerField(default=0)

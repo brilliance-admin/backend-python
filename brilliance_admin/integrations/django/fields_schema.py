@@ -208,11 +208,22 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
     async def create_from_deserialized(self, deserialized_data):
         record = self.model()
+        many_to_many_values = {}
 
         for field_slug, value in deserialized_data.items():
             field = self.get_field(field_slug)
 
-            if isinstance(field, (DjangoRelatedField, DjangoInlineField)):
+            if isinstance(field, DjangoInlineField):
+                continue
+
+            if isinstance(field, DjangoRelatedField):
+                model_field = self.model._meta.get_field(field_slug)
+
+                if getattr(model_field, 'many_to_many', False):
+                    many_to_many_values[field_slug] = value
+                    continue
+
+                setattr(record, model_field.attname, value)
                 continue
 
             model_field = self.model._meta.get_field(field_slug)
@@ -222,6 +233,11 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             setattr(record, field_slug, value)
 
         await record.asave()
+
+        for field_slug, value in many_to_many_values.items():
+            relation = getattr(record, field_slug)
+            await relation.aset([] if value is None else value)
+
         return record
 
     async def update(self, record, user, data):
@@ -245,13 +261,30 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         return await self.update_from_deserialized(record, deserialized_data)
 
     async def update_from_deserialized(self, record, deserialized_data):
+        many_to_many_values = {}
+
         for field_slug, value in deserialized_data.items():
             field = self.get_field(field_slug)
 
-            if isinstance(field, (DjangoRelatedField, DjangoInlineField)):
+            if isinstance(field, DjangoInlineField):
+                continue
+
+            if isinstance(field, DjangoRelatedField):
+                model_field = self.model._meta.get_field(field_slug)
+
+                if getattr(model_field, 'many_to_many', False):
+                    many_to_many_values[field_slug] = value
+                    continue
+
+                setattr(record, model_field.attname, value)
                 continue
 
             setattr(record, field_slug, value)
 
         await record.asave()
+
+        for field_slug, value in many_to_many_values.items():
+            relation = getattr(record, field_slug)
+            await relation.aset([] if value is None else value)
+
         return record

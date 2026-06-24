@@ -12,7 +12,7 @@ from brilliance_admin.utils import DeserializeAction
 from example.sections.models import (
     Currency, CurrencyFactory, Fee, FeeAccrualType, FeeFactory, FeeFixType, FeeOperationType, FeeSourceType,
     FeeTypeFactory, Merchant, MerchantFactory, Terminal, TerminalFactory, TerminalStatuses)
-from tests.test_sqlalcmeny_schema import FIELDS
+from tests.sqlalchemy.test_sqlalcmeny_schema import FIELDS
 
 
 class FeeFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):

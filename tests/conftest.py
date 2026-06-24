@@ -1,4 +1,6 @@
 # pylint: disable=protected-access
+from urllib.parse import urlparse
+
 import pytest_asyncio
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -8,23 +10,27 @@ from brilliance_admin.translations import LanguageContext, LanguageManager
 from example.sections.models import ModelBase
 from example.utils import SQLAlchemyFactoryBase
 
+POSTGRES = PostgresContainer(
+    image="postgres:alpine",
+    username="test_user",
+    password="test_password",
+    dbname="test_db",
+)
+POSTGRES.start()
+POSTGRES_URL = POSTGRES.get_connection_url()
+POSTGRES_ASYNC_URL = POSTGRES_URL.replace("psycopg2", "asyncpg")
+POSTGRES_PARSED = urlparse(POSTGRES_URL)
+
 
 @pytest_asyncio.fixture(scope="session")
 async def postgres_container():
-    with PostgresContainer(
-        image="postgres:alpine",
-        username="test_user",
-        password="test_password",
-        dbname="test_db",
-    ) as postgres:
-        yield postgres
+    yield POSTGRES
 
 
 @pytest_asyncio.fixture(scope="session")
 async def async_engine(postgres_container):
-    url = postgres_container.get_connection_url().replace("psycopg2", "asyncpg")
     engine = create_async_engine(
-        url,
+        POSTGRES_ASYNC_URL,
         echo=False,
         poolclass=NullPool,
         pool_pre_ping=True,

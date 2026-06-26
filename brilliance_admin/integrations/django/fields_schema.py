@@ -58,7 +58,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 continue
 
             field_slug = model_field.name
-            label = humanize_field_name(field_slug)
+            label = self.get_model_field_label(model_field)
 
             yield field_slug, DjangoRelatedField(
                 label=label,
@@ -71,7 +71,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
     def generate_many_to_many_field(self, model_field):
         return DjangoRelatedField(
-            label=humanize_field_name(model_field.name),
+            label=self.get_model_field_label(model_field),
             read_only=False,
             required=False,
             rel_name=model_field.name,
@@ -81,7 +81,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
     def generate_model_field(self, model_field):
         field_data = {
-            "label": humanize_field_name(model_field.name),
+            "label": self.get_model_field_label(model_field),
             "read_only": bool(model_field.primary_key or getattr(model_field, "auto_now_add", False)),
             "required": self.is_required_field(model_field),
         }
@@ -175,6 +175,18 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 'tag_color': None,
             })
         return normalized
+
+    @staticmethod
+    def get_model_field_label(model_field):
+        verbose_name = getattr(model_field, "verbose_name", None)
+        if verbose_name is None:
+            return humanize_field_name(model_field.name)
+
+        default_verbose_name = model_field.name.replace("_", " ")
+        if str(verbose_name) == default_verbose_name:
+            return humanize_field_name(model_field.name)
+
+        return str(verbose_name)
 
     @staticmethod
     def should_skip_none_on_create(model_field):

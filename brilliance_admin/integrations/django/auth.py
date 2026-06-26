@@ -11,12 +11,14 @@ class DjangoJWTAdminAuthentication(AdminAuthentication):
     secret: str
     user_model = None
     pk_name = None
+    admin_field_name = None
     password_validator = None
 
-    def __init__(self, secret: str, user_model, pk_name='id', password_validator=None):
+    def __init__(self, secret: str, user_model, pk_name='id', admin_field_name='is_admin', password_validator=None):
         self.pk_name = pk_name
         self.secret = secret
         self.user_model = user_model
+        self.admin_field_name = admin_field_name
         self.password_validator = password_validator
 
         if self.password_validator and not callable(self.password_validator):
@@ -24,6 +26,9 @@ class DjangoJWTAdminAuthentication(AdminAuthentication):
 
         if not isinstance(secret, str) or not secret:
             raise ValueError("JWT secret must be a non-empty string")
+
+        if not isinstance(self.admin_field_name, str) or not self.admin_field_name:
+            raise ValueError("admin_field_name must be a non-empty string")
 
         try:
             import jwt
@@ -33,7 +38,7 @@ class DjangoJWTAdminAuthentication(AdminAuthentication):
         assert hasattr(jwt, "encode"), "PyJWT is not installed"
 
         fields = {field.name for field in user_model._meta.fields}
-        required = {self.pk_name, "username", "is_admin"}
+        required = {self.pk_name, "username", self.admin_field_name}
         missing = required - fields
         if missing:
             raise ValueError(f"user_model is missing required columns: {', '.join(sorted(missing))}")
@@ -61,7 +66,7 @@ class DjangoJWTAdminAuthentication(AdminAuthentication):
                 status_code=500,
             ) from e
 
-        if not user.is_admin:
+        if not getattr(user, self.admin_field_name):
             raise AdminAPIException(APIError(code="not_an_admin"), status_code=401)
 
         return AuthResult(
@@ -106,7 +111,7 @@ class DjangoJWTAdminAuthentication(AdminAuthentication):
             )
 
         user = await self.user_model.objects.filter(
-            **{self.pk_name: user_pk, "is_admin": True}
+            **{self.pk_name: user_pk, self.admin_field_name: True}
         ).afirst()
         if not user:
             raise AdminAPIException(

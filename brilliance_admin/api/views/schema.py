@@ -1,11 +1,15 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from brilliance_admin.auth import AdminAuthentication
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.schema import AdminSchema, AdminSchemaData
+from brilliance_admin.translations import LanguageContext
+from brilliance_admin.utils import get_logger
 
 router = APIRouter(prefix="/schema", tags=["Main admin schema"])
+
+logger = get_logger()
 
 
 @router.get(
@@ -25,5 +29,13 @@ async def schema_handler(request: Request) -> AdminSchemaData:
         return JSONResponse(e.get_error().model_dump(mode='json'), status_code=e.status_code)
 
     language_slug = request.headers.get('Accept-Language')
+    language_context: LanguageContext = schema.get_language_context(language_slug)
+    context = {'language_context': language_context}
+
     admin_schema = schema.generate_admin_schema(user, language_slug)
-    return admin_schema
+
+    try:
+        return JSONResponse(content=admin_schema.model_dump(mode='json', context=context))
+    except Exception as e:
+        logger.exception('Admin schema model dump error: %s; admin_schema: %s', e, admin_schema)
+        raise HTTPException(status_code=500, detail="Content error") from e

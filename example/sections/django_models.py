@@ -2,12 +2,19 @@ import uuid
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+
+class DjangoExampleStatus(models.TextChoices):
+    PENDING = "pending", _("Pending translated")
+    DONE = "done", _("Done translated")
 
 
 class DjangoExample(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, verbose_name=_('Title translated'))
     allowed_ips = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     description = models.CharField(max_length=255, blank=True)
+    status = models.CharField(max_length=32, choices=DjangoExampleStatus.choices, default=DjangoExampleStatus.PENDING)
     is_active = models.BooleanField(default=True)
     count = models.IntegerField(default=0)
     uuid = models.UUIDField(default=uuid.uuid4, unique=True)
@@ -22,6 +29,8 @@ class DjangoExample(models.Model):
 
     class Meta:
         db_table = "django_example"
+        verbose_name = _("Django example translated")
+        verbose_name_plural = _("Django examples translated")
 
     def __str__(self):
         return self.title

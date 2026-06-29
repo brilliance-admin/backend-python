@@ -1,8 +1,6 @@
 from typing import Any
 
 from asgiref.sync import sync_to_async
-from django.db import models
-from django.db.models import Q
 from pydantic import BaseModel
 
 from brilliance_admin.exceptions import AdminAPIException, APIError
@@ -28,6 +26,8 @@ class DjangoRelatedField(RelatedField):
 
     @staticmethod
     def _get_search_fields(model) -> list[str]:
+        from django.db import models
+
         search_fields = getattr(model, '__search_fields__', None)
         if search_fields:
             return search_fields
@@ -39,6 +39,8 @@ class DjangoRelatedField(RelatedField):
         return result
 
     async def autocomplete(self, data: AutocompleteData, user, extra: dict | None = None) -> list[Record]:
+        from django.db.models import Q
+
         if extra is None or extra.get('model') is None:
             msg = AUTOCOMPLETE_REQUIRES_MODEL.format(class_name=type(self).__name__)
             raise AttributeError(msg)

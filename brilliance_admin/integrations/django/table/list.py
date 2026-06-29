@@ -1,7 +1,5 @@
 import re
 
-from django.db.models import Q
-
 from brilliance_admin import schema
 from brilliance_admin.exceptions import FieldError
 from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
@@ -46,6 +44,8 @@ class DjangoAdminListMixin:
         return queryset.order_by(ordering)
 
     def apply_search(self, queryset, list_data):
+        from django.db.models import Q
+
         if not self.search_fields or not list_data.search:
             return queryset
 

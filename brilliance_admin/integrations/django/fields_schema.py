@@ -1,5 +1,3 @@
-from django.db import models
-
 from brilliance_admin import schema
 from brilliance_admin.exceptions import APIError, AdminAPIException, ValidationError
 from brilliance_admin.integrations.django.inline_field import DjangoInlineField
@@ -22,24 +20,38 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         if self.model is None:
             return generated_fields
 
+        result = {}
+        pk_field = self.model._meta.pk
+        pk_slug = pk_field.name
+
+        if pk_slug in generated_fields:
+            result[pk_slug] = generated_fields[pk_slug]
+        else:
+            result[pk_slug] = self.generate_model_field(pk_field)
+
         for field_slug, field in self.generate_related_fields():
-            generated_fields = {field_slug: field, **generated_fields}
+            if field_slug not in result:
+                result[field_slug] = field
+
+        for field_slug, field in generated_fields.items():
+            if field_slug not in result:
+                result[field_slug] = field
 
         for model_field in self.model._meta.fields:
             field_slug = model_field.name
-            if field_slug in generated_fields:
+            if field_slug in result:
                 continue
 
-            generated_fields[field_slug] = self.generate_model_field(model_field)
+            result[field_slug] = self.generate_model_field(model_field)
 
         for model_field in self.model._meta.many_to_many:
             field_slug = model_field.name
-            if field_slug in generated_fields:
+            if field_slug in result:
                 continue
 
-            generated_fields[field_slug] = self.generate_many_to_many_field(model_field)
+            result[field_slug] = self.generate_many_to_many_field(model_field)
 
-        return generated_fields
+        return result
 
     async def serialize(self, record, extra: dict, *args, **kwargs) -> dict:
         record_data = {}
@@ -53,6 +65,8 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         return await super().serialize(record_data, extra, *args, **kwargs)
 
     def generate_related_fields(self):
+        from django.db import models
+
         for model_field in self.model._meta.fields:
             if not isinstance(model_field, (models.ForeignKey, models.OneToOneField)):
                 continue
@@ -80,6 +94,8 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         )
 
     def generate_model_field(self, model_field):
+        from django.db import models
+
         field_data = {
             "label": self.get_model_field_label(model_field),
             "read_only": bool(model_field.primary_key or getattr(model_field, "auto_now_add", False)),

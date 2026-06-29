@@ -5,7 +5,8 @@ from enum import Enum
 from typing import Any
 
 import factory
-from sqlalchemy import JSON, BigInteger, Boolean, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, func, select
+from sqlalchemy import (
+    JSON, BigInteger, Boolean, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, func, select)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship

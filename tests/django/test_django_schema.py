@@ -39,6 +39,13 @@ FORM_SCHEMA_DATA = {
         'table_filters': None,
         'table_schema': {
             'fields': {
+                'id': {
+                    'header': {},
+                    'label': 'ID',
+                    'read_only': True,
+                    'required': False,
+                    'type': 'integer',
+                },
                 'owner': {
                     'dual_list': False,
                     'header': {},
@@ -105,13 +112,6 @@ FORM_SCHEMA_DATA = {
                     'read_only': False,
                     'required': False,
                     'type': 'file',
-                },
-                'id': {
-                    'header': {},
-                    'label': 'ID',
-                    'read_only': True,
-                    'required': False,
-                    'type': 'integer',
                 },
                 'image': {
                     'header': {},
@@ -195,8 +195,8 @@ FORM_SCHEMA_DATA = {
                 },
             },
             'list_display': [
-                'owner',
                 'id',
+                'owner',
                 'title',
                 'allowed_ips',
                 'description',

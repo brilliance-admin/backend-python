@@ -82,18 +82,14 @@ class DjangoAdminBase(CategoryTable):
         )
 
     def generate_category_schema(self, user, language_context, parent_category=None):
-        if self.title is not None:
-            return super().generate_category_schema(user, language_context, parent_category)
+        if self.title is None:
+            meta = self.model._meta
+            verbose_name = getattr(meta, 'verbose_name_plural', None) or getattr(meta, 'verbose_name', None)
+            if verbose_name:
+                from django.utils.encoding import force_str
+                self.title = force_str(verbose_name)
 
-        meta = self.model._meta
-        title = getattr(meta, 'verbose_name_plural', None) or getattr(meta, 'verbose_name', None)
-
-        original_title = self.title
-        self.title = str(title) if title is not None else None
-        try:
-            return super().generate_category_schema(user, language_context, parent_category)
-        finally:
-            self.title = original_title
+        return super().generate_category_schema(user, language_context, parent_category)
 
     def validate_fields(self):
         model_fields = {field.name for field in self.model._meta.fields}

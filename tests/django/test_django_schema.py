@@ -219,4 +219,5 @@ async def test_generate_category_schema_django(language_context):
         table_schema=DjangoFieldsSchema(model=DjangoExample)
     )
     new_schema = category.generate_category_schema(UserABC(username="test"), language_context)
-    assert new_schema.model_dump() == FORM_SCHEMA_DATA, new_schema.model_dump()
+    context = {'language_context': language_context}
+    assert new_schema.model_dump(mode='json', context=context) == FORM_SCHEMA_DATA, new_schema.model_dump()

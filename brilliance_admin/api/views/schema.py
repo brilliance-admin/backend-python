@@ -37,5 +37,5 @@ async def schema_handler(request: Request) -> AdminSchemaData:
     try:
         return JSONResponse(content=admin_schema.model_dump(mode='json', context=context))
     except Exception as e:
-        logger.exception('Admin schema model dump error: %s; admin_schema: %s', e, admin_schema)
+        logger.exception('Admin schema model dump error: %s', e)
         raise HTTPException(status_code=500, detail="Content error") from e

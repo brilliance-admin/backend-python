@@ -169,9 +169,10 @@ class DjangoFieldsSchema(schema.FieldsSchema):
     def normalize_choices(choices):
         normalized = []
         for value, title in choices:
+            from django.utils.encoding import force_str
             normalized.append({
                 'value': value,
-                'title': title,
+                'title': force_str(title),
                 'tag_color': None,
             })
         return normalized
@@ -179,14 +180,16 @@ class DjangoFieldsSchema(schema.FieldsSchema):
     @staticmethod
     def get_model_field_label(model_field):
         verbose_name = getattr(model_field, "verbose_name", None)
-        if verbose_name is None:
-            return humanize_field_name(model_field.name)
+        if verbose_name is not None:
 
-        default_verbose_name = model_field.name.replace("_", " ")
-        if str(verbose_name) == default_verbose_name:
-            return humanize_field_name(model_field.name)
+            default_verbose_name = model_field.name.replace("_", " ")
+            if str(verbose_name) == default_verbose_name:
+                return humanize_field_name(model_field.name)
 
-        return str(verbose_name)
+            from django.utils.encoding import force_str
+            return force_str(verbose_name)
+
+        return humanize_field_name(model_field.name)
 
     @staticmethod
     def should_skip_none_on_create(model_field):

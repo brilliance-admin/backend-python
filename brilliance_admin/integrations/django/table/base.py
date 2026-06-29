@@ -2,6 +2,7 @@ from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
 from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.schema.table.schema_type import SchemaType
+from brilliance_admin.schema.table.table_models import AutocompleteData
 
 
 class DjangoAdminBase(CategoryTable):
@@ -141,3 +142,14 @@ class DjangoAdminBase(CategoryTable):
 
         fk_field_name = self.get_parent_fk_field_name(parent_category)
         return queryset.filter(**{fk_field_name: parent_pk})
+
+    def get_extra_autocomplete(self, data: AutocompleteData) -> dict:
+        extra = super().get_extra_autocomplete(data)
+        extra['model'] = self.model
+
+        if data.inline_field_slug:
+            inline_field = self.table_schema.get_field(data.inline_field_slug)
+            form_schema = inline_field.table_schema
+            extra['model'] = form_schema.model
+
+        return extra

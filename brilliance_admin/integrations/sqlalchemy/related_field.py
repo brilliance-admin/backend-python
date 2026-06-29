@@ -1,13 +1,14 @@
 from typing import Any, List
 
+from asgiref.sync import sync_to_async
 from pydantic.dataclasses import dataclass
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.integrations.sqlalchemy.utils import get_pk
 from brilliance_admin.schema.category import FieldSchemaData
-from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.fields.base import RelatedField
+from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_models import AutocompleteData, Record
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
@@ -174,7 +175,11 @@ class SQLAlchemyRelatedField(RelatedField):
             records = (await session.execute(stmt)).scalars().all()
 
         for record in records:
-            results.append(Record(key=getattr(record, pk.key), title=str(record)))
+            _record = Record(
+                key=getattr(record, pk.key),
+                title=await sync_to_async(record.__str__)(),
+            )
+            results.append(_record)
 
         return results
 

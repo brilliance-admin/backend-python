@@ -1,6 +1,6 @@
 [project]
 name = "brilliance-admin"
-version = "0.44.54"
+version = "0.44.56"
 description = 'Simple and lightweight data managment framework powered by FastAPI and Vue3 Vuetify all-in-one. Some call it heavenly in its brilliance.'
 readme = "README.md"
 requires-python = ">=3.10"

@@ -60,7 +60,7 @@ class DjangoExample(models.Model):
         verbose_name_plural = _("Django examples translated")
 
     def __str__(self):
-        return f'#{self.pk} {self.title}'
+        return f'#{self.pk} {self.title} (owner: {self.owner.username})'
 
 
 class DjangoExampleFactory(DjangoFactoryBase):

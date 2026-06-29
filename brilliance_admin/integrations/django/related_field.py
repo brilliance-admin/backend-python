@@ -91,7 +91,13 @@ class DjangoRelatedField(RelatedField):
                 queryset = self.filter_fn(queryset, data, user)
 
         records = await sync_to_async(lambda: list(queryset[: min(150, data.limit)]), thread_sensitive=True)()
-        return [Record(key=getattr(record, pk_name), title=str(record)) for record in records]
+        return [
+            Record(
+                key=getattr(record, pk_name),
+                title=await sync_to_async(record.__str__)()
+            )
+            for record in records
+        ]
 
     async def serialize(self, value, extra: dict, *args, **kwargs):
         if not value:
@@ -111,11 +117,14 @@ class DjangoRelatedField(RelatedField):
             related = await sync_to_async(lambda: list(getattr(record, self.rel_name).all()), thread_sensitive=True)()
             if related is None:
                 raise FieldError(MANY_RELATED_MISSING.format(rel_name=self.rel_name, record=record))
-            return [{'key': obj.pk, 'title': str(obj)} for obj in related]
+            return [
+                {'key': obj.pk, 'title': await sync_to_async(obj.__str__)()}
+                for obj in related
+            ]
 
         related = await sync_to_async(getattr, thread_sensitive=True)(record, self.rel_name, None)
 
         if related is None:
             return None
 
-        return {'key': related.pk, 'title': str(related)}
+        return {'key': related.pk, 'title': await sync_to_async(related.__str__)()}

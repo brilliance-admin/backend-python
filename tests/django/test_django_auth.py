@@ -3,7 +3,7 @@ import pytest
 from brilliance_admin.auth import AuthData
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.integrations.django import DjangoJWTAdminAuthentication
-from example.sections.django_models import DjangoUser
+from example.sections.django_models import DjangoUser, DjangoUserFactory
 
 
 @pytest.mark.asyncio
@@ -12,7 +12,7 @@ async def test_login():
         secret='123',
         user_model=DjangoUser,
     )
-    user = await DjangoUser.objects.acreate(username='admin', password='test', is_admin=True)
+    user = await DjangoUserFactory(username='admin', password='test', is_admin=True)
     result = await auth.login(data=AuthData(username='admin', password='test'), debug=True)
     assert result.user.username == user.username
 
@@ -23,7 +23,7 @@ async def test_login_not_admin():
         secret='123',
         user_model=DjangoUser,
     )
-    await DjangoUser.objects.acreate(username='admin', password='test', is_admin=False)
+    await DjangoUserFactory(username='admin', password='test', is_admin=False)
     with pytest.raises(AdminAPIException) as e:
         await auth.login(data=AuthData(username='admin', password='test'), debug=True)
 
@@ -48,7 +48,7 @@ async def test_authenticate():
         secret='123',
         user_model=DjangoUser,
     )
-    user = await DjangoUser.objects.acreate(username='admin', password='test', is_admin=True)
+    user = await DjangoUserFactory(username='admin', password='test', is_admin=True)
 
     token = auth.get_token(user)
     result_user = await auth.authenticate(headers={'Authorization': f'Token {token}'})
@@ -62,7 +62,7 @@ async def test_authenticate_bad_secret():
         secret='123',
         user_model=DjangoUser,
     )
-    user = await DjangoUser.objects.acreate(username='admin', password='test', is_admin=True)
+    user = await DjangoUserFactory(username='admin', password='test', is_admin=True)
 
     token = auth.get_token(user)
     auth.secret = 'another'
@@ -80,7 +80,7 @@ async def test_login_valid_password_sync():
         user_model=DjangoUser,
         password_validator=lambda user, password: password == 'correct_password',
     )
-    await DjangoUser.objects.acreate(username='admin', password='correct_password', is_admin=True)
+    await DjangoUserFactory(username='admin', password='correct_password', is_admin=True)
 
     result = await auth.login(data=AuthData(username='admin', password='correct_password'))
 
@@ -98,7 +98,7 @@ async def test_login_valid_password_async():
         user_model=DjangoUser,
         password_validator=async_password_validator,
     )
-    await DjangoUser.objects.acreate(username='admin', password='correct_password', is_admin=True)
+    await DjangoUserFactory(username='admin', password='correct_password', is_admin=True)
 
     result = await auth.login(data=AuthData(username='admin', password='correct_password'))
 

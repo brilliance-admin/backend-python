@@ -45,10 +45,10 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         record_data = {}
 
         for slug, field in self.get_fields().items():
-            if field._type == 'related':
-                record_data[slug] = record
-            else:
-                record_data[slug] = getattr(record, slug, None)
+            if field._type == 'related' and not field.many:
+                record_data[slug] = getattr(record, f'{slug}_id', None)
+                continue
+            record_data[slug] = getattr(record, slug, None)
 
         return await super().serialize(record_data, extra, *args, **kwargs)
 

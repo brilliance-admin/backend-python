@@ -1,8 +1,10 @@
 import uuid
+import factory
 
 from django.contrib.postgres.fields import ArrayField
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from example.utils import DjangoFactoryBase
 
 
 class DjangoExampleStatus(models.TextChoices):
@@ -10,7 +12,32 @@ class DjangoExampleStatus(models.TextChoices):
     DONE = "done", _("Done translated")
 
 
+class DjangoUser(models.Model):
+    username = models.CharField(max_length=150, unique=True)
+    password = models.CharField(max_length=255, null=True, blank=True)
+    is_admin = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "django_user"
+
+    def __str__(self):
+        return f'#{self.pk} {self.username}'
+
+
+class DjangoUserFactory(DjangoFactoryBase):
+    class Meta:
+        model = DjangoUser
+
+    username = factory.Faker("word")
+
+
 class DjangoExample(models.Model):
+    owner = models.ForeignKey(
+        DjangoUser,
+        on_delete=models.CASCADE,
+        related_name="examples",
+    )
     title = models.CharField(max_length=255, verbose_name=_('Title translated'))
     allowed_ips = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     description = models.CharField(max_length=255, blank=True)
@@ -33,7 +60,15 @@ class DjangoExample(models.Model):
         verbose_name_plural = _("Django examples translated")
 
     def __str__(self):
-        return self.title
+        return f'#{self.pk} {self.title}'
+
+
+class DjangoExampleFactory(DjangoFactoryBase):
+    class Meta:
+        model = DjangoExample
+
+    owner = factory.SubFactory(DjangoUserFactory)
+    title = factory.Faker("word")
 
 
 class DjangoAnotherExample(models.Model):
@@ -50,17 +85,12 @@ class DjangoAnotherExample(models.Model):
         db_table = "django_another_example"
 
     def __str__(self):
-        return self.title
+        return f'#{self.pk} {self.title}'
 
 
-class DjangoUser(models.Model):
-    username = models.CharField(max_length=150, unique=True)
-    password = models.CharField(max_length=255, null=True, blank=True)
-    is_admin = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=True)
-
+class DjangoAnotherExampleFactory(DjangoFactoryBase):
     class Meta:
-        db_table = "django_user"
+        model = DjangoAnotherExample
 
-    def __str__(self):
-        return self.username
+    example = factory.SubFactory(DjangoExampleFactory)
+    title = factory.Faker("word")

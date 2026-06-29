@@ -39,6 +39,15 @@ FORM_SCHEMA_DATA = {
         'table_filters': None,
         'table_schema': {
             'fields': {
+                'owner': {
+                    'dual_list': False,
+                    'header': {},
+                    'label': 'Owner',
+                    'many': False,
+                    'read_only': False,
+                    'required': True,
+                    'type': 'related',
+                },
                 'allowed_ips': {
                     'array_type': 'string',
                     'header': {},
@@ -186,6 +195,7 @@ FORM_SCHEMA_DATA = {
                 },
             },
             'list_display': [
+                'owner',
                 'id',
                 'title',
                 'allowed_ips',

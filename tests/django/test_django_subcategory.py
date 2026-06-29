@@ -4,7 +4,8 @@ from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
-from example.sections.django_models import DjangoAnotherExample, DjangoExample
+from example.sections.django_models import (
+    DjangoAnotherExample, DjangoAnotherExampleFactory, DjangoExample, DjangoExampleFactory, DjangoUser)
 
 
 class DjangoExampleAdmin(DjangoAdmin):
@@ -39,13 +40,13 @@ async def test_subcategory_list(language_context):
     example_category, another_subcategory = get_example_another_subcategory()
     user = UserABC(username='test')
 
-    example_1 = await DjangoExample.objects.acreate(title='example 1')
-    example_2 = await DjangoExample.objects.acreate(title='example 2')
+    example_1 = await DjangoExampleFactory()
+    example_2 = await DjangoExampleFactory()
 
-    another_1 = await DjangoAnotherExample.objects.acreate(example=example_1, title='example 1 child 1')
-    another_2 = await DjangoAnotherExample.objects.acreate(example=example_1, title='example 1 child 2')
-    await DjangoAnotherExample.objects.acreate(example=example_2, title='example 2 child 1')
-    await DjangoAnotherExample.objects.acreate(example=example_2, title='example 2 child 2')
+    another_1 = await DjangoAnotherExampleFactory(example=example_1)
+    another_2 = await DjangoAnotherExampleFactory(example=example_1)
+    await DjangoAnotherExampleFactory(example=example_2)
+    await DjangoAnotherExampleFactory(example=example_2)
 
     list_result = await another_subcategory.get_list(
         schema.ListData(page=1, limit=25),
@@ -64,11 +65,11 @@ async def test_subcategory_retrieve(language_context):
     example_category, another_subcategory = get_example_another_subcategory()
     user = UserABC(username='test')
 
-    example_1 = await DjangoExample.objects.acreate(title='example 1')
-    example_2 = await DjangoExample.objects.acreate(title='example 2')
+    example_1 = await DjangoExampleFactory()
+    another_1 = await DjangoAnotherExampleFactory(example=example_1)
 
-    another_1 = await DjangoAnotherExample.objects.acreate(example=example_1, title='child 1')
-    another_2 = await DjangoAnotherExample.objects.acreate(example=example_2, title='child 2')
+    example_2 = await DjangoExampleFactory()
+    another_2 = await DjangoAnotherExampleFactory(example=example_2)
 
     retrieve_result = await another_subcategory.retrieve(
         pk=another_1.id,
@@ -80,7 +81,7 @@ async def test_subcategory_retrieve(language_context):
     )
 
     assert retrieve_result.data['id'] == another_1.id
-    assert retrieve_result.data['title'] == 'child 1'
+    assert retrieve_result.data['title'] == another_1.title
 
     with pytest.raises(AdminAPIException) as exc_info:
         await another_subcategory.retrieve(
@@ -100,7 +101,7 @@ async def test_subcategory_create(language_context):
     example_category, another_subcategory = get_example_another_subcategory()
     user = UserABC(username='test')
 
-    example = await DjangoExample.objects.acreate(title='example for create')
+    example = await DjangoExampleFactory()
 
     create_result = await another_subcategory.create(
         data={
@@ -124,11 +125,11 @@ async def test_subcategory_update(language_context):
     example_category, another_subcategory = get_example_another_subcategory()
     user = UserABC(username='test')
 
-    example_1 = await DjangoExample.objects.acreate(title='example 1')
-    example_2 = await DjangoExample.objects.acreate(title='example 2')
+    example_1 = await DjangoExampleFactory()
+    another_1 = await DjangoAnotherExampleFactory(example=example_1)
 
-    another_1 = await DjangoAnotherExample.objects.acreate(example=example_1, title='child 1')
-    another_2 = await DjangoAnotherExample.objects.acreate(example=example_2, title='child 2')
+    example_2 = await DjangoExampleFactory()
+    another_2 = await DjangoAnotherExampleFactory(example=example_2)
 
     update_result = await another_subcategory.update(
         pk=another_1.id,

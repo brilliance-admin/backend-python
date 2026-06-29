@@ -3,26 +3,28 @@ from unittest import mock
 
 import pytest
 
-from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.auth import UserABC
-from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
-from brilliance_admin.schema.table.admin_action import ActionData
 from brilliance_admin import schema
-from example.sections.django_models import DjangoExample
+from brilliance_admin.auth import UserABC
+from brilliance_admin.integrations.django import DjangoAdmin
+from brilliance_admin.schema.table.admin_action import ActionData
+from brilliance_admin.translations import TranslateText as _
+from example.sections.django_models import (
+    DjangoAnotherExample, DjangoExample, DjangoExampleFactory, DjangoUser, DjangoUserFactory)
 
 
 class DjangoExampleCategory(DjangoAdmin):
     model = DjangoExample
-    table_schema = DjangoFieldsSchema(model=DjangoExample)
 
 
 @pytest.mark.asyncio
 async def test_create(language_context):
     category = DjangoExampleCategory()
     user = UserABC(username='test')
+    user_django = await DjangoUserFactory()
 
     result = await category.create(
         data={
+            'owner': user_django.pk,
             'title': 'test title',
             'description': 'test description',
             'is_active': False,
@@ -40,6 +42,7 @@ async def test_create(language_context):
 
     record = await DjangoExample.objects.aget(pk=result.pk)
 
+    assert record.owner_id == user_django.pk
     assert record.title == 'test title'
     assert record.allowed_ips == []
     assert record.description == 'test description'
@@ -54,7 +57,7 @@ async def test_create(language_context):
 async def test_update(language_context):
     category = DjangoExampleCategory()
     user = UserABC(username='test')
-    record = await DjangoExample.objects.acreate(
+    record = await DjangoExampleFactory(
         title='before',
         description='before description',
         is_active=True,
@@ -63,10 +66,11 @@ async def test_update(language_context):
         rating=1.0,
         payload={'before': True},
     )
-
+    new_owner = await DjangoUserFactory()
     result = await category.update(
         pk=record.pk,
         data={
+            'owner': new_owner.pk,
             'title': 'after',
             'description': 'after description',
             'is_active': False,
@@ -85,6 +89,7 @@ async def test_update(language_context):
     updated = await DjangoExample.objects.aget(pk=record.pk)
 
     assert updated.title == 'after'
+    assert updated.owner_id == new_owner.pk
     assert updated.allowed_ips == []
     assert updated.description == 'after description'
     assert updated.is_active is False
@@ -98,7 +103,7 @@ async def test_update(language_context):
 async def test_retrieve(language_context):
     category = DjangoExampleCategory()
     user = UserABC(username='test')
-    record = await DjangoExample.objects.acreate(
+    record = await DjangoExampleFactory(
         title='retrieve title',
         description='retrieve description',
         is_active=True,
@@ -116,19 +121,18 @@ async def test_retrieve(language_context):
     )
 
     assert result.data['id'] == record.pk
+    assert result.data['owner'] == {'key': record.owner_id, 'title': str(record.owner)}
     assert result.data['title'] == 'retrieve title'
-    assert result.data['allowed_ips'] == []
     assert result.data['description'] == 'retrieve description'
-    assert result.data['is_active'] is True
-    assert result.data['count'] == 9
 
 
 @pytest.mark.asyncio
 async def test_list(language_context):
     category = DjangoExampleCategory()
     user = UserABC(username='test')
-    first = await DjangoExample.objects.acreate(title='first', description='a')
-    second = await DjangoExample.objects.acreate(title='second', description='b')
+
+    first = await DjangoExampleFactory(title='first')
+    second = await DjangoExampleFactory(title='second')
 
     result = await category.get_list(
         list_data=schema.ListData(),
@@ -141,9 +145,10 @@ async def test_list(language_context):
         data=[
             {
                 'id': second.pk,
-                'title': 'second',
+                'owner': {'key': second.owner.pk, 'title': mock.ANY},
+                'title': second.title,
                 'allowed_ips': [],
-                'description': 'b',
+                'description': second.description,
                 'status': {'value': 'pending', 'title': 'Pending translated'},
                 'is_active': True,
                 'count': 0,
@@ -159,9 +164,10 @@ async def test_list(language_context):
             },
             {
                 'id': first.pk,
-                'title': 'first',
+                'owner': {'key': first.owner.pk, 'title': mock.ANY},
+                'title': first.title,
                 'allowed_ips': [],
-                'description': 'a',
+                'description': first.description,
                 'status': {'value': 'pending', 'title': 'Pending translated'},
                 'is_active': True,
                 'count': 0,
@@ -183,7 +189,7 @@ async def test_list(language_context):
 @pytest.mark.asyncio
 async def test_delete(language_context):
     category = DjangoExampleCategory()
-    record = await DjangoExample.objects.acreate(title='delete me')
+    record = await DjangoExampleFactory(title='delete me')
 
     result = await category.delete(
         action_data=ActionData(

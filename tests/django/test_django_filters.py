@@ -5,7 +5,7 @@ import pytest
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
-from example.sections.django_models import DjangoAnotherExample, DjangoExample
+from example.sections.django_models import DjangoAnotherExample, DjangoAnotherExampleFactory, DjangoExample, DjangoExampleFactory, DjangoUser
 
 
 @pytest.mark.asyncio
@@ -24,9 +24,10 @@ async def test_list_filter(language_context):
     )
     user = UserABC(username='test')
 
-    example_1 = await DjangoExample.objects.acreate(title='Test terminal', description='a')
-    example_2 = await DjangoExample.objects.acreate(title='Test terminal second', description='b')
-    await DjangoExample.objects.acreate(title='other', description='c')
+    example_1 = await DjangoExampleFactory(title='Test terminal')
+    example_2 = await DjangoExampleFactory(title='Test terminal second')
+
+    await DjangoExampleFactory(title='Other')
 
     list_result = await category.get_list(
         list_data=schema.ListData(filters={'id': example_1.id}),
@@ -55,7 +56,7 @@ async def test_list_filter(language_context):
         total_count=2,
     )
 
-    example_old = await DjangoExample.objects.acreate(title='Old terminal', description='old')
+    example_old = await DjangoExampleFactory()
     await DjangoExample.objects.filter(pk=example_old.pk).aupdate(
         created_at=datetime(2023, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
     )
@@ -86,10 +87,11 @@ async def test_list_search(language_context):
     )
     user = UserABC(username='test')
 
-    example_1 = await DjangoExample.objects.acreate(title='Test terminal', description='a')
-    example_2 = await DjangoExample.objects.acreate(title='Test terminal second', description='b')
-    await DjangoExample.objects.acreate(title='other', description='c')
-    await DjangoExample.objects.acreate(title='other second', description='d')
+    example_1 = await DjangoExampleFactory(title='Test terminal')
+    example_2 = await DjangoExampleFactory(title='Test terminal second')
+
+    await DjangoExampleFactory(title='Other')
+    await DjangoExampleFactory(title='Nothing')
 
     list_result = await category.get_list(
         list_data=schema.ListData(search='Test%'),
@@ -118,11 +120,11 @@ async def test_filter_related_many(language_context):
     )
     user = UserABC(username='test')
 
-    example_1 = await DjangoExample.objects.acreate(title='one')
-    another_1 = await DjangoAnotherExample.objects.acreate(example=example_1, title='a1')
+    example_1 = await DjangoExampleFactory(title='one')
+    another_1 = await DjangoAnotherExampleFactory(example=example_1)
 
-    example_2 = await DjangoExample.objects.acreate(title='two')
-    another_2 = await DjangoAnotherExample.objects.acreate(example=example_2, title='a2')
+    example_2 = await DjangoExampleFactory()
+    another_2 = await DjangoAnotherExampleFactory(example=example_2)
 
     list_result = await category.get_list(
         list_data=schema.ListData(filters={
@@ -158,8 +160,8 @@ async def test_ordering(language_context):
     )
     user = UserABC(username='test')
 
-    example_1 = await DjangoExample.objects.acreate(title='one')
-    example_2 = await DjangoExample.objects.acreate(title='two')
+    example_1 = await DjangoExampleFactory()
+    example_2 = await DjangoExampleFactory()
 
     list_result = await category.get_list(
         list_data=schema.ListData(ordering='id'),

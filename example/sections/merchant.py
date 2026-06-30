@@ -20,7 +20,11 @@ class MerchantFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
     ]
 
     title = schema.StringField(multilined=True, required=True)
-    description = schema.StringField(tinymce=True, required=True)
+    description = schema.StringField(tinymce=True, help_text='help text', required=True)
+    extra_kwargs = {
+        'tx_actions': {'help_text': 'help text'},
+        'terminals': {'help_text': 'help text'},
+    }
 
 
 class MerchantAdmin(sqlalchemy.SQLAlchemyAdmin):

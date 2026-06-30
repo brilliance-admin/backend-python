@@ -105,6 +105,8 @@ disputes: 'Disputes'
 disputes_help_text: 'Contains information about disputes associated with the payment. A dispute may be created when a payer challenges a transaction through their bank, card issuer, or payment provider.'
 terminal_errors: 'Errors'
 
+whitelist_ips__help_text: 'A whitelist of ip addresses.'
+
 statuses:
   process: 'Process'
   success: 'Success'

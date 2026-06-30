@@ -37,19 +37,24 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     ]
 
     id = schema.IntegerField(label='ID', read_only=True)
-    amount = schema.IntegerField(label=_('amount'), read_only=True)
+    amount = schema.IntegerField(label=_('amount'), read_only=True, required=True)
     endpoint = schema.StringField(label=_('endpoint'))
-    description = schema.StringField(label=_('description'))
+    description = schema.StringField(label=_('description'), help_text='help text example')
     other_field = schema.StringField(read_only=True)
-    whitelist_ips = schema.ArrayField(label=_('whitelist_ips'))
+    whitelist_ips = schema.ArrayField(label=_('whitelist_ips'), help_text=_('whitelist_ips__help_text'))
     # image = schema.ImageField(label=_('image'))
+    gateway_settings = schema.JSONField(help_text='help text', read_only=True)
     created_at = schema.DateTimeField(label=_('created_at'), read_only=True)
 
     @schema.function_field(label=_('registry_checked'), type=schema.BooleanField)
     async def get_provider_registry(self, record, user, **kwargs):
         return True
 
-    @schema.function_field(label=_('registry_info_checked'), type=schema.BooleanField)
+    @schema.function_field(
+        label=_('registry_info_checked'),
+        help_text=_('registry_info_checked'),
+        type=schema.BooleanField,
+    )
     async def get_provider_registry_info(self, record, user, **kwargs):
         return False
 
@@ -73,14 +78,6 @@ class CreatePaymentSchema(schema.FieldsSchema):
         if value:
             raise FieldError(_('throw_error'))
         return value
-
-
-class ChangeAmountSchema(schema.FieldsSchema):
-    amount = schema.IntegerField(label=_('amount'), required=True)
-
-
-class UpdateStatusSchema(schema.FieldsSchema):
-    status = schema.ChoiceField(label='Status', required=True, choices=TerminalStatuses)
 
 
 class LogsAdmin(schema.CategoryTable):
@@ -179,7 +176,9 @@ class PaymentsAdmin(schema.CategoryTable):
         title='Change amount',
         base_color='orange-darken-1',
         icon='mdi-pencil-circle-outline',
-        form_schema=ChangeAmountSchema(),
+        form_schema=schema.FieldsSchema(
+            amount=schema.IntegerField(label=_('amount'), required=True),
+        ),
     )
     async def change_amount(self, action_data: ActionData):
         await asyncio.sleep(0.2)
@@ -189,7 +188,9 @@ class PaymentsAdmin(schema.CategoryTable):
         title='Update status',
         base_color='grey-darken-1',
         icon='mdi-sync-circle',
-        form_schema=UpdateStatusSchema(),
+        form_schema=schema.FieldsSchema(
+            status=schema.ChoiceField(label='Status', required=True, choices=TerminalStatuses),
+        ),
     )
     async def update_status(self, action_data: ActionData):
         await asyncio.sleep(0.2)

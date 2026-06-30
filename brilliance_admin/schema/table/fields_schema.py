@@ -4,7 +4,7 @@ from typing import Any, ClassVar, Dict, List
 from pydantic_core import core_schema
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError, ValidationError
+from brilliance_admin.exceptions import FieldError, ValidationError
 from brilliance_admin.schema.category import FieldSchemaData, FieldsSchemaData
 from brilliance_admin.schema.table.fields.base import TableField
 from brilliance_admin.schema.table.fields.function_field import FunctionField
@@ -35,6 +35,7 @@ class DeserializeError(Exception):
     pass
 
 
+# pylint: disable=too-many-instance-attributes
 class FieldsSchema:
     # List of field slugs included in the schema.
     # Defines the complete set of fields and their order.
@@ -67,9 +68,14 @@ class FieldsSchema:
     #   }
     extra_kwargs: Dict[str, dict] | None = None
 
+    # Controls fields grid
+    formset: Dict[Any, Any] | None = None
+
     # Generated fields
     _generated_fields: dict = None
 
+    # pylint: disable=too-many-branches
+    # pylint: disable=too-many-locals
     def __init__(
             self,
             *args,
@@ -79,6 +85,7 @@ class FieldsSchema:
             fields=None,
             exclude_fields=None,
             extra_kwargs=None,
+            formset=None,
             **kwargs,
     ):
 
@@ -103,6 +110,9 @@ class FieldsSchema:
 
         if readonly_fields:
             self.readonly_fields = readonly_fields
+
+        if formset:
+            self.formset = formset
 
         generated_fields = self.generate_fields(kwargs)
 

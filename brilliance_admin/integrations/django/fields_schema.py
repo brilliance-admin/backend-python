@@ -139,6 +139,19 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 field_data["array_type"] = "integer"
                 return schema.ArrayField(**field_data)
 
+            if isinstance(base_field, models.JSONField):
+                field_data["array_type"] = "json"
+                return schema.ArrayField(**field_data)
+
+            base_field_type = type(base_field).__name__ if base_field is not None else "None"
+            base_internal_type = base_field.get_internal_type() if base_field is not None else "None"
+            msg = (
+                f'Django autogenerate ORM field {self.model.__name__}.{model_field.name} '
+                f'is not supported for type: ArrayField({base_internal_type})'
+                f' [base_field={base_field_type}]'
+            )
+            raise AttributeError(msg)
+
         if isinstance(model_field, models.BooleanField):
             field_data["required"] = False
             return schema.BooleanField(**field_data)

@@ -48,6 +48,9 @@ class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
         many=True,
         table_schema=FeeFieldsSchema(),
     )
+    extra_kwargs = {
+        'secret_key': {'help_text': 'help_text help_text'}
+    }
 
 
 class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):

@@ -250,11 +250,13 @@ class DjangoFieldsSchema(schema.FieldsSchema):
     async def create_from_deserialized(self, deserialized_data):
         record = self.model()
         many_to_many_values = {}
+        inline_values = {}
 
         for field_slug, value in deserialized_data.items():
             field = self.get_field(field_slug)
 
             if isinstance(field, DjangoInlineField):
+                inline_values[field_slug] = value
                 continue
 
             if isinstance(field, DjangoRelatedField):
@@ -278,6 +280,10 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         for field_slug, value in many_to_many_values.items():
             relation = getattr(record, field_slug)
             await relation.aset([] if value is None else value)
+
+        for field_slug, value in inline_values.items():
+            field = self.get_field(field_slug)
+            await field.create_inline(record, field_slug, value, None)
 
         return record
 
@@ -303,11 +309,13 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
     async def update_from_deserialized(self, record, deserialized_data):
         many_to_many_values = {}
+        inline_values = {}
 
         for field_slug, value in deserialized_data.items():
             field = self.get_field(field_slug)
 
             if isinstance(field, DjangoInlineField):
+                inline_values[field_slug] = value
                 continue
 
             if isinstance(field, DjangoRelatedField):
@@ -327,5 +335,9 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         for field_slug, value in many_to_many_values.items():
             relation = getattr(record, field_slug)
             await relation.aset([] if value is None else value)
+
+        for field_slug, value in inline_values.items():
+            field = self.get_field(field_slug)
+            await field.update_inline(record, field_slug, value, None, None)
 
         return record

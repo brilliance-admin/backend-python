@@ -1,3 +1,5 @@
+from unittest import mock
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -38,6 +40,7 @@ FORM_SCHEMA_DATA = {
         'subcategories': {},
         'table_filters': None,
         'table_schema': {
+            'formset': mock.ANY,
             'fields': {
                 'id': {
                     'header': {},

@@ -46,6 +46,38 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     gateway_settings = schema.JSONField(help_text='help text', read_only=True)
     created_at = schema.DateTimeField(label=_('created_at'), read_only=True)
 
+    formset = schema.FormSet(
+        fields=[
+            'id',
+            'disputes',
+            'get_provider_registry',
+            'get_provider_registry_info',
+            schema.FormSet(
+                fields=[
+                    'endpoint',
+                    'amount',
+                ],
+                col_span=6,
+            ),
+            schema.FormSet(
+                fields=[
+                    'created_at',
+                ],
+                col_span=6,
+            ),
+            schema.FormSet(
+                title='Main 2',
+                description='form description form description form description form description',
+                fields=[
+                    schema.FormField('other_field', col_span=6),
+                    schema.FormField('description', col_span=6),
+                    'gateway_settings',
+                    'whitelist_ips',
+                ]
+            )
+        ]
+    )
+
     @schema.function_field(label=_('registry_checked'), type=schema.BooleanField)
     async def get_provider_registry(self, record, user, **kwargs):
         return True

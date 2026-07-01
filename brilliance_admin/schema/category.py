@@ -71,6 +71,7 @@ class FieldSchemaData(DataclassBase):
 class FieldsSchemaData(DataclassBase):
     fields: Dict[str, dict] = Field(default_factory=dict)
     list_display: List[str] = Field(default_factory=list)
+    formset: Any = None
 
 
 # pylint: disable=too-many-instance-attributes

@@ -1,16 +1,18 @@
 import inspect
 from typing import Any, ClassVar, Dict, List
 
+from pydantic import Field
+from pydantic.dataclasses import dataclass
 from pydantic_core import core_schema
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import FieldError, ValidationError
 from brilliance_admin.schema.category import FieldSchemaData, FieldsSchemaData
-from brilliance_admin.schema.table.fields.base import TableField
+from brilliance_admin.schema.table.fields.base import InlineField, TableField
 from brilliance_admin.schema.table.fields.function_field import FunctionField
 from brilliance_admin.schema.table.schema_type import SchemaType
-from brilliance_admin.translations import LanguageContext
-from brilliance_admin.utils import DeserializeAction
+from brilliance_admin.translations import DataclassBase, LanguageContext
+from brilliance_admin.utils import DeserializeAction, SupportsStr
 
 NOT_FUND_EXCEPTION = '''{class_name}: field "{field_slug}" not found inside generated fields
 Available options: {available_fields}
@@ -20,6 +22,14 @@ Available options: {available_fields}
 '''
 LIST_DISPLAY_NOT_FUND = '''Field "{field_slug}" inside {class_name}.list_display, but not presented as field;
 Available options: {available_fields}'''
+
+FORMSET_MISSING_FIELDS = '''{class_name}.formset is invalid: missing fields.
+Missing fields: {missing_fields};
+Available fields: {available_fields}'''
+
+FORMSET_EXTRA_FIELDS = '''{class_name}.formset is invalid: fields not found.
+Unknown fields: {extra_fields};
+Available fields: {available_fields}'''
 
 FIELD_NOT_IN_FIELDS_LIST = (
     'Schema {class_name} attribute "{attribute_name}" {type_name}'
@@ -33,6 +43,27 @@ READONLY_FIELD_NOT_FOUND = (
 
 class DeserializeError(Exception):
     pass
+
+
+@dataclass
+class FormField(DataclassBase):
+    title: SupportsStr | None = None
+    col_span: int | None = None
+
+    def __init__(self, *args, title=None, col_span=None, **kwargs):
+        if args:
+            title = args[0]
+
+        self.title = title
+        self.col_span = col_span
+
+
+@dataclass
+class FormSet(DataclassBase):
+    title: SupportsStr | None = None
+    description: SupportsStr | None = None
+    fields: list = Field(default_factory=list)
+    col_span: int | None = None
 
 
 # pylint: disable=too-many-instance-attributes
@@ -69,7 +100,7 @@ class FieldsSchema:
     extra_kwargs: Dict[str, dict] | None = None
 
     # Controls fields grid
-    formset: Dict[Any, Any] | None = None
+    formset: Any = None
 
     # Generated fields
     _generated_fields: dict = None
@@ -200,6 +231,78 @@ class FieldsSchema:
                 )
                 raise AttributeError(msg)
 
+        self.validate_formset()
+
+    def validate_formset(self):
+        if not self.formset:
+            return
+
+        formset_fields = self._collect_formset_fields(self.formset)
+        available_fields = set(self.fields or [])
+        required_fields = {
+            field_slug
+            for field_slug, field in self.get_fields().items()
+        }
+        missing_fields = sorted(required_fields - formset_fields)
+        extra_fields = sorted(formset_fields - available_fields)
+
+        if missing_fields:
+            msg = FORMSET_MISSING_FIELDS.format(
+                class_name=type(self).__name__,
+                missing_fields=', '.join(missing_fields),
+                available_fields=', '.join(sorted(available_fields)),
+            )
+            raise AttributeError(msg)
+
+        if extra_fields:
+            msg = FORMSET_EXTRA_FIELDS.format(
+                class_name=type(self).__name__,
+                extra_fields=', '.join(extra_fields),
+                available_fields=', '.join(sorted(available_fields)),
+            )
+            raise AttributeError(msg)
+
+    def _collect_formset_fields(self, formset) -> set[str]:
+        result = set()
+
+        if formset is None:
+            return result
+
+        if isinstance(formset, str):
+            result.add(formset)
+            return result
+
+        fields = getattr(formset, 'fields', None)
+        if fields is None and isinstance(formset, dict):
+            fields = formset.get('fields')
+
+        if fields is None:
+            return result
+
+        for item in fields:
+            if isinstance(item, str):
+                result.add(item)
+                continue
+
+            if isinstance(item, dict):
+                if item.get('fields'):
+                    result |= self._collect_formset_fields(item)
+                    continue
+                slug = item.get('field') or item.get('slug') or item.get('title')
+                if slug:
+                    result.add(slug)
+                continue
+
+            if getattr(item, 'fields', None):
+                result |= self._collect_formset_fields(item)
+                continue
+
+            slug = getattr(item, 'field', None) or getattr(item, 'slug', None) or getattr(item, 'title', None)
+            if slug:
+                result.add(slug)
+
+        return result
+
     def generate_fields(self, kwargs) -> dict:
         generated_fields = {}
 
@@ -248,6 +351,7 @@ class FieldsSchema:
         ]
         fields_schema = FieldsSchemaData(
             list_display=schema_list_display,
+            formset=self.formset,
         )
 
         context = {'language_context': language_context}

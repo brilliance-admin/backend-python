@@ -37,6 +37,7 @@ CATEGORY_SCHEMA_DATA = {
         'subcategories': mock.ANY,
         'table_filters': None,
         'table_schema': {
+            'formset': mock.ANY,
             'fields': {
                 'created_at': {
                     'header': {},

@@ -48,10 +48,13 @@ class PaymentFieldsSchema(schema.FieldsSchema):
 
     formset = schema.FormSet(
         fields=[
-            'id',
-            'disputes',
-            'get_provider_registry',
-            'get_provider_registry_info',
+            schema.FormSet(
+                fields=[
+                    'id',
+                    'get_provider_registry',
+                    'get_provider_registry_info',
+                ]
+            ),
             schema.FormSet(
                 fields=[
                     'endpoint',
@@ -74,7 +77,8 @@ class PaymentFieldsSchema(schema.FieldsSchema):
                     'gateway_settings',
                     'whitelist_ips',
                 ]
-            )
+            ),
+            'disputes',
         ]
     )
 

@@ -1,9 +1,14 @@
 from brilliance_admin import schema
 from brilliance_admin.exceptions import APIError, AdminAPIException, ValidationError
+from brilliance_admin.schema.table.fields.base import InlineField
 from brilliance_admin.integrations.django.inline_field import DjangoInlineField
 from brilliance_admin.integrations.django.related_field import DjangoRelatedField
 from brilliance_admin.utils import DeserializeAction
 from brilliance_admin.utils import humanize_field_name
+
+INLINE_FIELD_NOT_SUPPORTED = (
+    '{class_name}: field "{field_slug}" is InlineField, but DjangoFieldsSchema supports only DjangoInlineField'
+)
 
 
 class DjangoFieldsSchema(schema.FieldsSchema):
@@ -52,6 +57,18 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             result[field_slug] = self.generate_many_to_many_field(model_field)
 
         return result
+
+    def validate_fields(self, *args, **kwargs):
+        super().validate_fields(*args, **kwargs)
+
+        for field_slug, field in self.get_fields().items():
+            if isinstance(field, InlineField) and not isinstance(field, DjangoInlineField):
+                raise AttributeError(
+                    INLINE_FIELD_NOT_SUPPORTED.format(
+                        class_name=type(self).__name__,
+                        field_slug=field_slug,
+                    )
+                )
 
     async def serialize(self, record, extra: dict, *args, **kwargs) -> dict:
         record_data = {}

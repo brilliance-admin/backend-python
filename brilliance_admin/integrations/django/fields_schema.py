@@ -61,6 +61,13 @@ class DjangoFieldsSchema(schema.FieldsSchema):
     def validate_fields(self, *args, **kwargs):
         super().validate_fields(*args, **kwargs)
 
+        if self.list_display:
+            self.list_display = [
+                slug
+                for slug in self.list_display
+                if not isinstance(self.get_field(slug), InlineField)
+            ]
+
         for field_slug, field in self.get_fields().items():
             if isinstance(field, InlineField) and not isinstance(field, DjangoInlineField):
                 raise AttributeError(

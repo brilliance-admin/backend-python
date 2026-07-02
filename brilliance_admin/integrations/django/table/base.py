@@ -97,16 +97,36 @@ class DjangoAdminBase(CategoryTable):
         model_fields |= {field.name for field in self.model._meta.many_to_many}
 
         for field in self.search_fields:
-            if field not in model_fields:
-                raise AttributeError(
-                    f'{type(self).__name__}: search field "{field}" not found in model {self.model.__name__}'
-                )
+            self.validate_lookup_path(field, 'search')
 
         for field in self.ordering_fields:
             if field not in model_fields:
                 raise AttributeError(
                     f'{type(self).__name__}: ordering field "{field}" not found in model {self.model.__name__}'
                 )
+
+    def validate_lookup_path(self, field_path, field_kind):
+        model = self.model
+        parts = field_path.split('__')
+
+        for index, part in enumerate(parts):
+            try:
+                model_field = model._meta.get_field(part)
+            except Exception as e:
+                raise AttributeError(
+                    f'{type(self).__name__}: {field_kind} field "{field_path}" not found in model {self.model.__name__}'
+                ) from e
+
+            if index == len(parts) - 1:
+                return
+
+            related_model = getattr(model_field, 'related_model', None)
+            if related_model is None:
+                raise AttributeError(
+                    f'{type(self).__name__}: {field_kind} field "{field_path}" not found in model {self.model.__name__}'
+                )
+
+            model = related_model
 
     def get_parent_fk_field_name(self, parent_category):
         if parent_category is None:

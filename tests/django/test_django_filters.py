@@ -106,6 +106,34 @@ async def test_list_search(language_context):
 
 
 @pytest.mark.asyncio
+async def test_list_search_related_field(language_context):
+    category = DjangoAdmin(
+        search_fields=['owner__username'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    owner = await DjangoUser.objects.acreate(username='john_search')
+    example = await DjangoExampleFactory(owner=owner)
+    await DjangoExampleFactory()
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='john_search'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': example.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
 async def test_filter_related_many(language_context):
     category = DjangoAdmin(
         model=DjangoAnotherExample,

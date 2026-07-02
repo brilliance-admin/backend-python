@@ -52,8 +52,25 @@ class DjangoAdminListMixin:
         regex = self.like_to_regex(list_data.search)
         query = Q()
         for field_slug in self.search_fields:
-            query |= Q(**{f'{field_slug}__iregex': regex})
+            lookup, value = self.get_search_lookup(field_slug, list_data.search, regex)
+            query |= Q(**{lookup: value})
         return queryset.filter(query)
+
+    def get_search_lookup(self, field_slug, raw_value, regex):
+        model = self.model
+        model_field = None
+
+        for part in field_slug.split('__'):
+            model_field = model._meta.get_field(part)
+            related_model = getattr(model_field, 'related_model', None)
+            if related_model is not None:
+                model = related_model
+
+        internal_type = model_field.get_internal_type()
+        if internal_type in {'CharField', 'TextField', 'SlugField', 'EmailField', 'URLField'}:
+            return f'{field_slug}__iregex', regex
+
+        return field_slug, raw_value
 
     async def apply_filters(self, queryset, list_data):
         if not self.table_filters or not list_data.filters:

@@ -100,6 +100,7 @@ class FieldsSchema:
     extra_kwargs: Dict[str, dict] | None = None
 
     # Controls fields grid
+    # All fields from fields must be listed
     formset: Any = None
 
     # Generated fields

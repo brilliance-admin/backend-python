@@ -1,5 +1,8 @@
+import json
+
 from brilliance_admin import schema
 from brilliance_admin.exceptions import APIError, AdminAPIException, ValidationError
+from brilliance_admin.schema.table.fields_schema import FORMSET_EXTRA_FIELDS, FORMSET_MISSING_FIELDS
 from brilliance_admin.schema.table.fields.base import InlineField
 from brilliance_admin.integrations.django.inline_field import DjangoInlineField
 from brilliance_admin.integrations.django.related_field import DjangoRelatedField
@@ -65,21 +68,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         return result
 
     def validate_fields(self, *args, **kwargs):
-        deferred_formset = None
-        reverse_fk_field_slug = self._get_single_reverse_fk_candidate()
-        if (
-            self.formset
-            and not self._has_explicit_fields
-            and reverse_fk_field_slug is not None
-            and reverse_fk_field_slug not in self._collect_formset_fields(self.formset)
-        ):
-            deferred_formset = self.formset
-            self.formset = None
-
         super().validate_fields(*args, **kwargs)
-
-        if deferred_formset is not None:
-            self.formset = deferred_formset
 
         if self.list_display:
             self.list_display = [
@@ -97,21 +86,55 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                     )
                 )
 
-    def _get_single_reverse_fk_candidate(self):
+    def _is_deferred_inline_fk_field(self, field_slug):
         from django.db import models
 
         if self.model is None:
-            return None
+            return False
 
-        fk_fields = [
-            model_field.name
-            for model_field in self.model._meta.fields
-            if isinstance(model_field, (models.ForeignKey, models.OneToOneField))
-        ]
-        if len(fk_fields) != 1:
-            return None
+        if self._has_explicit_fields:
+            return False
 
-        return fk_fields[0]
+        model_field = self.model._meta.get_field(field_slug)
+        return isinstance(model_field, (models.ForeignKey, models.OneToOneField))
+
+    def validate_formset(self):
+        if not self.formset:
+            return
+
+        formset_fields = self._collect_formset_fields(self.formset)
+        available_fields = set(self.fields or [])
+        required_fields = {
+            field_slug
+            for field_slug, field in self.get_fields().items()
+        }
+        missing_fields = sorted(required_fields - formset_fields)
+        extra_fields = sorted(formset_fields - available_fields)
+
+        if missing_fields:
+            deferred_missing_fields = [
+                field_slug
+                for field_slug in missing_fields
+                if self._is_deferred_inline_fk_field(field_slug)
+            ]
+            if len(deferred_missing_fields) == len(missing_fields):
+                missing_fields = []
+
+        if missing_fields:
+            msg = FORMSET_MISSING_FIELDS.format(
+                class_name=type(self).__name__,
+                missing_fields=json.dumps(missing_fields, ensure_ascii=False, indent=4),
+                available_fields=json.dumps(list(available_fields), ensure_ascii=False, indent=4),
+            )
+            raise AttributeError(msg)
+
+        if extra_fields:
+            msg = FORMSET_EXTRA_FIELDS.format(
+                class_name=type(self).__name__,
+                extra_fields=json.dumps(extra_fields, ensure_ascii=False, indent=4),
+                available_fields=json.dumps(list(available_fields), ensure_ascii=False, indent=4),
+            )
+            raise AttributeError(msg)
 
     async def serialize(self, record, extra: dict, *args, **kwargs) -> dict:
         record_data = {}

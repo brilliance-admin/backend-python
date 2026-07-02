@@ -19,6 +19,10 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             self.model = model
         super().__init__(*args, **kwargs)
 
+        for field in self.get_fields().values():
+            if isinstance(field, DjangoInlineField):
+                field.remove_reverse_fk_field(self.model)
+
     def generate_fields(self, kwargs) -> dict:
         generated_fields = super().generate_fields(kwargs)
 

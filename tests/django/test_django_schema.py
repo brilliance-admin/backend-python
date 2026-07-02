@@ -5,9 +5,10 @@ from fastapi.testclient import TestClient
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.integrations.django import DjangoFieldsSchema
+from brilliance_admin.integrations.django.inline_field import DjangoInlineField
 from brilliance_admin.integrations.django.table import DjangoAdmin
 from example.main import admin_app
-from example.sections.django_models import DjangoExample
+from example.sections.django_models import DjangoAnotherExample, DjangoExample
 
 FORM_SCHEMA_DATA = {
     'categories': {},
@@ -40,7 +41,7 @@ FORM_SCHEMA_DATA = {
         'subcategories': {},
         'table_filters': None,
         'table_schema': {
-            'formset': mock.ANY,
+            'formset': None,
             'fields': {
                 'id': {
                     'header': {},
@@ -57,6 +58,57 @@ FORM_SCHEMA_DATA = {
                     'read_only': False,
                     'required': True,
                     'type': 'related',
+                },
+                'another_examples': {
+                    'header': {},
+                    'inline_field_schema': {
+                        'fields': {
+                            'id': {
+                                'header': {},
+                                'label': 'ID',
+                                'read_only': True,
+                                'required': False,
+                                'type': 'integer',
+                            },
+                            'title': {
+                                'header': {},
+                                'label': 'Title',
+                                'max_length': 255,
+                                'password': False,
+                                'read_only': False,
+                                'required': True,
+                                'type': 'string',
+                            },
+                            'is_active': {
+                                'header': {},
+                                'label': 'Is Active',
+                                'read_only': False,
+                                'required': False,
+                                'type': 'boolean',
+                            },
+                            'created_at': {
+                                'header': {},
+                                'include_date': True,
+                                'include_time': True,
+                                'label': 'Created At',
+                                'read_only': True,
+                                'required': False,
+                                'type': 'datetime',
+                            },
+                        },
+                        'list_display': [
+                            'id',
+                            'title',
+                            'is_active',
+                            'created_at',
+                        ],
+                        'formset': None,
+                    },
+                    'label': 'Another Examples',
+                    'many': True,
+                    'read_only': False,
+                    'required': False,
+                    'type': 'inline',
                 },
                 'allowed_ips': {
                     'array_type': 'string',
@@ -229,7 +281,15 @@ client = TestClient(admin_app)
 async def test_generate_category_schema_django(language_context):
     category = DjangoAdmin(
         model=DjangoExample,
-        table_schema=DjangoFieldsSchema(model=DjangoExample)
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            another_examples=DjangoInlineField(
+                many=True,
+                table_schema=DjangoFieldsSchema(
+                    model=DjangoAnotherExample,
+                ),
+            ),
+        )
     )
     new_schema = category.generate_category_schema(UserABC(username="test"), language_context)
     context = {'language_context': language_context}

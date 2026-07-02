@@ -1,15 +1,9 @@
 import pytest
 
-from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema, DjangoInlineField
 from example.sections.django_models import (
-    DjangoAnotherExample,
-    DjangoAnotherExampleFactory,
-    DjangoExample,
-    DjangoExampleFactory,
-    DjangoUserFactory,
-)
+    DjangoAnotherExample, DjangoAnotherExampleFactory, DjangoExample, DjangoExampleFactory, DjangoUserFactory)
 
 
 class DjangoAnotherExampleInlineSchema(DjangoFieldsSchema):

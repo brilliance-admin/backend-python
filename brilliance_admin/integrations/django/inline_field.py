@@ -5,6 +5,67 @@ from brilliance_admin.schema.table.fields.base import InlineField
 
 
 class DjangoInlineField(InlineField):
+    def _remove_formset_fields(self, formset, excluded_fields):
+        if formset is None:
+            return None
+
+        fields = getattr(formset, 'fields', None)
+        if fields is None:
+            return formset
+
+        next_fields = []
+        for item in fields:
+            if isinstance(item, str):
+                if item not in excluded_fields:
+                    next_fields.append(item)
+                continue
+
+            item_fields = getattr(item, 'fields', None)
+            if item_fields is not None:
+                self._remove_formset_fields(item, excluded_fields)
+                if item.fields:
+                    next_fields.append(item)
+                continue
+
+            slug = getattr(item, 'field', None) or getattr(item, 'slug', None) or getattr(item, 'title', None)
+            if slug not in excluded_fields:
+                next_fields.append(item)
+
+        formset.fields = next_fields
+        return formset
+
+    def remove_reverse_fk_field(self, owner_model):
+        # pylint: disable=import-outside-toplevel
+        from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
+
+        if not isinstance(self.table_schema, DjangoFieldsSchema):
+            msg = (
+                f'{type(self).__name__}.table_schema {self.table_schema} '
+                'must be subclass of DjangoFieldsSchema'
+            )
+            raise AttributeError(msg)
+
+        excluded_fields = []
+        for field_slug in list(self.table_schema.get_fields().keys()):
+            model_field = self.table_schema.model._meta.get_field(field_slug)
+            related_model = getattr(model_field, 'related_model', None)
+            if related_model is owner_model:
+                excluded_fields.append(field_slug)
+
+        for field_slug in excluded_fields:
+            self.table_schema.get_fields().pop(field_slug, None)
+
+        if self.table_schema.fields:
+            self.table_schema.fields = [slug for slug in self.table_schema.fields if slug not in excluded_fields]
+
+        if self.table_schema.list_display:
+            self.table_schema.list_display = [
+                slug for slug in self.table_schema.list_display if slug not in excluded_fields
+            ]
+
+        if self.table_schema.formset:
+            self._remove_formset_fields(self.table_schema.formset, set(excluded_fields))
+
     def _get_related_model(self, owner_model):
         if self.table_schema is None or getattr(self.table_schema, 'model', None) is None:
             msg = f'{type(self).__name__}.table_schema.model is required'

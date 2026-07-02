@@ -251,16 +251,16 @@ class FieldsSchema:
         if missing_fields:
             msg = FORMSET_MISSING_FIELDS.format(
                 class_name=type(self).__name__,
-                missing_fields=json.dumps(missing_fields, ensure_ascii=False),
-                available_fields=json.dumps(list(available_fields), ensure_ascii=False),
+                missing_fields=json.dumps(missing_fields, ensure_ascii=False, indent=4),
+                available_fields=json.dumps(list(available_fields), ensure_ascii=False, indent=4),
             )
             raise AttributeError(msg)
 
         if extra_fields:
             msg = FORMSET_EXTRA_FIELDS.format(
                 class_name=type(self).__name__,
-                extra_fields=json.dumps(extra_fields, ensure_ascii=False),
-                available_fields=json.dumps(list(available_fields), ensure_ascii=False),
+                extra_fields=json.dumps(extra_fields, ensure_ascii=False, indent=4),
+                available_fields=json.dumps(list(available_fields), ensure_ascii=False, indent=4),
             )
             raise AttributeError(msg)
 

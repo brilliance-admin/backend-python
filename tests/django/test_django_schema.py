@@ -234,3 +234,32 @@ async def test_generate_category_schema_django(language_context):
     new_schema = category.generate_category_schema(UserABC(username="test"), language_context)
     context = {'language_context': language_context}
     assert new_schema.model_dump(mode='json', context=context) == FORM_SCHEMA_DATA, new_schema.model_dump()
+
+
+def test_django_formset_missing_fields():
+    with pytest.raises(AttributeError, match=r'DjangoFieldsSchema\.formset is invalid: missing fields'):
+        DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id', 'title', 'allowed_ips'],
+            formset={
+                'fields': [
+                    'id',
+                    'title',
+                ],
+            },
+        )
+
+
+def test_django_formset_extra_fields():
+    with pytest.raises(AttributeError, match=r'DjangoFieldsSchema\.formset is invalid: fields not found'):
+        DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id', 'title'],
+            formset={
+                'fields': [
+                    'id',
+                    'title',
+                    'ghost',
+                ],
+            },
+        )

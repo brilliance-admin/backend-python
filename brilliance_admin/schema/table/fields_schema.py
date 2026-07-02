@@ -1,4 +1,5 @@
 import inspect
+import json
 from typing import Any, ClassVar, Dict, List
 
 from pydantic import Field
@@ -8,7 +9,7 @@ from pydantic_core import core_schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import FieldError, ValidationError
 from brilliance_admin.schema.category import FieldSchemaData, FieldsSchemaData
-from brilliance_admin.schema.table.fields.base import InlineField, TableField
+from brilliance_admin.schema.table.fields.base import TableField
 from brilliance_admin.schema.table.fields.function_field import FunctionField
 from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.translations import DataclassBase, LanguageContext
@@ -250,16 +251,16 @@ class FieldsSchema:
         if missing_fields:
             msg = FORMSET_MISSING_FIELDS.format(
                 class_name=type(self).__name__,
-                missing_fields=', '.join(missing_fields),
-                available_fields=', '.join(sorted(available_fields)),
+                missing_fields=json.dumps(missing_fields, ensure_ascii=False),
+                available_fields=json.dumps(list(available_fields), ensure_ascii=False),
             )
             raise AttributeError(msg)
 
         if extra_fields:
             msg = FORMSET_EXTRA_FIELDS.format(
                 class_name=type(self).__name__,
-                extra_fields=', '.join(extra_fields),
-                available_fields=', '.join(sorted(available_fields)),
+                extra_fields=json.dumps(extra_fields, ensure_ascii=False),
+                available_fields=json.dumps(list(available_fields), ensure_ascii=False),
             )
             raise AttributeError(msg)
 

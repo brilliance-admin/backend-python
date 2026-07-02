@@ -13,10 +13,12 @@ INLINE_FIELD_NOT_SUPPORTED = (
 
 class DjangoFieldsSchema(schema.FieldsSchema):
     model = None
+    _has_explicit_fields = False
 
     def __init__(self, *args, model=None, **kwargs):
         if model is not None:
             self.model = model
+        self._has_explicit_fields = kwargs.get('fields') is not None
         super().__init__(*args, **kwargs)
 
         for field in self.get_fields().values():
@@ -63,7 +65,21 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         return result
 
     def validate_fields(self, *args, **kwargs):
+        deferred_formset = None
+        reverse_fk_field_slug = self._get_single_reverse_fk_candidate()
+        if (
+            self.formset
+            and not self._has_explicit_fields
+            and reverse_fk_field_slug is not None
+            and reverse_fk_field_slug not in self._collect_formset_fields(self.formset)
+        ):
+            deferred_formset = self.formset
+            self.formset = None
+
         super().validate_fields(*args, **kwargs)
+
+        if deferred_formset is not None:
+            self.formset = deferred_formset
 
         if self.list_display:
             self.list_display = [
@@ -80,6 +96,22 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                         field_slug=field_slug,
                     )
                 )
+
+    def _get_single_reverse_fk_candidate(self):
+        from django.db import models
+
+        if self.model is None:
+            return None
+
+        fk_fields = [
+            model_field.name
+            for model_field in self.model._meta.fields
+            if isinstance(model_field, (models.ForeignKey, models.OneToOneField))
+        ]
+        if len(fk_fields) != 1:
+            return None
+
+        return fk_fields[0]
 
     async def serialize(self, record, extra: dict, *args, **kwargs) -> dict:
         record_data = {}

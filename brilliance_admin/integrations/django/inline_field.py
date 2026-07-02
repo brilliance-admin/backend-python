@@ -65,6 +65,7 @@ class DjangoInlineField(InlineField):
 
         if self.table_schema.formset:
             self._remove_formset_fields(self.table_schema.formset, set(excluded_fields))
+            self.table_schema.validate_formset()
 
     def _get_related_model(self, owner_model):
         if self.table_schema is None or getattr(self.table_schema, 'model', None) is None:

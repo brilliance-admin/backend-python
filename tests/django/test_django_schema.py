@@ -102,7 +102,14 @@ FORM_SCHEMA_DATA = {
                             'is_active',
                             'created_at',
                         ],
-                        'formset': None,
+                        'formset': {
+                            'fields': [
+                                'id',
+                                'title',
+                                'is_active',
+                                'created_at',
+                            ],
+                        },
                     },
                     'label': 'Another Examples',
                     'many': True,
@@ -287,6 +294,14 @@ async def test_generate_category_schema_django(language_context):
                 many=True,
                 table_schema=DjangoFieldsSchema(
                     model=DjangoAnotherExample,
+                    formset={
+                        'fields': [
+                            'id',
+                            'title',
+                            'is_active',
+                            'created_at',
+                        ],
+                    },
                 ),
             ),
         )

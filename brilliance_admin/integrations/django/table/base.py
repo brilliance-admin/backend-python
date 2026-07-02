@@ -106,27 +106,34 @@ class DjangoAdminBase(CategoryTable):
                 )
 
     def validate_lookup_path(self, field_path, field_kind):
+        try:
+            self.resolve_lookup_path(field_path)
+        except Exception as e:
+            raise AttributeError(
+                f'{type(self).__name__}: {field_kind} field "{field_path}" not found in model {self.model.__name__}'
+            ) from e
+
+    def resolve_lookup_path(self, field_path):
         model = self.model
         parts = field_path.split('__')
+        model_field = None
+        json_tail = []
 
         for index, part in enumerate(parts):
-            try:
-                model_field = model._meta.get_field(part)
-            except Exception as e:
-                raise AttributeError(
-                    f'{type(self).__name__}: {field_kind} field "{field_path}" not found in model {self.model.__name__}'
-                ) from e
+            if model_field is not None and model_field.get_internal_type() == 'JSONField':
+                json_tail = parts[index:]
+                break
 
-            if index == len(parts) - 1:
-                return
+            model_field = model._meta.get_field(part)
 
             related_model = getattr(model_field, 'related_model', None)
-            if related_model is None:
-                raise AttributeError(
-                    f'{type(self).__name__}: {field_kind} field "{field_path}" not found in model {self.model.__name__}'
-                )
+            if related_model is not None:
+                model = related_model
 
-            model = related_model
+        if model_field is None:
+            raise AttributeError(f'Lookup "{field_path}" is empty')
+
+        return model_field, json_tail
 
     def get_parent_fk_field_name(self, parent_category):
         if parent_category is None:

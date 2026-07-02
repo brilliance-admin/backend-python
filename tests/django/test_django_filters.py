@@ -134,6 +134,61 @@ async def test_list_search_related_field(language_context):
 
 
 @pytest.mark.asyncio
+async def test_list_search_reverse_related_id(language_context):
+    category = DjangoAdmin(
+        search_fields=['another_examples__id'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    example = await DjangoExampleFactory()
+    another = await DjangoAnotherExampleFactory(example=example)
+    await DjangoExampleFactory()
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search=str(another.id)),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': example.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
+async def test_list_search_json_field(language_context):
+    category = DjangoAdmin(
+        search_fields=['payload__phone'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    example = await DjangoExampleFactory(payload={'phone': '79990001122'})
+    await DjangoExampleFactory(payload={'phone': '70000000000'})
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='79990001122'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': example.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
 async def test_filter_related_many(language_context):
     category = DjangoAdmin(
         model=DjangoAnotherExample,

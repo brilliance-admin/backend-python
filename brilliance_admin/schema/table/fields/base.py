@@ -1,5 +1,6 @@
 import abc
 import datetime
+import inspect
 from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import Any, ClassVar
@@ -355,32 +356,41 @@ class ChoiceField(TableField):
     variant: str = 'elevated'
     size: str = 'default'
 
-    def __post_init__(self):
-        self.choices = self.generate_choices()
+    _choices = None
 
     def generate_choices(self):
+        if self._choices is not None:
+            return self._choices
+
         if not self.choices:
             return None
 
-        if issubclass(self.choices, Enum):
-            return [
+        if inspect.isclass(self.choices) and issubclass(self.choices, Enum):
+            self._choices = [
                 {'value': c.value, 'title': c.label, 'tag_color': getattr(c, 'tag_color', None)}
                 for c in self.choices
             ]
+            return self._choices
 
-        msg = f'Field choices is not suppored: {self.choices}'
+        if isinstance(self.choices, list):
+            self._choices = self.choices
+            return self._choices
+
+        msg = f'{type(self).__name__}.choices is not suppored: {self.choices}'
         raise NotImplementedError(msg)
 
     def find_choice(self, value):
-        if not self.choices:
+        choices = self.generate_choices()
+
+        if not choices:
             return None
 
-        return next((c for c in self.choices if c.get('value') == value), None)
+        return next((c for c in choices if c.get('value') == value), None)
 
     def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
 
-        schema.choices = self.choices
+        schema.choices = self.generate_choices()
 
         schema.size = self.size
         schema.variant = self.variant

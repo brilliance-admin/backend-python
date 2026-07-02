@@ -16,7 +16,7 @@ jobs:
         run: docker build -t brilliance-backend -f .configs/docker/Dockerfile .
 
       - name: Run tests
-        run: docker compose -f .configs/docker/docker-compose.yml run --rm backend sh -c 'git config --global --add safe.directory /app && uv sync --all-groups --all-extras && uv run pytest'
+        run: docker compose -f .configs/docker/docker-compose.yml run --rm backend sh -c 'git config --global --add safe.directory /app && uv sync --all-groups --all-extras && uv run pytest -vvv'
 
       - name: Cleanup
         if: always()

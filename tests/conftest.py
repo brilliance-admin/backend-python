@@ -16,10 +16,14 @@ POSTGRES = PostgresContainer(
     password="test_password",
     dbname="test_db",
 )
+print("[conftest] starting postgres testcontainer")
 POSTGRES.start()
+print("[conftest] postgres testcontainer started")
 POSTGRES_URL = POSTGRES.get_connection_url()
+print(f"[conftest] postgres url={POSTGRES_URL}")
 POSTGRES_ASYNC_URL = POSTGRES_URL.replace("psycopg2", "asyncpg")
 POSTGRES_PARSED = urlparse(POSTGRES_URL)
+print(f"[conftest] postgres async url={POSTGRES_ASYNC_URL}")
 
 
 @pytest_asyncio.fixture(scope="session")

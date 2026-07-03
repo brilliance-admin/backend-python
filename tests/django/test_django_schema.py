@@ -168,6 +168,13 @@ FORM_SCHEMA_DATA = {
                     'required': False,
                     'type': 'datetime',
                 },
+                'ttl': {
+                    'header': {},
+                    'label': 'Ttl',
+                    'read_only': False,
+                    'required': False,
+                    'type': 'duration',
+                },
                 'file': {
                     'header': {},
                     'label': 'File',
@@ -271,6 +278,7 @@ FORM_SCHEMA_DATA = {
                 'payload',
                 'event_date',
                 'event_time',
+                'ttl',
                 'file',
                 'image',
                 'created_at',

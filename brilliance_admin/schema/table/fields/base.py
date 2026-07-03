@@ -1,6 +1,7 @@
 import abc
 import datetime
 import inspect
+import re
 from decimal import Decimal, InvalidOperation
 from enum import Enum
 from typing import Any, ClassVar
@@ -232,6 +233,59 @@ def _parse_iso(value: str) -> datetime.datetime:
     return dt
 
 
+_DURATION_RE = re.compile(
+    r'^(?:(?P<days>-?\d+)\s+)?(?P<hours>\d+):(?P<minutes>\d{2})(?::(?P<seconds>\d{2})(?:\.(?P<microseconds>\d{1,6}))?)?$'
+)
+
+
+def _format_timedelta(value: datetime.timedelta) -> str:
+    total_microseconds = (
+        (value.days * 24 * 60 * 60 + value.seconds) * 1_000_000
+        + value.microseconds
+    )
+    sign = '-' if total_microseconds < 0 else ''
+    total_microseconds = abs(total_microseconds)
+
+    total_seconds, microseconds = divmod(total_microseconds, 1_000_000)
+    days, rem = divmod(total_seconds, 24 * 60 * 60)
+    hours, rem = divmod(rem, 60 * 60)
+    minutes, seconds = divmod(rem, 60)
+
+    base = f'{hours}:{minutes:02}:{seconds:02}'
+    if days:
+        base = f'{days} {base}'
+    if microseconds:
+        base = f'{base}.{microseconds:06d}'.rstrip('0')
+
+    return f'{sign}{base}'
+
+
+def _parse_duration(value: str) -> datetime.timedelta:
+    match = _DURATION_RE.fullmatch(value.strip())
+    if not match:
+        raise ValueError(f'Invalid duration format: {value}')
+
+    days = int(match.group('days') or 0)
+    hours = int(match.group('hours'))
+    minutes = int(match.group('minutes'))
+    seconds = int(match.group('seconds') or 0)
+    microseconds_raw = match.group('microseconds')
+    microseconds = int(microseconds_raw.ljust(6, '0')) if microseconds_raw else 0
+
+    if minutes >= 60 or seconds >= 60:
+        raise ValueError(f'Invalid duration format: {value}')
+
+    sign = -1 if days < 0 else 1
+    result = datetime.timedelta(
+        days=abs(days),
+        hours=hours,
+        minutes=minutes,
+        seconds=seconds,
+        microseconds=microseconds,
+    )
+    return result * sign
+
+
 @dataclass
 class DateTimeField(TableField):
     _type = 'datetime'
@@ -274,6 +328,37 @@ class DateTimeField(TableField):
             }
 
         raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'datetime'})
+
+
+@dataclass
+class DurationField(TableField):
+    _type = 'duration'
+
+    async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
+        if value is None:
+            return None
+
+        if not isinstance(value, datetime.timedelta):
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'duration'})
+
+        return _format_timedelta(value)
+
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
+
+        if value is None or value == '':
+            return None
+
+        if isinstance(value, datetime.timedelta):
+            return value
+
+        if not isinstance(value, str):
+            raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'duration'})
+
+        try:
+            return _parse_duration(value)
+        except ValueError as e:
+            raise FieldError(str(e), 'bad_duration_format') from e
 
 
 @dataclass

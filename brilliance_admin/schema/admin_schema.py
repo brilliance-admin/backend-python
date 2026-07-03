@@ -68,6 +68,7 @@ class AdminSchema:
 
     navbar_density: str = 'default'
 
+    base_url: str | None = None
     backend_prefix: str | None = None
     static_prefix: str | None = None
 
@@ -199,20 +200,22 @@ class AdminSchema:
     async def get_index_context_data(self, request: Request) -> dict:
         language_context = self.get_language_context(language_slug=None)
         context = {'language_context': language_context}
+        resolved_base_url = self.base_url or str(request.base_url)
 
         backend_prefix = self.backend_prefix
         if not backend_prefix:
-            backend_prefix = urljoin(str(request.base_url), '/admin/')
+            backend_prefix = urljoin(resolved_base_url, '/admin/')
 
         static_prefix = self.static_prefix
         if not static_prefix:
-            static_prefix = urljoin(str(request.base_url), '/admin/static/')
+            static_prefix = urljoin(resolved_base_url, '/admin/static/')
 
         logo_image = self.logo_image
         if logo_image and logo_image.startswith('/'):
-            logo_image = urljoin(str(request.base_url), logo_image)
+            logo_image = urljoin(resolved_base_url, logo_image)
 
         settings_json = {
+            'base_url': self.base_url,
             'backend_prefix': backend_prefix,
             'static_prefix': static_prefix,
             'version': importlib.metadata.version('brilliance-admin'),

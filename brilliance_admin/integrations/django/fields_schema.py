@@ -178,6 +178,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
     def generate_model_field(self, model_field):
         from django.db import models
+        from django.contrib.postgres.fields import ArrayField as PostgresArrayField
 
         field_data = {
             "label": self.get_model_field_label(model_field),
@@ -212,7 +213,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 field_data["max_length"] = model_field.max_length
             return schema.StringField(**field_data)
 
-        if isinstance(model_field, models.Field) and model_field.get_internal_type() == "ArrayField":
+        if isinstance(model_field, PostgresArrayField):
             base_field = model_field.base_field
             if isinstance(base_field, (models.CharField, models.TextField)):
                 field_data["array_type"] = "string"
@@ -251,6 +252,9 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             field_data["include_date"] = False
             field_data["include_time"] = True
             return schema.DateTimeField(**field_data)
+
+        if isinstance(model_field, models.DurationField):
+            return schema.DurationField(**field_data)
 
         if isinstance(model_field, models.JSONField):
             return schema.JSONField(**field_data)

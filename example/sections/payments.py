@@ -19,9 +19,11 @@ logger = get_logger()
 class PaymentFiltersSchema(schema.FieldsSchema):
     id = schema.IntegerField(label='ID')
     created_at = schema.DateTimeField(label=_('created_at'), range=True)
+    status = schema.ChoiceField(label='Status', required=True, choices=TerminalStatuses)
 
     fields = [
         'id',
+        'status',
         'created_at',
     ]
 
@@ -31,6 +33,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
         'id',
         'amount',
         'endpoint',
+        'status',
         'created_at',
         'get_provider_registry',
         'get_provider_registry_info',
@@ -41,6 +44,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     endpoint = schema.StringField(label=_('endpoint'))
     description = schema.StringField(label=_('description'), help_text='help text example')
     other_field = schema.StringField(read_only=True)
+    status = schema.ChoiceField(label=_('status'), required=True, choices=TerminalStatuses)
     whitelist_ips = schema.ArrayField(label=_('whitelist_ips'), help_text=_('whitelist_ips__help_text'))
     # image = schema.ImageField(label=_('image'))
     gateway_settings = schema.JSONField(help_text='help text', read_only=True)
@@ -53,6 +57,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
                     'id',
                     'get_provider_registry',
                     'get_provider_registry_info',
+                    'status',
                 ]
             ),
             schema.FormSet(

@@ -50,6 +50,7 @@ class DjangoExample(models.Model):
     payload = models.JSONField(default=dict, blank=True)
     event_date = models.DateField(null=True, blank=True)
     event_time = models.TimeField(null=True, blank=True)
+    ttl = models.DurationField(null=True, blank=True)
     file = models.FileField(upload_to="django_example/files/", null=True, blank=True)
     image = models.ImageField(upload_to="django_example/images/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

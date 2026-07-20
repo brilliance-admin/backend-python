@@ -1,12 +1,12 @@
-from typing import Any
-
 from asgiref.sync import sync_to_async
 from pydantic import BaseModel
 
-from brilliance_admin.exceptions import AdminAPIException, APIError
-from brilliance_admin.exceptions import FieldError
+from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.table_models import AutocompleteData, Record
+from brilliance_admin.utils import get_logger
+
+logger = get_logger()
 
 MISSING_RECORD_IN_CONTEXT = 'Missing record in serialize context in value: {value}'
 RELATED_MISSING_ON_RECORD = (
@@ -130,6 +130,13 @@ class DjangoRelatedField(RelatedField):
         try:
             related = await sync_to_async(getattr, thread_sensitive=True)(record, self.rel_name, None)
         except Exception as e:
+            logger.exception(
+                'Related load failed: field=%s model=%s pk=%s error=%s',
+                self.rel_name,
+                type(record).__name__,
+                getattr(record, 'pk', None),
+                str(e),
+            )
             msg = RELATED_LOAD_ERROR.format(
                 field=self.rel_name,
                 model=type(record).__name__,

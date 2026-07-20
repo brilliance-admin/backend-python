@@ -240,7 +240,7 @@ class FieldsSchema:
             return
 
         formset_fields = self._collect_formset_fields(self.formset)
-        available_fields = set(self.fields or [])
+        available_fields = set(self.get_fields().keys())
         required_fields = {
             field_slug
             for field_slug, field in self.get_fields().items()

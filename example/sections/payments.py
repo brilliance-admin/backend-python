@@ -106,6 +106,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
             id=schema.IntegerField(label='ID', read_only=True),
             reason=schema.StringField(label=_('Name')),
             manager=schema.RelatedField(label=_('Manager')),
+            errors=schema.JSONField(help_text='This is errors', read_only=True),
             created_at=schema.DateTimeField(label=_('created_at'), read_only=True),
         )
     )
@@ -145,12 +146,13 @@ class LogsAdmin(schema.CategoryTable):
         data = []
         total_count = 5039
 
+        fake = Faker()
         for i in range(0, list_data.limit):
             pk = total_count - ((list_data.page - 1) * list_data.limit + i)
             if pk < 0:
                 continue
 
-            line_data = {'log': 'test'}
+            line_data = {'log': fake.sentence(nb_words=20)}
             line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
             data.append(line)
 
@@ -249,12 +251,14 @@ class PaymentsAdmin(schema.CategoryTable):
             'description': fake.sentence(nb_words=50),
             'other_field': fake.word(),
             'image': f'https://picsum.photos/id/{5039-pk+1}/200/300',
+            'gateway_settings': ['first', 'second'],
             'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
             'disputes': [
                 {
                     'id': 1,
                     'reason': 'Reason title',
                     'manager': {'key': 1, 'title': 'Manager name'},
+                    'errors': ['first', 'second', {'code': "provider_error", 'description': "Error from the provider. Please contact support." }],
                     'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
                 },
                 {

@@ -346,3 +346,19 @@ def test_django_formset_extra_fields():
                 ],
             },
         )
+
+
+def test_django_formset_excluded_field_is_invalid():
+    with pytest.raises(AttributeError, match=r'DjangoFieldsSchema\.formset is invalid: fields not found'):
+        DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id', 'title', 'allowed_ips'],
+            exclude_fields=['allowed_ips'],
+            formset={
+                'fields': [
+                    'id',
+                    'title',
+                    'allowed_ips',
+                ],
+            },
+        )

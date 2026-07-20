@@ -8,8 +8,7 @@ from brilliance_admin.auth import UserABC
 from brilliance_admin.integrations.django import DjangoAdmin
 from brilliance_admin.schema.table.admin_action import ActionData
 from brilliance_admin.translations import TranslateText as _
-from example.sections.django_models import (
-    DjangoAnotherExample, DjangoExample, DjangoExampleFactory, DjangoUser, DjangoUserFactory)
+from example.sections.django_models import DjangoExample, DjangoExampleFactory, DjangoUserFactory
 
 
 class DjangoExampleCategory(DjangoAdmin):

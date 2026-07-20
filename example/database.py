@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from copy import deepcopy
 
 from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -49,9 +50,10 @@ async def lifespan(app):
 
     await models.FeeTypeFactory.create_batch_async(5)
     await models.CurrencyFactory.create_batch_async(5)
-    await models.MerchantFactory.create_batch_async(10)
     await models.TerminalFactory.create_batch_async(15)
     await models.UserFactory.create_batch_async(27)
     await models.UserSessionFactory.create_batch_async(50)
+    await models.MerchantFactory.create_batch_async(9)
+    await models.MerchantFactory.create_async(provider_settings=deepcopy(models.BIG_JSON))
 
     yield

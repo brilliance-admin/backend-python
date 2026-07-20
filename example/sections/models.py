@@ -16,6 +16,68 @@ from brilliance_admin.translations import TranslateText as _
 from example.database import async_sessionmaker_
 from example.utils import SQLAlchemyFactoryBase
 
+BIG_JSON = {
+    "additional_data": {
+        "browser_info": {
+            "fp_ip": "185.48.250.133",
+            "parent": "https://payment-form.dev.payplanet.tech/?tx=52e6c177-897d-49d7-a6c4-99b7416aa055",
+            "adblock": False,
+            "referer": "https://payment-form.dev.payplanet.tech/",
+            "audio_fp": 0.1,
+            "js_fonts": "Qanelas, Qanelas-Regula, monospace, sans-serif, serif",
+            "location": "https://payment-form.dev.payplanet.tech/?tx=52e6c177-897d-49d7-a6c4-99b7416aa055",
+            "cpu_class": "Win32",
+            "browser_ip": "185.48.250.133",
+            "browser_tz": -180,
+            "indexed_db": 1,
+            "resolution": [
+                1707,
+                1067
+            ],
+            "has_lied_os": True,
+            "webgl_vendor": "WebKit",
+            "window_width": "480",
+            "device_memory": 16,
+            "local_storage": 1,
+            "open_database": 0,
+            "touch_support": [
+                "0",
+                "false",
+                "false"
+            ],
+            "window_height": "940",
+            "device_channel": "02",
+            "regular_plugins": [
+                "PDF Viewer",
+                "Chrome PDF Viewer",
+                "Chromium PDF Viewer",
+                "Microsoft Edge PDF Viewer",
+                "WebKit built-in PDF"
+            ],
+            "session_storage": 1,
+            "timezone_offset": -180,
+            "browser_language": "ru",
+            "fingerprint_hash": "fc7aa1ae627179e2e2825baad415ba1eff9c36e5f6ca1356ffeb7abf519c5504",
+            "has_lied_browser": True,
+            "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 YaBrowser/26.6.0.0 Safari/537.36",
+            "has_lied_languages": False,
+            "navigator_platform": "Win32",
+            "browser_color_depth": 30,
+            "has_lied_resolution": True,
+            "java_script_enabled": True,
+            "available_resolution": [
+                1707,
+                1067
+            ],
+            "browser_java_enabled": False,
+            "browser_screen_width": 1707,
+            "hardware_concurrency": 16,
+            "browser_accept_header": "accept_header",
+            "browser_screen_height": 1067
+        }
+    }
+}
+
 
 class ModelBase(DeclarativeBase):
     pass

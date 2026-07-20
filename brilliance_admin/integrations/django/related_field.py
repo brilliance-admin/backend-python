@@ -17,6 +17,9 @@ MANY_RELATED_MISSING = 'Many Related field "{rel_name}" is missing on record "{r
 AUTOCOMPLETE_REQUIRES_MODEL = (
     'DjangoRelatedField.autocomplete {class_name} requires extra["model"]'
 )
+RELATED_LOAD_ERROR = (
+    "Failed to load related field \"{field}\" for model \"{model}\" pk={pk}: {error}"
+)
 
 
 class DjangoRelatedField(RelatedField):
@@ -124,7 +127,19 @@ class DjangoRelatedField(RelatedField):
                 for obj in related
             ]
 
-        related = await sync_to_async(getattr, thread_sensitive=True)(record, self.rel_name, None)
+        try:
+            related = await sync_to_async(getattr, thread_sensitive=True)(record, self.rel_name, None)
+        except Exception as e:
+            msg = RELATED_LOAD_ERROR.format(
+                field=self.rel_name,
+                model=type(record).__name__,
+                pk=getattr(record, 'pk', None),
+                error=e,
+            )
+            raise AdminAPIException(
+                APIError(message=msg, code='field_error'),
+                status_code=500,
+            ) from e
 
         if related is None:
             return None

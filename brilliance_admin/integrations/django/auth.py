@@ -46,11 +46,11 @@ class DjangoJWTAdminAuthentication(AdminAuthentication):
             raise ValueError(f"user_model is missing required columns: {', '.join(sorted(missing))}")
 
     async def login(self, data: AuthData, debug: bool = False) -> AuthResult:
-        user = await self.user_model.objects.filter(username=data.username).afirst()
-        if not user:
-            raise AdminAPIException(APIError(code="user_not_found"), status_code=401)
-
         try:
+            user = await self.user_model.objects.filter(username=data.username).afirst()
+            if not user:
+                raise AdminAPIException(APIError(code="user_not_found"), status_code=401)
+
             if self.password_validator:
                 if inspect.iscoroutinefunction(self.password_validator):
                     valid_password = await self.password_validator(user, data.password)

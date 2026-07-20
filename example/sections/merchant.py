@@ -18,6 +18,15 @@ class MerchantFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
         'created_at',
         'terminals',
     ]
+    list_display = [
+        'id',
+        'user_id',
+        'title',
+        'tx_actions',
+        'description',
+        'created_at',
+        'terminals',
+    ]
 
     title = schema.StringField(multilined=True, required=True)
     description = schema.StringField(tinymce=True, help_text='help text', required=True)

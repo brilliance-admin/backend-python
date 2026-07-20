@@ -365,6 +365,16 @@ class DurationField(TableField):
 class JSONField(TableField):
     _type = 'json'
 
+    max_height: int | None = None
+
+    def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
+
+        if self.max_height is not None:
+            schema.max_height = self.max_height
+
+        return schema
+
     async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
         value = await super().deserialize_field(value, action, extra, *args, **kwargs)
 

@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 from fastapi.testclient import TestClient
 
+from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.integrations.django import DjangoFieldsSchema
 from brilliance_admin.integrations.django.inline_field import DjangoInlineField
@@ -201,6 +202,7 @@ FORM_SCHEMA_DATA = {
                 'payload': {
                     'header': {},
                     'label': 'Payload',
+                    'max_height': 400,
                     'read_only': False,
                     'required': False,
                     'type': 'json',
@@ -266,6 +268,7 @@ FORM_SCHEMA_DATA = {
             'list_display': [
                 'id',
                 'owner',
+                'payload',
                 'title',
                 'allowed_ips',
                 'description',
@@ -275,7 +278,6 @@ FORM_SCHEMA_DATA = {
                 'uuid',
                 'price',
                 'rating',
-                'payload',
                 'event_date',
                 'event_time',
                 'ttl',
@@ -298,6 +300,7 @@ async def test_generate_category_schema_django(language_context):
         model=DjangoExample,
         table_schema=DjangoFieldsSchema(
             model=DjangoExample,
+            payload=schema.JSONField(max_height=400),
             another_examples=DjangoInlineField(
                 many=True,
                 table_schema=DjangoFieldsSchema(

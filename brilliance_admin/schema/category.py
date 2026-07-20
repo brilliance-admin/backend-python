@@ -40,6 +40,7 @@ class FieldSchemaData(DataclassBase):
 
     preview_max_height: int | None = None
     preview_max_width: int | None = None
+    max_height: int | None = None
 
     # StringField
     multilined: bool | None = None

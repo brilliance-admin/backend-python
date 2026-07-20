@@ -89,6 +89,23 @@ async def test_login_valid_password_sync():
 
 
 @pytest.mark.asyncio
+async def test_login_valid_password_sync_django_check_password(monkeypatch):
+    monkeypatch.setattr(DjangoUser, 'check_password', lambda self, password: self.password == password, raising=False)
+
+    auth = DjangoJWTAdminAuthentication(
+        secret='123',
+        user_model=DjangoUser,
+        password_validator=lambda user, password: user.check_password(password),
+    )
+    await DjangoUserFactory(username='admin', password='correct_password', is_admin=True)
+
+    result = await auth.login(data=AuthData(username='admin', password='correct_password'))
+
+    assert result.token is not None
+    assert result.user.username == 'admin'
+
+
+@pytest.mark.asyncio
 async def test_login_valid_password_async():
     async def async_password_validator(user, password):
         return password == 'correct_password'

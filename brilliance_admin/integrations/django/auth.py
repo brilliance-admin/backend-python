@@ -1,5 +1,7 @@
 import inspect
 
+from asgiref.sync import sync_to_async
+
 from brilliance_admin.auth import AdminAuthentication, AuthData, AuthResult, UserResult
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.utils import get_logger
@@ -53,7 +55,7 @@ class DjangoJWTAdminAuthentication(AdminAuthentication):
                 if inspect.iscoroutinefunction(self.password_validator):
                     valid_password = await self.password_validator(user, data.password)
                 else:
-                    valid_password = self.password_validator(user, data.password)
+                    valid_password = await sync_to_async(self.password_validator)(user, data.password)
 
                 if not valid_password:
                     raise AdminAPIException(APIError(code="user_not_found"), status_code=401)

@@ -10,6 +10,7 @@ from brilliance_admin.utils import DataclassBase
 class TableListResult(DataclassBase):
     data: List[dict]
     total_count: int
+    debug_info: dict | None = None
 
 
 class AutocompleteData(BaseModel):

@@ -18,7 +18,7 @@ class DjangoAdminRetrieveMixin:
         if not self.has_retrieve:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
-        queryset = self.model.objects.filter(**{self.pk_name: pk})
+        queryset = self.get_queryset().filter(**{self.pk_name: pk})
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
         record = await queryset.afirst()
         if record is None:

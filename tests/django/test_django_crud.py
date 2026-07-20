@@ -14,6 +14,9 @@ from example.sections.django_models import DjangoExample, DjangoExampleFactory, 
 class DjangoExampleCategory(DjangoAdmin):
     model = DjangoExample
 
+    def get_queryset(self):
+        return super().get_queryset().select_related('owner')
+
 
 @pytest.mark.asyncio
 async def test_create(language_context):
@@ -184,6 +187,7 @@ async def test_list(language_context):
             },
         ],
         total_count=2,
+        debug_info={'db_query_count': 2},
     )
 
 

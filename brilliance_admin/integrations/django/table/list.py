@@ -1,5 +1,9 @@
 import re
 
+from asgiref.sync import sync_to_async
+from django.db import connections
+from django.test.utils import CaptureQueriesContext
+
 from brilliance_admin import schema
 from brilliance_admin.exceptions import FieldError
 from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
@@ -14,6 +18,14 @@ ORDERING_NOT_ALLOWED = (
 
 class DjangoAdminListMixin:
     table_filters: DjangoFieldsSchema | None
+
+    @staticmethod
+    def _load_page_with_query_count(queryset, offset, limit):
+        connection = connections[queryset.db]
+        with CaptureQueriesContext(connection) as ctx:
+            total_count = queryset.count()
+            records = list(queryset[offset:offset + limit])
+        return total_count, records, len(ctx)
 
     @staticmethod
     def like_to_regex(value: str) -> str:
@@ -120,7 +132,7 @@ class DjangoAdminListMixin:
         parent_category=None,
         parent_pk=None,
     ):
-        queryset = self.model.objects.all()
+        queryset = self.get_queryset()
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
         queryset = await self.apply_filters(queryset, list_data)
         queryset = self.apply_search(queryset, list_data)
@@ -130,8 +142,16 @@ class DjangoAdminListMixin:
         limit = min(150, max(1, list_data.limit or 25))
         offset = (page - 1) * limit
 
-        total_count = await queryset.acount()
-        records = [record async for record in queryset[offset:offset + limit]]
+        debug_info = None
+        if debug:
+            total_count, records, db_query_count = await sync_to_async(
+                self._load_page_with_query_count,
+                thread_sensitive=True,
+            )(queryset, offset, limit)
+            debug_info = {"db_query_count": db_query_count}
+        else:
+            total_count = await queryset.acount()
+            records = [record async for record in queryset[offset:offset + limit]]
 
         data = []
         for record in records:
@@ -141,4 +161,4 @@ class DjangoAdminListMixin:
             )
             data.append(line)
 
-        return schema.TableListResult(data=data, total_count=total_count)
+        return schema.TableListResult(data=data, total_count=total_count, debug_info=debug_info)

@@ -180,3 +180,6 @@ class DjangoAdminBase(CategoryTable):
             extra['model'] = form_schema.model
 
         return extra
+
+    def get_queryset(self):
+        return self.model.objects.all()

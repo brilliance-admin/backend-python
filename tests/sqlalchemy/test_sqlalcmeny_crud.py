@@ -140,7 +140,10 @@ async def test_create_bad_fk(postgres_sessionmaker, language_context):
     expected = {
         'code': 'related_not_found',
         'field_errors': None,
-        'message': 'Ошибка при обновлении связей поля merchant_id: запись Merchant с ключем pk=100 не найдена. Возможно запись более недоступна.',
+        'message': (
+            'Ошибка при обновлении связей поля merchant_id: запись Merchant '
+            'с ключем pk=100 не найдена. Возможно запись более недоступна.'
+        ),
     }
     context = {'language_context': language_context}
     assert e.value.get_error().model_dump(context=context) == expected
@@ -194,7 +197,10 @@ async def test_create_bad_inline_fk_rollbacks_all(postgres_sessionmaker, languag
     assert e.value.get_error().model_dump(context=context) == {
         'code': 'related_not_found',
         'field_errors': None,
-        'message': 'Ошибка при обновлении связей поля fee_type_id: запись FeeType с ключем pk=999999 не найдена. Возможно запись более недоступна.',
+        'message': (
+            'Ошибка при обновлении связей поля fee_type_id: запись FeeType '
+            'с ключем pk=999999 не найдена. Возможно запись более недоступна.'
+        ),
     }
 
     async with postgres_sessionmaker() as session:

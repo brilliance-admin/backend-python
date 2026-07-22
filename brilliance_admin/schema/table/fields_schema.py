@@ -370,9 +370,14 @@ class FieldsSchema:
 
         return fields_schema
 
-    async def serialize(self, data: Any, extra: dict) -> dict:
+    async def serialize(self, data: Any, extra: dict, field_slugs: list[str] | None = None) -> dict:
         result = {}
-        for field_slug, field in self.get_fields().items():
+        slugs = field_slugs or list(self.get_fields().keys())
+        for field_slug in slugs:
+            field = self.get_field(field_slug)
+            if field is None:
+                msg = f'{type(self).__name__}: field "{field_slug}" not found for serialization'
+                raise AttributeError(msg)
             value = data.get(field_slug)
 
             try:

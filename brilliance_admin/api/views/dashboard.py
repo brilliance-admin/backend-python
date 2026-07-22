@@ -25,7 +25,13 @@ async def dashboard_data(
         parent_pk: Any | None = None,
 ) -> DashboardContainer:
     schema: AdminSchema = request.app.state.schema
-    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryDashboard)
+    schema_category, user, parent_category = await get_category(
+        request,
+        group,
+        category,
+        subcategory,
+        check_type=CategoryDashboard,
+    )
 
     result: DashboardContainer = await schema_category.get_data(
         data,

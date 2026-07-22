@@ -21,15 +21,21 @@ async def get_category(request, group: str, category: str, subcategory: str | No
         raise HTTPException(status_code=404, detail="Category not found")
 
     if check_type and not issubclass(schema_category.__class__, check_type):
-        raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not a {check_type.__name__}")
+        detail = f"Category {group}.{category} is not a {check_type.__name__}"
+        raise HTTPException(status_code=404, detail=detail)
 
     if subcategory:
         schema_subcategory = schema_category.get_subcategory(subcategory)
         if not schema_subcategory:
-            raise HTTPException(status_code=404, detail=f"Category {group}.{category} subcategory \"{subcategory}\" not found")
+            detail = f'Category {group}.{category} subcategory "{subcategory}" not found'
+            raise HTTPException(status_code=404, detail=detail)
 
         if check_type and not issubclass(schema_category.__class__, check_type):
-            raise HTTPException(status_code=404, detail=f"Category {group}.{category} subcategory \"{subcategory}\" is not a {check_type.__name__}")
+            detail = (
+                f'Category {group}.{category} subcategory "{subcategory}" '
+                f'is not a {check_type.__name__}'
+            )
+            raise HTTPException(status_code=404, detail=detail)
         return schema_subcategory, user, schema_category
 
     return schema_category, user, None

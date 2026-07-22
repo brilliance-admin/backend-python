@@ -5,7 +5,7 @@ import pytest
 
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
-from brilliance_admin.integrations.django import DjangoAdmin
+from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
 from brilliance_admin.schema.table.admin_action import ActionData
 from brilliance_admin.translations import TranslateText as _
 from example.sections.django_models import DjangoExample, DjangoExampleFactory, DjangoUserFactory
@@ -13,6 +13,17 @@ from example.sections.django_models import DjangoExample, DjangoExampleFactory, 
 
 class DjangoExampleCategory(DjangoAdmin):
     model = DjangoExample
+
+    def get_queryset(self):
+        return super().get_queryset().select_related('owner')
+
+
+class DjangoExampleCompactCategory(DjangoAdmin):
+    model = DjangoExample
+    table_schema = DjangoFieldsSchema(
+        model=DjangoExample,
+        list_display=['id', 'owner', 'title'],
+    )
 
     def get_queryset(self):
         return super().get_queryset().select_related('owner')
@@ -208,3 +219,43 @@ async def test_delete(language_context):
 
     assert result.message == _('deleted_successfully')
     assert await DjangoExample.objects.filter(pk=record.pk).aexists() is False
+
+
+@pytest.mark.asyncio
+async def test_list_uses_list_display_fields_only(language_context):
+    category = DjangoExampleCompactCategory()
+    user = UserABC(username='test')
+
+    first = await DjangoExampleFactory(title='first', description='first description')
+    second = await DjangoExampleFactory(title='second', description='second description')
+
+    result = await category.get_list(
+        list_data=schema.ListData(),
+        user=user,
+        language_context=language_context,
+        debug=True,
+    )
+
+    assert result == schema.TableListResult(
+        data=[
+            {
+                'id': second.pk,
+                'owner': {'key': second.owner.pk, 'title': mock.ANY},
+                'title': second.title,
+            },
+            {
+                'id': first.pk,
+                'owner': {'key': first.owner.pk, 'title': mock.ANY},
+                'title': first.title,
+            },
+        ],
+        total_count=2,
+        debug_info={'db_query_count': 2},
+    )
+
+    queryset = category.optimize_list_queryset(category.get_queryset())
+    record = await queryset.aget(pk=first.pk)
+    deferred_fields = record.get_deferred_fields()
+
+    assert 'description' in deferred_fields
+    assert 'payload' in deferred_fields

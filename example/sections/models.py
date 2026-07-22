@@ -59,7 +59,10 @@ BIG_JSON = {
             "browser_language": "ru",
             "fingerprint_hash": "fc7aa1ae627179e2e2825baad415ba1eff9c36e5f6ca1356ffeb7abf519c5504",
             "has_lied_browser": True,
-            "browser_user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 YaBrowser/26.6.0.0 Safari/537.36",
+            "browser_user_agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                "(KHTML, like Gecko) Chrome/148.0.0.0 YaBrowser/26.6.0.0 Safari/537.36"
+            ),
             "has_lied_languages": False,
             "navigator_platform": "Win32",
             "browser_color_depth": 30,

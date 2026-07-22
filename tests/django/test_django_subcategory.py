@@ -5,7 +5,11 @@ from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
 from example.sections.django_models import (
-    DjangoAnotherExample, DjangoAnotherExampleFactory, DjangoExample, DjangoExampleFactory, DjangoUser)
+    DjangoAnotherExample,
+    DjangoAnotherExampleFactory,
+    DjangoExample,
+    DjangoExampleFactory,
+)
 
 
 class DjangoExampleAdmin(DjangoAdmin):
@@ -168,7 +172,12 @@ def test_subcategory_schema_removes_reverse_fk(language_context):
     user = UserABC(username='test')
 
     example_schema = example_category.generate_category_schema(user, language_context)
-    subcategory_schema = example_schema.table_info.subcategories['djangonotherexample'] if 'djangonotherexample' in example_schema.table_info.subcategories else example_schema.table_info.subcategories['djangoanotherexample']
+    subcategories = example_schema.table_info.subcategories
+    subcategory_schema = (
+        subcategories['djangonotherexample']
+        if 'djangonotherexample' in subcategories
+        else subcategories['djangoanotherexample']
+    )
     subcategory_fields = subcategory_schema['table_info']['table_schema']['fields']
 
     assert 'example' not in subcategory_fields

@@ -73,7 +73,13 @@ class IntegerField(TableField):
     precision: int | None = None
     scale: int | None = None
 
-    def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
 
         if self.max_value is not None:
@@ -118,7 +124,13 @@ class DecimalField(TableField):
     precision: int | None = None
     scale: int | None = None
 
-    def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
 
         if self.max_value is not None:
@@ -183,7 +195,13 @@ class StringField(TableField):
 
     choices: Any | None = None
 
-    def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
 
         schema.multilined = self.multilined
@@ -297,7 +315,13 @@ class DateTimeField(TableField):
     include_date: bool | None = True
     include_time: bool | None = True
 
-    def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
 
         schema.range = self.range
@@ -369,7 +393,13 @@ class JSONField(TableField):
 
     max_height: int | None = None
 
-    def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
 
         if self.max_height is not None:
@@ -395,7 +425,13 @@ class ArrayField(TableField):
 
     array_type: str | None
 
-    def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
 
         schema.array_type = self.array_type
@@ -426,7 +462,13 @@ class ImageField(TableField):
     preview_max_height: int = 100
     preview_max_width: int = 100
 
-    def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
 
         if self.preview_max_height is not None:
@@ -484,7 +526,13 @@ class ChoiceField(TableField):
 
         return next((c for c in choices if c.get('value') == value), None)
 
-    def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
 
         schema.choices = self.generate_choices()
@@ -539,7 +587,13 @@ class RelatedField(TableField):
     dual_list: bool = False
     filter_fn: Any | None = None
 
-    def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
         schema.many = self.many
         schema.dual_list = self.dual_list
@@ -579,7 +633,13 @@ class InlineField(TableField):
     many: bool = False
     table_schema: Any = None
 
-    def generate_field_schema(self, user, field_slug, language_context: LanguageContext, schema_type: SchemaType = SchemaType.TABLE) -> FieldSchemaData:
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
         schema.many = self.many
 

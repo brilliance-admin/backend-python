@@ -136,16 +136,21 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             )
             raise AttributeError(msg)
 
-    async def serialize(self, record, extra: dict, *args, **kwargs) -> dict:
+    async def serialize(self, record, extra: dict, field_slugs: list[str] | None = None, *args, **kwargs) -> dict:
         record_data = {}
+        slugs = field_slugs or list(self.get_fields().keys())
 
-        for slug, field in self.get_fields().items():
+        for slug in slugs:
+            field = self.get_field(slug)
+            if field is None:
+                msg = f'{type(self).__name__}: field "{slug}" not found for serialization'
+                raise AttributeError(msg)
             if field._type == 'related' and not field.many:
                 record_data[slug] = getattr(record, f'{slug}_id', None)
                 continue
             record_data[slug] = getattr(record, slug, None)
 
-        return await super().serialize(record_data, extra, *args, **kwargs)
+        return await super().serialize(record_data, extra, field_slugs=slugs, *args, **kwargs)
 
     def generate_related_fields(self):
         from django.db import models

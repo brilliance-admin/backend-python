@@ -264,11 +264,17 @@ class CategoryTable(BaseCategory):
         if data.inline_field_slug:
             inline_field = form_schema.get_field(data.inline_field_slug)
             if not inline_field:
-                msg = f'Autocomplete: inline field "{data.inline_field_slug}" is not found inside {type(form_schema).__name__}'
+                msg = (
+                    f'Autocomplete: inline field "{data.inline_field_slug}" '
+                    f'is not found inside {type(form_schema).__name__}'
+                )
                 raise AdminAPIException(APIError(message=msg), status_code=500)
 
             if not issubclass(type(inline_field), InlineField):
-                msg = f'Autocomplete: inline field "{data.inline_field_slug}" is not subclass of InlineField: {type(inline_field).__name__}'
+                msg = (
+                    f'Autocomplete: inline field "{data.inline_field_slug}" '
+                    f'is not subclass of InlineField: {type(inline_field).__name__}'
+                )
                 raise AdminAPIException(APIError(message=msg), status_code=500)
 
             form_schema = inline_field.table_schema

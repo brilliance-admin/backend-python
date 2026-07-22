@@ -29,8 +29,12 @@ class DjangoAdminUpdate:
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
         record = await queryset.afirst()
         if record is None:
+            error = APIError(
+                message=_('errors.record_not_found') % {'pk_name': self.pk_name, 'pk': pk},
+                code='record_not_found',
+            )
             raise AdminAPIException(
-                APIError(message=_('errors.record_not_found') % {'pk_name': self.pk_name, 'pk': pk}, code='record_not_found'),
+                error,
                 status_code=400,
             )
         await self.table_schema.update(record, user, data)

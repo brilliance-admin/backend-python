@@ -258,7 +258,14 @@ class PaymentsAdmin(schema.CategoryTable):
                     'id': 1,
                     'reason': 'Reason title',
                     'manager': {'key': 1, 'title': 'Manager name'},
-                    'errors': ['first', 'second', {'code': "provider_error", 'description': "Error from the provider. Please contact support." }],
+                    'errors': [
+                        'first',
+                        'second',
+                        {
+                            'code': "provider_error",
+                            'description': "Error from the provider. Please contact support.",
+                        },
+                    ],
                     'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
                 },
                 {

@@ -19,6 +19,50 @@ ORDERING_NOT_ALLOWED = (
 class DjangoAdminListMixin:
     table_filters: DjangoFieldsSchema | None
 
+    def get_list_field_slugs(self) -> list[str]:
+        return list(self.table_schema.list_display or self.table_schema.get_fields().keys())
+
+    def optimize_list_queryset(self, queryset):
+        model = queryset.model
+        model_field_names = {field.name for field in model._meta.fields}
+        model_many_to_many_names = {field.name for field in model._meta.many_to_many}
+        only_fields = {model._meta.pk.name}
+        select_related_fields = set()
+        prefetch_related_fields = set()
+
+        for field_slug in self.get_list_field_slugs():
+            field = self.table_schema.get_field(field_slug)
+            if field is None:
+                continue
+
+            if isinstance(field, RelatedField):
+                if field.many:
+                    prefetch_related_fields.add(field.rel_name)
+                    continue
+
+                if field_slug not in model_field_names:
+                    continue
+
+                select_related_fields.add(field.rel_name)
+                only_fields.add(field_slug)
+
+                target_model = model._meta.get_field(field_slug).related_model
+                if target_model is not None:
+                    for target_field in target_model._meta.fields:
+                        only_fields.add(f'{field_slug}__{target_field.name}')
+                continue
+
+            if field_slug in model_field_names or field_slug in model_many_to_many_names:
+                only_fields.add(field_slug)
+
+        if select_related_fields:
+            queryset = queryset.select_related(*sorted(select_related_fields))
+
+        if prefetch_related_fields:
+            queryset = queryset.prefetch_related(*sorted(prefetch_related_fields))
+
+        return queryset.only(*sorted(only_fields))
+
     @staticmethod
     def _load_page_with_query_count(queryset, offset, limit):
         connection = connections[queryset.db]
@@ -137,10 +181,12 @@ class DjangoAdminListMixin:
         queryset = await self.apply_filters(queryset, list_data)
         queryset = self.apply_search(queryset, list_data)
         queryset = self.apply_ordering(queryset, list_data)
+        queryset = self.optimize_list_queryset(queryset)
 
         page = max(1, list_data.page or 1)
         limit = min(150, max(1, list_data.limit or 25))
         offset = (page - 1) * limit
+        list_field_slugs = self.get_list_field_slugs()
 
         debug_info = None
         if debug:
@@ -158,6 +204,7 @@ class DjangoAdminListMixin:
             line = await self.table_schema.serialize(
                 record,
                 extra={"record": record, "user": user, "debug": debug},
+                field_slugs=list_field_slugs,
             )
             data.append(line)
 

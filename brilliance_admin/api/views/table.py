@@ -30,7 +30,13 @@ async def table_list(
 ) -> TableListResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryTable)
+    schema_category, user, parent_category = await get_category(
+        request,
+        group,
+        category,
+        subcategory,
+        check_type=CategoryTable,
+    )
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)
@@ -66,7 +72,13 @@ async def table_retrieve(
 ) -> RetrieveResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryTable)
+    schema_category, user, parent_category = await get_category(
+        request,
+        group,
+        category,
+        subcategory,
+        check_type=CategoryTable,
+    )
     if not schema_category.has_retrieve:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for retrive")
 
@@ -102,7 +114,13 @@ async def table_create(
 ) -> CreateResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryTable)
+    schema_category, user, parent_category = await get_category(
+        request,
+        group,
+        category,
+        subcategory,
+        check_type=CategoryTable,
+    )
     if not schema_category.has_create:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for create")
 
@@ -139,7 +157,13 @@ async def table_update(
 ) -> UpdateResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryTable)
+    schema_category, user, parent_category = await get_category(
+        request,
+        group,
+        category,
+        subcategory,
+        check_type=CategoryTable,
+    )
     if not schema_category.has_update:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for update")
 
@@ -178,7 +202,13 @@ async def table_action(
 ) -> ActionResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user, parent_category = await get_category(request, group, category, subcategory, check_type=CategoryTable)
+    schema_category, user, parent_category = await get_category(
+        request,
+        group,
+        category,
+        subcategory,
+        check_type=CategoryTable,
+    )
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)

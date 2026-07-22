@@ -46,6 +46,7 @@ class FieldSchemaData(DataclassBase):
     multilined: bool | None = None
     ckeditor: bool | None = None
     tinymce: bool | None = None
+    allow_html: bool | None = None
 
     # ArrayField
     array_type: str | None = None

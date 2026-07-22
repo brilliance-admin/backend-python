@@ -175,6 +175,7 @@ class StringField(TableField):
     multilined: bool | None = None
     ckeditor: bool | None = None
     tinymce: bool | None = None
+    allow_html: bool | None = None
 
     min_length: int | None = None
     max_length: int | None = None
@@ -188,6 +189,7 @@ class StringField(TableField):
         schema.multilined = self.multilined
         schema.ckeditor = self.ckeditor
         schema.tinymce = self.tinymce
+        schema.allow_html = self.allow_html
         schema.password = self.password
 
         if self.min_length is not None:

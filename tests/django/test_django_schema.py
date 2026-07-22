@@ -143,6 +143,7 @@ FORM_SCHEMA_DATA = {
                     'type': 'datetime',
                 },
                 'description': {
+                    'allow_html': True,
                     'header': {},
                     'label': 'Description',
                     'max_length': 255,
@@ -300,6 +301,9 @@ async def test_generate_category_schema_django(language_context):
         model=DjangoExample,
         table_schema=DjangoFieldsSchema(
             model=DjangoExample,
+            extra_kwargs={
+                'description': {'allow_html': True},
+            },
             payload=schema.JSONField(max_height=400),
             another_examples=DjangoInlineField(
                 many=True,

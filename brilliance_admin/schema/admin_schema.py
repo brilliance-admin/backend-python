@@ -57,6 +57,8 @@ class AdminSchema:
     categories: List[BaseCategory]
     auth: Any
 
+    api_timeout_ms: int = 1000 * 5
+
     main_page: str | None = None
 
     title: SupportsStr | None = 'Admin'
@@ -219,7 +221,7 @@ class AdminSchema:
             'backend_prefix': backend_prefix,
             'static_prefix': static_prefix,
             'version': importlib.metadata.version('brilliance-admin'),
-            'api_timeout_ms': 1000 * 5,
+            'api_timeout_ms': self.api_timeout_ms,
             'logo_image': logo_image,
             'default_theme': self.default_theme,
             'custom_themes': self.custom_themes,

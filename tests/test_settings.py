@@ -28,6 +28,7 @@ async def test_index_context_data():
     request = Request(scope=SCOPE)
     # admin_schema.backend_prefix = 'test'
     admin_schema.custom_themes = []
+    admin_schema.api_timeout_ms = 5000
     result = await admin_schema.get_index_context_data(request)
     version = importlib.metadata.version('brilliance-admin')
     assert result == {

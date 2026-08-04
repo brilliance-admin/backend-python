@@ -57,7 +57,7 @@ async def test_delete_payment(mocker):
     )
     response = client.post(url, json=request_data.model_dump(mode='json'))
     assert response.status_code == 200, response.content.decode()
-    assert response.json() == {"message": "The entries were successfully deleted.", "persistent_message": None}
+    assert response.json() == {"message": None, "persistent_message": None}
 
 
 @pytest.mark.asyncio

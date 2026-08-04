@@ -42,5 +42,5 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
             new_password=schema.StringField(label=_('password.new_password'), min_length=6, password=True)
         ),
     )
-    async def change_password(self, action_data: ActionData):
+    async def change_password(self, action_data: ActionData, **kwargs):
         return ActionResult(_('password.password_changed'))

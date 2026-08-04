@@ -200,7 +200,10 @@ class CategoryTable(BaseCategory):
                 )
                 action_data.form_data = deserialized_data
 
-            result: ActionResult = await action_fn(action_data=action_data)
+            action_data.user = user
+            result: ActionResult | None = await action_fn(action_data=action_data, user=user)
+            if result is None:
+                result = ActionResult()
 
         except ValidationError as e:
             raise AdminAPIException(

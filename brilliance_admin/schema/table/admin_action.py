@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, validate_call
 from pydantic.dataclasses import dataclass
 
+from brilliance_admin.auth import UserABC
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.translations import DataclassBase
 from brilliance_admin.utils import SupportsStr, humanize_field_name
@@ -12,6 +13,7 @@ from brilliance_admin.utils import SupportsStr, humanize_field_name
 class ActionData(BaseModel):
     pks: List[Any] = Field(default_factory=list)
     form_data: dict = Field(default_factory=dict)
+    user: UserABC | None = Field(default=None, exclude=True)
 
     search: str | None = None
     filters: Dict[str, Any] = Field(default_factory=dict)

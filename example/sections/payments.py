@@ -189,7 +189,7 @@ class PaymentsAdmin(schema.CategoryTable):
         form_schema=CreatePaymentSchema(),
         allow_empty_selection=True,
     )
-    async def create_payment(self, action_data: ActionData):
+    async def create_payment(self, action_data: ActionData, **kwargs):
         await asyncio.sleep(1)
         fake = Faker()
         msg = _('payment_create_result') % {
@@ -206,12 +206,11 @@ class PaymentsAdmin(schema.CategoryTable):
         icon='mdi-delete-outline',
         variant='outlined',
     )
-    async def delete(self, action_data: ActionData):
+    async def delete(self, action_data: ActionData, **kwargs):
         await asyncio.sleep(1)
-        return ActionResult(_('deleted_successfully'))
 
     @admin_action(title=_('action_with_exception'), allow_empty_selection=True, icon='mdi-alert-circle-outline')
-    async def action_with_exception(self, action_data: ActionData):
+    async def action_with_exception(self, action_data: ActionData, **kwargs):
         await asyncio.sleep(0.5)
         raise Exception(_('exception_example'))
 
@@ -223,7 +222,7 @@ class PaymentsAdmin(schema.CategoryTable):
             amount=schema.IntegerField(label=_('amount'), required=True),
         ),
     )
-    async def change_amount(self, action_data: ActionData):
+    async def change_amount(self, action_data: ActionData, **kwargs):
         await asyncio.sleep(0.2)
         return ActionResult(f'Amount changed to {action_data.form_data["amount"]}')
 
@@ -235,7 +234,7 @@ class PaymentsAdmin(schema.CategoryTable):
             status=schema.ChoiceField(label='Status', required=True, choices=TerminalStatuses),
         ),
     )
-    async def update_status(self, action_data: ActionData):
+    async def update_status(self, action_data: ActionData, **kwargs):
         await asyncio.sleep(0.2)
         return ActionResult(f'Status updated to {action_data.form_data["status"]}')
 

@@ -19,12 +19,12 @@ async def test_exception_handle(mocker):
     request_data = ActionData()
     response = client.post(url, json=request_data.model_dump(mode='json'))
     assert response.status_code == 500, response.content.decode()
-    response_data = {
-        'code': 'user_action_error',
-        'field_errors': None,
-        'message': 'Exception example.',
-    }
-    assert response.json() == response_data
+    response_data = response.json()
+    assert response_data['code'] == 'user_action_error'
+    assert response_data['field_errors'] is None
+    assert response_data['message'].startswith('<b>Exception example</b>:')
+    assert 'action_with_exception' in response_data['message']
+    assert 'traceback.format_stack()' in response_data['message']
 
 
 @pytest.mark.asyncio

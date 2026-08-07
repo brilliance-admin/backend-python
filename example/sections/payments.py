@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import traceback
 import uuid
 from typing import Any
 
@@ -212,7 +213,15 @@ class PaymentsAdmin(schema.CategoryTable):
     @admin_action(title=_('action_with_exception'), allow_empty_selection=True, icon='mdi-alert-circle-outline')
     async def action_with_exception(self, action_data: ActionData, **kwargs):
         await asyncio.sleep(0.5)
-        raise Exception(_('exception_example'))
+        # Try for traceback
+        try:
+            raise RuntimeError('test')
+        except Exception as e:
+            raise Exception(
+                _('exception_example') % {
+                    'traceback': ''.join(traceback.format_stack()),
+                }
+            ) from e
 
     @admin_action(
         title='Change amount',

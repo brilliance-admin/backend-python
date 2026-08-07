@@ -112,6 +112,89 @@ async def test_list_search(language_context):
 
 
 @pytest.mark.asyncio
+async def test_list_search_exact_operator(language_context):
+    category = DjangoAdmin(
+        search_fields=['title'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    exact = await DjangoExampleFactory(title='Test terminal')
+    await DjangoExampleFactory(title='Test terminal second')
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='"Test terminal"'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': exact.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
+async def test_list_search_sequence_operator(language_context):
+    category = DjangoAdmin(
+        search_fields=['title'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    match = await DjangoExampleFactory(title='Test terminal second')
+    await DjangoExampleFactory(title='Test terminal')
+    await DjangoExampleFactory(title='Test second terminal')
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='Test%second'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': match.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
+async def test_list_search_single_character_operator(language_context):
+    category = DjangoAdmin(
+        search_fields=['title'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    match = await DjangoExampleFactory(title='A1CD')
+    await DjangoExampleFactory(title='A12CD')
+    await DjangoExampleFactory(title='ACD')
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='A_CD'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': match.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
 async def test_list_search_related_field(language_context):
     category = DjangoAdmin(
         search_fields=['owner__username'],

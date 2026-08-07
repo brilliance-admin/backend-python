@@ -83,6 +83,13 @@ class DjangoAdminListMixin:
                 parts.append(re.escape(char))
         return '^' + ''.join(parts) + '$'
 
+    @staticmethod
+    def search_to_regex(value: str) -> str:
+        if len(value) >= 2 and value.startswith('"') and value.endswith('"'):
+            return '^' + re.escape(value[1:-1]) + '$'
+
+        return DjangoAdminListMixin.like_to_regex(value)
+
     def apply_ordering(self, queryset, list_data):
         ordering = list_data.ordering or self.default_ordering
         if not ordering:
@@ -105,7 +112,7 @@ class DjangoAdminListMixin:
         if not self.search_fields or not list_data.search:
             return queryset
 
-        regex = self.like_to_regex(list_data.search)
+        regex = self.search_to_regex(list_data.search)
         query = Q()
         for field_slug in self.search_fields:
             lookup, value = self.get_search_lookup(field_slug, list_data.search, regex)

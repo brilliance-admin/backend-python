@@ -107,7 +107,8 @@ class DjangoAdminListMixin:
         return queryset.order_by(ordering)
 
     def apply_search(self, queryset, list_data):
-        from django.db.models import Q
+        from django.db.models import CharField, Q
+        from django.db.models.functions import Cast
 
         if not self.search_fields or not list_data.search:
             return queryset
@@ -115,21 +116,35 @@ class DjangoAdminListMixin:
         regex = self.search_to_regex(list_data.search)
         query = Q()
         for field_slug in self.search_fields:
-            lookup, value = self.get_search_lookup(field_slug, list_data.search, regex)
+            queryset, lookup, value = self.get_search_lookup(
+                queryset,
+                field_slug,
+                list_data.search,
+                regex,
+                CharField,
+                Cast,
+            )
             query |= Q(**{lookup: value})
         return queryset.filter(query)
 
-    def get_search_lookup(self, field_slug, raw_value, regex):
+    def get_search_lookup(self, queryset, field_slug, raw_value, regex, char_field_cls, cast_cls):
         model_field, json_tail = self.resolve_lookup_path(field_slug)
 
         internal_type = model_field.get_internal_type()
         if internal_type in {'CharField', 'TextField', 'SlugField', 'EmailField', 'URLField'}:
-            return f'{field_slug}__iregex', regex
+            return queryset, f'{field_slug}__iregex', regex
+
+        if internal_type == 'UUIDField':
+            alias = f'{field_slug}_search_text'
+            queryset = queryset.alias(**{
+                alias: cast_cls(field_slug, output_field=char_field_cls()),
+            })
+            return queryset, f'{alias}__iregex', regex
 
         if internal_type == 'JSONField' and json_tail:
-            return field_slug, raw_value
+            return queryset, field_slug, raw_value
 
-        return field_slug, raw_value
+        return queryset, field_slug, raw_value
 
     async def apply_filters(self, queryset, list_data):
         if not self.table_filters or not list_data.filters:

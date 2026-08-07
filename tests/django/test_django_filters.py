@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
+from uuid import UUID
 
 import pytest
-
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
@@ -184,6 +184,111 @@ async def test_list_search_single_character_operator(language_context):
 
     list_result = await category.get_list(
         list_data=schema.ListData(search='A_CD'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': match.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
+async def test_list_search_uuid_invalid_value_returns_empty_result(language_context):
+    category = DjangoAdmin(
+        search_fields=['uuid'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    await DjangoExampleFactory()
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='5'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(data=[], total_count=0)
+
+
+@pytest.mark.asyncio
+async def test_list_search_uuid_partial_operator(language_context):
+    category = DjangoAdmin(
+        search_fields=['uuid'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    match = await DjangoExampleFactory(uuid=UUID('12345678-1234-5678-1234-567812345678'))
+    await DjangoExampleFactory(uuid=UUID('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'))
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='%5678-1234%'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': match.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
+async def test_list_search_uuid_exact_operator(language_context):
+    category = DjangoAdmin(
+        search_fields=['uuid'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    uuid = UUID('12345678-1234-5678-1234-567812345678')
+    match = await DjangoExampleFactory(uuid=uuid)
+    await DjangoExampleFactory(uuid=UUID('12345678-1234-5678-1234-567812345679'))
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search=f'"{uuid}"'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': match.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
+async def test_list_search_uuid_single_character_operator(language_context):
+    category = DjangoAdmin(
+        search_fields=['uuid'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    match = await DjangoExampleFactory(uuid=UUID('12345678-1234-5678-1234-567812345678'))
+    await DjangoExampleFactory(uuid=UUID('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'))
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='12345678-1234-5678-1234-56781234567_'),
         user=user,
         language_context=language_context,
         debug=False,

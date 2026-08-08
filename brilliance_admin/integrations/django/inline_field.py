@@ -84,6 +84,9 @@ class DjangoInlineField(InlineField):
         raise AttributeError(msg)
 
     async def _save_inline_record(self, parent_record, line_data, fk_field_name, existing_record=None):
+        # pylint: disable=import-outside-toplevel
+        from brilliance_admin.integrations.django.related_field import DjangoRelatedField
+
         if existing_record is None:
             record = self.table_schema.model()
         else:
@@ -92,6 +95,13 @@ class DjangoInlineField(InlineField):
         for field_slug, value in line_data.items():
             if field_slug == self.table_schema.model._meta.pk.name:
                 continue
+
+            field = self.table_schema.get_field(field_slug)
+            if isinstance(field, DjangoRelatedField):
+                model_field = self.table_schema.model._meta.get_field(field_slug)
+                setattr(record, model_field.attname, value)
+                continue
+
             setattr(record, field_slug, value)
 
         setattr(record, fk_field_name, parent_record)

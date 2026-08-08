@@ -1,4 +1,5 @@
 import pytest
+from django.db import connection, models
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema, DjangoInlineField
@@ -21,6 +22,75 @@ class DjangoExampleInlineAdmin(DjangoAdmin):
             table_schema=DjangoAnotherExampleInlineSchema(),
         ),
     )
+
+
+class InlineBugParent(models.Model):
+    title = models.CharField(max_length=255)
+
+    class Meta:
+        app_label = 'sections'
+        db_table = 'test_inline_bug_parent'
+
+
+class InlineBugTarget(models.Model):
+    title = models.CharField(max_length=255)
+
+    class Meta:
+        app_label = 'sections'
+        db_table = 'test_inline_bug_target'
+
+    def __str__(self):
+        return self.title
+
+
+class InlineBugRow(models.Model):
+    parent = models.ForeignKey(
+        InlineBugParent,
+        on_delete=models.CASCADE,
+        related_name='items',
+    )
+    target = models.ForeignKey(
+        InlineBugTarget,
+        on_delete=models.CASCADE,
+        related_name='rows',
+    )
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        app_label = 'sections'
+        db_table = 'test_inline_bug_row'
+
+
+class InlineBugRowSchema(DjangoFieldsSchema):
+    model = InlineBugRow
+    fields = ['id', 'target', 'name']
+
+
+class InlineBugParentAdmin(DjangoAdmin):
+    model = InlineBugParent
+    table_schema = DjangoFieldsSchema(
+        model=InlineBugParent,
+        fields=['id', 'title', 'items'],
+        items=DjangoInlineField(
+            many=True,
+            table_schema=InlineBugRowSchema(),
+        ),
+    )
+
+
+@pytest.fixture
+def inline_bug_schema():
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(InlineBugParent)
+        schema_editor.create_model(InlineBugTarget)
+        schema_editor.create_model(InlineBugRow)
+
+    yield
+
+    with connection.schema_editor() as schema_editor:
+        schema_editor.delete_model(InlineBugRow)
+        schema_editor.delete_model(InlineBugTarget)
+        schema_editor.delete_model(InlineBugParent)
 
 
 def get_category():
@@ -114,3 +184,33 @@ async def test_inline_update(language_context):
     children = [child async for child in updated.another_examples.all().order_by('id')]
 
     assert [child.title for child in children] == ['child updated', 'child 2']
+
+
+@pytest.mark.asyncio
+async def test_inline_update_accepts_related_field_payload(language_context, inline_bug_schema):
+    category = InlineBugParentAdmin()
+    user = UserABC(username='test')
+
+    parent = await InlineBugParent.objects.acreate(title='list_342')
+    target = await InlineBugTarget.objects.acreate(id=4, title='target')
+
+    await category.update(
+        pk=parent.pk,
+        data={
+            'title': 'list_342',
+            'items': [
+                {
+                    'target': {'key': target.pk, 'title': 'target'},
+                    'name': 'item',
+                },
+            ],
+        },
+        user=user,
+        language_context=language_context,
+        debug=True,
+    )
+
+    row = await InlineBugRow.objects.aget(parent=parent)
+
+    assert row.target_id == target.pk
+    assert row.name == 'item'

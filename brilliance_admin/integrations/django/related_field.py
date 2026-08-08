@@ -41,9 +41,12 @@ class DjangoRelatedField(RelatedField):
                 result.append(model_field.name)
         return result
 
-    async def autocomplete(self, data: AutocompleteData, user, extra: dict | None = None) -> list[Record]:
-        from django.db.models import Q
-
+    async def _get_autocomplete_queryset(
+        self,
+        data: AutocompleteData,
+        user,
+        extra: dict | None = None,
+    ):
         if extra is None or extra.get('model') is None:
             msg = AUTOCOMPLETE_REQUIRES_MODEL.format(class_name=type(self).__name__)
             raise AttributeError(msg)
@@ -57,19 +60,6 @@ class DjangoRelatedField(RelatedField):
         pk_field = target_model._meta.pk
         pk_name = pk_field.name
         pk_python = pk_field.to_python
-
-        if data.search_string:
-            search_fields = self._get_search_fields(target_model)
-            if search_fields:
-                query = Q()
-                for field_name in search_fields:
-                    query |= Q(**{f'{field_name}__icontains': data.search_string})
-                queryset = queryset.filter(query)
-            else:
-                try:
-                    queryset = queryset.filter(**{pk_name: pk_python(data.search_string)})
-                except (TypeError, ValueError):
-                    queryset = queryset.none()
 
         if data.existed_choices:
             pks = []
@@ -95,6 +85,31 @@ class DjangoRelatedField(RelatedField):
             else:
                 queryset = self.filter_fn(queryset, data, user)
 
+        return queryset, pk_name
+
+    def _apply_autocomplete_search(self, queryset, data: AutocompleteData, pk_name: str):
+        if not data.search_string:
+            return queryset
+
+        from django.db.models import Q
+
+        target_model = queryset.model
+        search_fields = self._get_search_fields(target_model)
+        if search_fields:
+            query = Q()
+            for field_name in search_fields:
+                query |= Q(**{f'{field_name}__icontains': data.search_string})
+            return queryset.filter(query)
+
+        pk_field = target_model._meta.pk
+        try:
+            return queryset.filter(**{pk_name: pk_field.to_python(data.search_string)})
+        except (TypeError, ValueError):
+            return queryset.none()
+
+    async def autocomplete(self, data: AutocompleteData, user, extra: dict | None = None) -> list[Record]:
+        queryset, pk_name = await self._get_autocomplete_queryset(data, user, extra)
+        queryset = self._apply_autocomplete_search(queryset, data, pk_name)
         records = await sync_to_async(lambda: list(queryset[: min(150, data.limit)]), thread_sensitive=True)()
         return [
             Record(
@@ -103,6 +118,10 @@ class DjangoRelatedField(RelatedField):
             )
             for record in records
         ]
+
+    async def autocomplete_total_count(self, data: AutocompleteData, user, extra: dict | None = None) -> int:
+        queryset, _ = await self._get_autocomplete_queryset(data, user, extra)
+        return await queryset.acount()
 
     async def serialize(self, value, extra: dict, *args, **kwargs):
         if not value:

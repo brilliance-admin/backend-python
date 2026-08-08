@@ -1,5 +1,6 @@
 import importlib.metadata
 import json
+import traceback
 from importlib import resources
 from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
@@ -7,7 +8,7 @@ from urllib.parse import urljoin
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import Field
 from pydantic.dataclasses import dataclass
@@ -16,12 +17,36 @@ from brilliance_admin.auth import UserABC
 from brilliance_admin.docs import build_redoc_docs, build_scalar_docs
 from brilliance_admin.schema.category import BaseCategory
 from brilliance_admin.translations import LanguageContext, LanguageManager
-from brilliance_admin.utils import DataclassBase, SupportsStr
+from brilliance_admin.utils import DataclassBase, SupportsStr, get_logger
 
 DEFAULT_LANGUAGES = {
     'ru': 'Russian',
     'en': 'English',
 }
+DEFAULT_DEBUG_TRACEBACK_LIMIT = 7
+
+logger = get_logger()
+
+
+def format_limited_debug_traceback(exc: Exception, limit: int) -> str:
+    return ''.join(
+        traceback.format_exception(
+            type(exc),
+            exc,
+            exc.__traceback__,
+            limit=-limit,
+        )
+    )
+
+
+def add_limited_debug_traceback_middleware(app: FastAPI, traceback_limit: int) -> None:
+    @app.middleware('http')
+    async def limited_debug_traceback_middleware(request: Request, call_next):
+        try:
+            return await call_next(request)
+        except Exception as e:
+            logger.exception('Unhandled admin exception: %s', e)
+            return PlainTextResponse(format_limited_debug_traceback(e, traceback_limit), status_code=500)
 
 
 @dataclass
@@ -58,6 +83,7 @@ class AdminSchema:
     auth: Any
 
     api_timeout_ms: int = 1000 * 5
+    debug_traceback_limit: int = DEFAULT_DEBUG_TRACEBACK_LIMIT
 
     main_page: str | None = None
 
@@ -156,6 +182,9 @@ class AdminSchema:
             docs_url='/docs' if include_docs else None,
             redoc_url=None,
         )
+
+        if debug:
+            add_limited_debug_traceback_middleware(app, self.debug_traceback_limit)
 
         if default_cors:
             allow_origins = [self.backend_prefix.rstrip('/')] if self.backend_prefix else ["*"]

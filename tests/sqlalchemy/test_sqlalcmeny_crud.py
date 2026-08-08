@@ -982,4 +982,4 @@ async def test_autocomplete(postgres_sessionmaker, language_context):
         language_context=language_context,
         debug=True,
     )
-    assert autocomplete_result == schema.AutocompleteResult()
+    assert autocomplete_result == schema.AutocompleteResult(results=[], total_count=0)

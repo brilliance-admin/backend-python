@@ -103,50 +103,27 @@ class SQLAlchemyRelatedField(RelatedField):
         msg = CANNOT_RESOLVE_TARGET_MODEL.format(field_slug=field_slug)
         raise AttributeError(msg)
 
-    async def autocomplete(self, data: AutocompleteData, user, *, extra: dict | None = None) -> List[Record]:
+    async def _get_autocomplete_statement(
+        self,
+        data: AutocompleteData,
+        user,
+        *,
+        extra: dict | None = None,
+    ):
         if extra is None or extra.get('model') is None:
             msg = AUTOCOMPLETE_REQUIRES_MODEL.format(class_name=type(self).__name__)
             raise AttributeError(msg)
 
         model = extra['model']
 
-        if extra is None or extra.get('db_async_session') is None:
-            msg = AUTOCOMPLETE_REQUIRES_SESSION.format(class_name=type(self).__name__)
-            raise AttributeError(msg)
-
-        db_async_session = extra['db_async_session']
-
-        results = []
-
         # pylint: disable=import-outside-toplevel
-        from sqlalchemy import String, cast, or_, select
+        from sqlalchemy import select
 
         target_model = self._get_target_model(model, data.field_slug)
-        limit = min(150, data.limit)
-        stmt = select(target_model).limit(limit)
+        stmt = select(target_model)
 
         pk = get_pk(target_model)
         python_pk_type = pk.property.columns[0].type.python_type
-
-        if data.search_string:
-            search_fields = getattr(target_model, '__search_fields__', None)
-
-            if search_fields:
-                conditions = []
-                for field_name in search_fields:
-                    col = getattr(target_model, field_name, None)
-                    if col is not None:
-                        conditions.append(
-                            cast(col, String).ilike(data.search_string)
-                        )
-                if conditions:
-                    stmt = stmt.where(or_(*conditions))
-            else:
-                try:
-                    value = python_pk_type(data.search_string)
-                except (ValueError, TypeError):
-                    value = None
-                stmt = stmt.where(pk == value)
 
         # Add already selected choices
         if data.existed_choices:
@@ -171,6 +148,47 @@ class SQLAlchemyRelatedField(RelatedField):
             else:
                 stmt = self.filter_fn(stmt, data, user)
 
+        return stmt, pk
+
+    def _apply_autocomplete_search(self, stmt, data: AutocompleteData, pk):
+        if not data.search_string:
+            return stmt
+
+        # pylint: disable=import-outside-toplevel
+        from sqlalchemy import String, cast, or_
+
+        target_model = pk.class_
+        search_fields = getattr(target_model, '__search_fields__', None)
+        if search_fields:
+            conditions = []
+            for field_name in search_fields:
+                col = getattr(target_model, field_name, None)
+                if col is not None:
+                    conditions.append(
+                        cast(col, String).ilike(data.search_string)
+                    )
+            if conditions:
+                return stmt.where(or_(*conditions))
+            return stmt
+
+        python_pk_type = pk.property.columns[0].type.python_type
+        try:
+            value = python_pk_type(data.search_string)
+        except (ValueError, TypeError):
+            value = None
+        return stmt.where(pk == value)
+
+    async def autocomplete(self, data: AutocompleteData, user, *, extra: dict | None = None) -> List[Record]:
+        if extra is None or extra.get('db_async_session') is None:
+            msg = AUTOCOMPLETE_REQUIRES_SESSION.format(class_name=type(self).__name__)
+            raise AttributeError(msg)
+
+        db_async_session = extra['db_async_session']
+        stmt, pk = await self._get_autocomplete_statement(data, user, extra=extra)
+        stmt = self._apply_autocomplete_search(stmt, data, pk)
+        stmt = stmt.limit(min(150, data.limit))
+        results = []
+
         async with db_async_session() as session:
             records = (await session.execute(stmt)).scalars().all()
 
@@ -182,6 +200,20 @@ class SQLAlchemyRelatedField(RelatedField):
             results.append(_record)
 
         return results
+
+    async def autocomplete_total_count(self, data: AutocompleteData, user, *, extra: dict | None = None) -> int:
+        if extra is None or extra.get('db_async_session') is None:
+            msg = AUTOCOMPLETE_REQUIRES_SESSION.format(class_name=type(self).__name__)
+            raise AttributeError(msg)
+
+        # pylint: disable=import-outside-toplevel
+        from sqlalchemy import func, select
+
+        db_async_session = extra['db_async_session']
+        stmt, _ = await self._get_autocomplete_statement(data, user, extra=extra)
+        count_stmt = select(func.count()).select_from(stmt.subquery())
+        async with db_async_session() as session:
+            return await session.scalar(count_stmt)
 
     async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
         """

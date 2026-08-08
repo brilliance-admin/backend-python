@@ -41,4 +41,5 @@ async def test_django_related_autocomplete(language_context):
                 'title': str(owner_1),
             },
         ],
+        'total_count': 2,
     }

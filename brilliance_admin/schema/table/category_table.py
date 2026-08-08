@@ -296,7 +296,20 @@ class CategoryTable(BaseCategory):
             },
         )
 
-        return AutocompleteResult(results=results)
+        total_count_fn = getattr(field, 'autocomplete_total_count', None)
+        if total_count_fn is None:
+            total_count = len(results)
+        else:
+            total_count = await total_count_fn(
+                data,
+                user,
+                extra=self.get_extra_autocomplete(data) | {
+                    'parent_category': parent_category,
+                    'parent_pk': parent_pk if parent_pk is not None else data.parent_pk,
+                },
+            )
+
+        return AutocompleteResult(results=results, total_count=total_count)
 
     # pylint: disable=too-many-arguments
     @abc.abstractmethod

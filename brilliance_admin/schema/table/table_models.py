@@ -34,6 +34,7 @@ class Record(BaseModel):
 
 class AutocompleteResult(BaseModel):
     results: List[Record] = Field(default_factory=list)
+    total_count: int
 
 
 class ListData(BaseModel):

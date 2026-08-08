@@ -35,5 +35,6 @@ async def test_autocomplete_filter_fn(mocker):
                 'title': 'User #1 "active"',
             },
         ],
+        'total_count': 1,
     }
     assert response.json() == response_data

@@ -6,7 +6,7 @@ from typing import Any
 
 import factory
 from sqlalchemy import (
-    JSON, BigInteger, Boolean, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, func, select)
+    JSON, BigInteger, Boolean, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, Text, func, select)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -211,6 +211,36 @@ class UserSessionFactory(SQLAlchemyFactoryBase):
             None, None, {"locale": None}
         ) if not o.is_active else None
     )
+
+
+class PrivacyPolicyVersion(BaseIDModel):
+    __tablename__ = "privacy_policy_version"
+
+    version: Mapped[str] = mapped_column(String(20), unique=True, index=True, nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=expression.false())
+    published_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    def __repr__(self):
+        return f"<PrivacyPolicyVersion(id={self.id}, version='{self.version}')>"
+
+    def __str__(self):
+        return f'Privacy policy {self.version}'
+
+
+class PrivacyPolicyVersionFactory(SQLAlchemyFactoryBase):
+    class Meta:
+        model = PrivacyPolicyVersion
+        sqlalchemy_session_factory = async_sessionmaker_
+        sqlalchemy_session_persistence = "commit"
+
+    version = factory.Sequence(lambda n: f"{1 + n // 10}.{n % 10}")
+    title = factory.Sequence(lambda n: f"Privacy Policy v{1 + n // 10}.{n % 10}")
+    content = factory.Faker("paragraph", nb_sentences=8)
+    is_active = factory.Faker("boolean", chance_of_getting_true=15)
+    published_at = factory.Faker("date_time_between", start_date="-2y", end_date="now", tzinfo=UTC)
 
 
 class Currency(BaseIDModel):

@@ -17,6 +17,7 @@ from example.sections.currency import CurrencyAdmin
 from example.sections.dashboard import DasbhoardExample
 from example.sections.merchant import MerchantAdmin
 from example.sections.payments import PaymentsAdmin
+from example.sections.privacy_policy import PrivacyPolicyVersionAdmin
 from example.sections.terminal import FeeAdmin, TerminalAdmin
 from example.sections.user_session import UserSessionAdmin
 from example.sections.users import UserAdmin
@@ -165,6 +166,7 @@ admin_schema = schema.AdminSchema(
                     ],
                 ),
                 UserSessionAdmin(db_async_session=async_sessionmaker_),
+                PrivacyPolicyVersionAdmin(db_async_session=async_sessionmaker_),
             ]
         ),
         schema.CategoryGroup(

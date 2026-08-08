@@ -53,6 +53,7 @@ async def lifespan(app):
     await models.TerminalFactory.create_batch_async(15)
     await models.UserFactory.create_batch_async(27)
     await models.UserSessionFactory.create_batch_async(50)
+    await models.PrivacyPolicyVersionFactory.create_batch_async(50)
     await models.MerchantFactory.create_batch_async(9)
     await models.MerchantFactory.create_async(provider_settings=deepcopy(models.BIG_JSON))
 

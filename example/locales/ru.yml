@@ -65,6 +65,7 @@ device_type:
   tablet: 'Планшет'
 
 user_sessions: 'Сессии пользователей'
+privacy_policy_versions: 'Версии политики конфиденциальности'
 amount: 'Сумма'
 registry_checked: 'Реестр проверен'
 registry_info_checked: 'Информация по реестру провайдера'

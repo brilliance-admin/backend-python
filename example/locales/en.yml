@@ -65,6 +65,7 @@ device_type:
   tablet: 'Tablet'
 
 user_sessions: 'User sessions'
+privacy_policy_versions: 'Privacy policy versions'
 amount: 'Amount'
 registry_checked: 'Registry checked'
 registry_info_checked: 'Registry info checked'

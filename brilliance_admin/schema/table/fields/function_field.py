@@ -5,7 +5,7 @@ from typing import Any
 from pydantic.dataclasses import dataclass
 
 from brilliance_admin.exceptions import AdminAPIException, APIError
-from brilliance_admin.schema.table.fields.base import TableField
+from brilliance_admin.schema.table.fields.base import StringField, TableField
 from brilliance_admin.utils import get_logger
 
 logger = get_logger()
@@ -21,10 +21,9 @@ def function_field(**kwargs):
     def wrapper(func):
         func.__function_field__ = True
 
-        field_type = kwargs.pop('type', None)
-        if field_type:
-            # pylint: disable=protected-access
-            kwargs['_type'] = field_type._type
+        field_type = kwargs.pop('type', StringField)
+        # pylint: disable=protected-access
+        kwargs['_type'] = field_type._type
 
         func.__kwargs__ = kwargs
 

@@ -1,3 +1,4 @@
+from html import escape
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
@@ -58,7 +59,7 @@ async def table_list(
         return JSONResponse(content=result.model_dump(mode='json', context=context))
     except Exception as e:
         logger.exception('Admin list error: %s; result: %s', e, result)
-        detail = f"Content error: {e}" if schema.debug else f"Content error: {type(e).__name__}"
+        detail = f"Content error: {escape(str(e))}" if schema.debug else f"Content error: {type(e).__name__}"
         raise HTTPException(status_code=500, detail=detail) from e
 
 

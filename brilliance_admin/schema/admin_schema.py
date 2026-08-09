@@ -1,6 +1,7 @@
 import importlib.metadata
 import json
 import traceback
+from html import escape
 from importlib import resources
 from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
@@ -23,20 +24,19 @@ DEFAULT_LANGUAGES = {
     'ru': 'Russian',
     'en': 'English',
 }
-DEFAULT_DEBUG_TRACEBACK_LIMIT = 7
 
 logger = get_logger()
 
 
 def format_limited_debug_traceback(exc: Exception, limit: int) -> str:
-    return ''.join(
+    return escape(''.join(
         traceback.format_exception(
             type(exc),
             exc,
             exc.__traceback__,
             limit=-limit,
         )
-    )
+    ))
 
 
 def add_limited_debug_traceback_middleware(app: FastAPI, traceback_limit: int) -> None:
@@ -83,7 +83,7 @@ class AdminSchema:
     auth: Any
 
     api_timeout_ms: int = 1000 * 5
-    debug_traceback_limit: int = DEFAULT_DEBUG_TRACEBACK_LIMIT
+    debug_traceback_limit: int = 7
 
     main_page: str | None = None
 

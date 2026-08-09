@@ -1,3 +1,5 @@
+from html import escape
+
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
@@ -38,5 +40,5 @@ async def schema_handler(request: Request) -> AdminSchemaData:
         return JSONResponse(content=admin_schema.model_dump(mode='json', context=context))
     except Exception as e:
         logger.exception('Admin schema model dump error: %s', e)
-        detail = f"Content error: {e}" if schema.debug else f"Content error: {type(e).__name__}"
+        detail = f"Content error: {escape(str(e))}" if schema.debug else f"Content error: {type(e).__name__}"
         raise HTTPException(status_code=500, detail=detail) from e

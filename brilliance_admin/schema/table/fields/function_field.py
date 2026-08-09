@@ -26,7 +26,10 @@ def function_field(**kwargs):
         field_type = kwargs.pop('type', StringField)
         if isinstance(field_type, TableField):
             if kwargs:
-                msg = 'function_field kwargs cannot be used when type is a field instance'
+                msg = (
+                    f'function_field "{func.__name__}" kwargs cannot be used when type is a field instance: '
+                    f'{list(kwargs.keys())}'
+                )
                 raise TypeError(msg)
             field = field_type
         elif inspect.isclass(field_type) and issubclass(field_type, TableField):

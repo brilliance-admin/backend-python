@@ -91,6 +91,7 @@ class IntegerField(TableField):
         schema.inputmode = self.inputmode
         schema.precision = self.precision
         schema.scale = self.scale
+        schema.choices = self.choices
 
         return schema
 

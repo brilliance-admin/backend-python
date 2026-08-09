@@ -77,3 +77,40 @@ def test_function_field_choice_enum_schema(language_context):
         'label': 'Moderate Status Instance',
         'size': 'small',
     }
+
+
+def test_integer_field_enum_choices_schema(language_context):
+    class EndpointStatusChoice(Enum):
+        WAIT = 1
+        APPROVED = 2
+        NOT_APPROVED = 3
+
+        @property
+        def label(self):
+            return str(self.value)
+
+        @property
+        def tag_color(self):
+            return 'green'
+
+    class Fields(schema.FieldsSchema):
+        status = schema.IntegerField(choices=EndpointStatusChoice)
+
+    fields = Fields()
+    schema_data = fields.generate_form_schema(
+        user=UserABC(username="test"),
+        language_context=language_context,
+    )
+
+    assert schema_data.model_dump(mode='json', context={'language_context': language_context})['fields']['status'] == {
+        'choices': [
+            {'tag_color': 'green', 'title': '1', 'value': 1},
+            {'tag_color': 'green', 'title': '2', 'value': 2},
+            {'tag_color': 'green', 'title': '3', 'value': 3},
+        ],
+        'header': {},
+        'label': 'Status',
+        'read_only': False,
+        'required': False,
+        'type': 'integer',
+    }

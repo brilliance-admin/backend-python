@@ -16,6 +16,23 @@ from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction, SupportsStr, humanize_field_name
 
 
+def normalize_field_choices(choices, field_name: str):
+    if not choices:
+        return None
+
+    if inspect.isclass(choices) and issubclass(choices, Enum):
+        return [
+            {'value': c.value, 'title': c.label, 'tag_color': getattr(c, 'tag_color', None)}
+            for c in choices
+        ]
+
+    if isinstance(choices, list):
+        return choices
+
+    msg = f'{field_name}.choices is not suppored: {choices}'
+    raise NotImplementedError(msg)
+
+
 @dataclass
 class TableField(abc.ABC, FieldSchemaData):
     _type: ClassVar[str]
@@ -91,7 +108,7 @@ class IntegerField(TableField):
         schema.inputmode = self.inputmode
         schema.precision = self.precision
         schema.scale = self.scale
-        schema.choices = self.choices
+        schema.choices = normalize_field_choices(self.choices, type(self).__name__)
 
         return schema
 
@@ -502,22 +519,8 @@ class ChoiceField(TableField):
         if self._choices is not None:
             return self._choices
 
-        if not self.choices:
-            return None
-
-        if inspect.isclass(self.choices) and issubclass(self.choices, Enum):
-            self._choices = [
-                {'value': c.value, 'title': c.label, 'tag_color': getattr(c, 'tag_color', None)}
-                for c in self.choices
-            ]
-            return self._choices
-
-        if isinstance(self.choices, list):
-            self._choices = self.choices
-            return self._choices
-
-        msg = f'{type(self).__name__}.choices is not suppored: {self.choices}'
-        raise NotImplementedError(msg)
+        self._choices = normalize_field_choices(self.choices, type(self).__name__)
+        return self._choices
 
     def find_choice(self, value):
         choices = self.generate_choices()

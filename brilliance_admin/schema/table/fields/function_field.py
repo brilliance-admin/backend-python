@@ -6,6 +6,8 @@ from pydantic.dataclasses import dataclass
 
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.schema.table.fields.base import StringField, TableField
+from brilliance_admin.schema.table.schema_type import SchemaType
+from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
 
 logger = get_logger()
@@ -22,10 +24,18 @@ def function_field(**kwargs):
         func.__function_field__ = True
 
         field_type = kwargs.pop('type', StringField)
-        # pylint: disable=protected-access
-        kwargs['_type'] = field_type._type
+        if isinstance(field_type, TableField):
+            if kwargs:
+                msg = 'function_field kwargs cannot be used when type is a field instance'
+                raise TypeError(msg)
+            field = field_type
+        elif inspect.isclass(field_type) and issubclass(field_type, TableField):
+            field = field_type(**kwargs)
+        else:
+            msg = f'function_field type must be TableField subclass or instance, got {field_type}'
+            raise TypeError(msg)
 
-        func.__kwargs__ = kwargs
+        func.__kwargs__ = {'field': field}
 
         @functools.wraps(func)
         async def wrapped(*args, **kwargs):
@@ -42,11 +52,26 @@ class FunctionField(TableField):
     read_only = True
 
     fn: Any = None
+    field: TableField | None = None
 
     def __post_init__(self):
         if not inspect.iscoroutinefunction(self.fn):
             msg = f'{type(self).__name__}.fn {self.fn} must be coroutine function'
             raise AttributeError(msg)
+
+        if self.field is None:
+            self.field = StringField()
+
+        self.field.read_only = True
+
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ):
+        return self.field.generate_field_schema(user, field_slug, language_context, schema_type)
 
     async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
         try:

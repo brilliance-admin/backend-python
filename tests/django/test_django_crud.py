@@ -2,6 +2,7 @@ from decimal import Decimal
 from unittest import mock
 
 import pytest
+from django.db import connection, models
 
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
@@ -27,6 +28,52 @@ class DjangoExampleCompactCategory(DjangoAdmin):
 
     def get_queryset(self):
         return super().get_queryset().select_related('owner')
+
+
+class CallableDefaultTarget(models.Model):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        app_label = 'sections'
+        db_table = 'test_callable_default_target'
+
+
+def default_callable_target():
+    targets = CallableDefaultTarget.objects.filter(name='default').only('id')
+    if targets.exists():
+        return targets.first().id
+    return CallableDefaultTarget.objects.create(name='default').id
+
+
+class CallableDefaultOwner(models.Model):
+    title = models.CharField(max_length=255)
+    target = models.ForeignKey(
+        CallableDefaultTarget,
+        models.PROTECT,
+        related_name='owners',
+        default=default_callable_target,
+    )
+
+    class Meta:
+        app_label = 'sections'
+        db_table = 'test_callable_default_owner'
+
+
+class CallableDefaultOwnerAdmin(DjangoAdmin):
+    model = CallableDefaultOwner
+
+
+@pytest.fixture
+def callable_default_schema():
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(CallableDefaultTarget)
+        schema_editor.create_model(CallableDefaultOwner)
+
+    yield
+
+    with connection.schema_editor() as schema_editor:
+        schema_editor.delete_model(CallableDefaultOwner)
+        schema_editor.delete_model(CallableDefaultTarget)
 
 
 @pytest.mark.asyncio
@@ -66,6 +113,25 @@ async def test_create(language_context):
     assert record.rating == 4.5
     assert record.payload == {'key': 'value'}
     assert str(record.timezone) == 'Europe/Moscow'
+
+
+@pytest.mark.asyncio
+async def test_create_with_callable_fk_default(callable_default_schema, language_context):
+    category = CallableDefaultOwnerAdmin()
+    user = UserABC(username='test')
+
+    result = await category.create(
+        data={
+            'title': 'created with default',
+        },
+        user=user,
+        language_context=language_context,
+        debug=True,
+    )
+
+    record = await CallableDefaultOwner.objects.aget(pk=result.pk)
+    assert record.title == 'created with default'
+    assert record.target_id is not None
 
 
 @pytest.mark.asyncio

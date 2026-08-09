@@ -1,5 +1,7 @@
 import json
 
+from asgiref.sync import sync_to_async
+
 from brilliance_admin import schema
 from brilliance_admin.exceptions import APIError, AdminAPIException, ValidationError
 from brilliance_admin.schema.table.fields_schema import FORMSET_EXTRA_FIELDS, FORMSET_MISSING_FIELDS
@@ -355,7 +357,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         return await self.create_from_deserialized(deserialized_data)
 
     async def create_from_deserialized(self, deserialized_data):
-        record = self.model()
+        record = await sync_to_async(self.model, thread_sensitive=True)()
         many_to_many_values = {}
         inline_values = {}
 
@@ -368,6 +370,8 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
             if isinstance(field, DjangoRelatedField):
                 model_field = self.model._meta.get_field(field_slug)
+                if value is None and self.should_skip_none_on_create(model_field):
+                    continue
 
                 if getattr(model_field, 'many_to_many', False):
                     many_to_many_values[field_slug] = value

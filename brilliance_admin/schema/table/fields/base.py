@@ -524,7 +524,7 @@ class ChoiceField(TableField):
         if not choices:
             return None
 
-        return next((c for c in choices if c.get('value') == value), None)
+        return next((c for c in choices if c.get('value') == value or str(c.get('value')) == str(value)), None)
 
     def generate_field_schema(
         self,
@@ -548,8 +548,8 @@ class ChoiceField(TableField):
 
         choice = self.find_choice(value)
         return {
-            'value': value,
-            'title': choice.get('title') or value if choice else value.capitalize(),
+            'value': choice.get('value') if choice else value,
+            'title': choice.get('title') or value if choice else str(value).capitalize(),
         }
 
     async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:

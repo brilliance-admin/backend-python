@@ -321,7 +321,14 @@ async def test_generate_category_schema_django(language_context):
     )
     new_schema = category.generate_category_schema(UserABC(username="test"), language_context)
     context = {'language_context': language_context}
-    assert new_schema.model_dump(mode='json', context=context) == FORM_SCHEMA_DATA, new_schema.model_dump()
+    schema_data = new_schema.model_dump(mode='json', context=context)
+    timezone_field = schema_data['table_info']['table_schema']['fields'].pop('timezone')
+    schema_data['table_info']['table_schema']['list_display'].remove('timezone')
+
+    assert timezone_field['type'] == 'choice'
+    assert {'value': 'UTC', 'title': 'UTC', 'tag_color': None} in timezone_field['choices']
+    assert all(isinstance(choice['value'], str) for choice in timezone_field['choices'])
+    assert schema_data == FORM_SCHEMA_DATA, new_schema.model_dump()
 
 
 def test_django_formset_missing_fields():

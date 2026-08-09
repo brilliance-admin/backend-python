@@ -45,6 +45,7 @@ async def test_create(language_context):
             'price': '12.34',
             'rating': '4.5',
             'payload': {'key': 'value'},
+            'timezone': 'Europe/Moscow',
         },
         user=user,
         language_context=language_context,
@@ -64,6 +65,7 @@ async def test_create(language_context):
     assert record.price == Decimal('12.34')
     assert record.rating == 4.5
     assert record.payload == {'key': 'value'}
+    assert str(record.timezone) == 'Europe/Moscow'
 
 
 @pytest.mark.asyncio
@@ -91,6 +93,7 @@ async def test_update(language_context):
             'price': '77.70',
             'rating': '8.5',
             'payload': {'after': True},
+            'timezone': 'Asia/Tokyo',
         },
         user=user,
         language_context=language_context,
@@ -110,6 +113,7 @@ async def test_update(language_context):
     assert updated.price == Decimal('77.70')
     assert updated.rating == 8.5
     assert updated.payload == {'after': True}
+    assert str(updated.timezone) == 'Asia/Tokyo'
 
 
 @pytest.mark.asyncio
@@ -171,6 +175,7 @@ async def test_list(language_context):
                 'payload': {},
                 'event_date': None,
                 'event_time': None,
+                'timezone': {'value': 'UTC', 'title': 'UTC'},
                 'ttl': None,
                 'file': mock.ANY,
                 'image': {'url': mock.ANY},
@@ -191,6 +196,7 @@ async def test_list(language_context):
                 'payload': {},
                 'event_date': None,
                 'event_time': None,
+                'timezone': {'value': 'UTC', 'title': 'UTC'},
                 'ttl': None,
                 'file': mock.ANY,
                 'image': {'url': mock.ANY},

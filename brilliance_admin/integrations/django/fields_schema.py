@@ -291,6 +291,8 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         normalized = []
         for value, title in choices:
             from django.utils.encoding import force_str
+            if not isinstance(value, (str, int, float, bool)) and value is not None:
+                value = force_str(value)
             normalized.append({
                 'value': value,
                 'title': force_str(title),

@@ -79,6 +79,7 @@ FORM_SCHEMA_DATA = {
                                 'type': 'string',
                             },
                             'is_active': {
+                                'default': True,
                                 'header': {},
                                 'label': 'Is Active',
                                 'read_only': False,
@@ -192,6 +193,7 @@ FORM_SCHEMA_DATA = {
                     'type': 'image',
                 },
                 'is_active': {
+                    'default': True,
                     'header': {},
                     'label': 'Is Active',
                     'read_only': False,

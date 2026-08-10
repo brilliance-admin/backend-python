@@ -185,10 +185,12 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
     def generate_model_field(self, model_field):
         from django.db import models
+        from django.db.models import NOT_PROVIDED
         from django.contrib.postgres.fields import ArrayField as PostgresArrayField
         from django.utils.encoding import force_str
 
         help_text = getattr(model_field, "help_text", None)
+        default = getattr(model_field, "default", NOT_PROVIDED)
 
         field_data = {
             "label": self.get_model_field_label(model_field),
@@ -249,6 +251,8 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
         if isinstance(model_field, models.BooleanField):
             field_data["required"] = False
+            if default is not NOT_PROVIDED and not callable(default):
+                field_data["default"] = default
             return schema.BooleanField(**field_data)
 
         if isinstance(model_field, models.DateTimeField):

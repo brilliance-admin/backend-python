@@ -112,3 +112,4 @@ statuses:
   process: 'В процессе'
   success: 'Успех'
   error: 'Ошибка'
+  moderation: 'На модерации'

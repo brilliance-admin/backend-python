@@ -82,6 +82,8 @@ class IntegerField(TableField):
     _type = 'integer'
 
     choices: Any | None = None
+    variant: str = 'elevated'
+    size: str = 'default'
 
     max_value: int | None = None
     min_value: int | None = None
@@ -109,6 +111,9 @@ class IntegerField(TableField):
         schema.precision = self.precision
         schema.scale = self.scale
         schema.choices = normalize_field_choices(self.choices, type(self).__name__)
+        if schema.choices:
+            schema.variant = self.variant
+            schema.size = self.size
 
         return schema
 

@@ -112,3 +112,4 @@ statuses:
   process: 'Process'
   success: 'Success'
   error: 'Error'
+  moderation: 'Moderation'

@@ -112,5 +112,7 @@ def test_integer_field_enum_choices_schema(language_context):
         'label': 'Status',
         'read_only': False,
         'required': False,
+        'size': 'default',
         'type': 'integer',
+        'variant': 'elevated',
     }

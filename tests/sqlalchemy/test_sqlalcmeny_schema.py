@@ -134,6 +134,11 @@ CATEGORY_SCHEMA_DATA = {
                             'title': 'Ошибка',
                             'value': 'error',
                         },
+                        {
+                            'tag_color': 'blue',
+                            'title': 'На модерации',
+                            'value': 'moderation',
+                        },
                     ],
                     'header': {},
                     'label': 'Status',

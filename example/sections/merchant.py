@@ -1,6 +1,6 @@
 from brilliance_admin import schema, sqlalchemy
 from brilliance_admin.translations import TranslateText as _
-from example.sections.models import Merchant
+from example.sections.models import Merchant, MerchantStatus
 
 
 class MerchantFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
@@ -12,6 +12,7 @@ class MerchantFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
         'id',
         'user_id',
         'title',
+        'status',
         'provider_settings',
         'tx_actions',
         'description',
@@ -22,6 +23,7 @@ class MerchantFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
         'id',
         'user_id',
         'title',
+        'status',
         'tx_actions',
         'description',
         'created_at',
@@ -29,6 +31,7 @@ class MerchantFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
     ]
 
     title = schema.StringField(multilined=True, required=True)
+    status = schema.IntegerField(choices=MerchantStatus)
     description = schema.StringField(tinymce=True, help_text='help text', required=True)
     extra_kwargs = {
         'tx_actions': {'help_text': 'help text'},

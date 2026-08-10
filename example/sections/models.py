@@ -273,11 +273,36 @@ class CurrencyFactory(SQLAlchemyFactoryBase):
     depth = factory.Faker("random_element", elements=[2, 3])
 
 
+class MerchantStatus(Enum):
+    ACTIVE = 1
+    MODERATION = 2
+    BLOCKED = 3
+
+    @property
+    def label(self):
+        labels = {
+            self.ACTIVE: "Active",
+            self.MODERATION: "Moderation",
+            self.BLOCKED: "Blocked",
+        }
+        return labels[self]
+
+    @property
+    def tag_color(self):
+        colors = {
+            self.ACTIVE: "green",
+            self.MODERATION: "blue",
+            self.BLOCKED: "red",
+        }
+        return colors[self]
+
+
 class Merchant(BaseIDModel):
     __tablename__ = "merchant"
 
     user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[int] = mapped_column(Integer, nullable=False, default=MerchantStatus.ACTIVE.value)
 
     provider_settings: Mapped[dict[str, Any]] = mapped_column(
         MutableDict.as_mutable(JSONB().with_variant(JSON(), 'sqlite')),
@@ -310,6 +335,7 @@ class MerchantFactory(SQLAlchemyFactoryBase):
 
     user_id = factory.Faker("random_int", min=1, max=10_000)
     title = factory.Faker("word")
+    status = factory.Faker("random_element", elements=[status.value for status in MerchantStatus])
     description = factory.Faker("sentence", nb_words=6)
     created_at = factory.LazyFunction(lambda: datetime.now(UTC))
 
@@ -468,10 +494,12 @@ class FeeFactory(SQLAlchemyFactoryBase):
     def __str__(self):
         return self.title
 
+
 class TerminalStatuses(Enum):
     PROCESS = 'process'
     SUCCESS = 'success'
     ERROR = 'error'
+    MODERATION = 'moderation'
 
     @property
     def label(self):
@@ -479,6 +507,7 @@ class TerminalStatuses(Enum):
             self.PROCESS: _('statuses.process'),
             self.SUCCESS: _('statuses.success'),
             self.ERROR: _('statuses.error'),
+            self.MODERATION: _('statuses.moderation'),
         }
         return labels[self]
 
@@ -488,6 +517,7 @@ class TerminalStatuses(Enum):
             self.PROCESS: 'grey-lighten-1',
             self.SUCCESS: 'green-darken-1',
             self.ERROR: 'red-lighten-2',
+            self.MODERATION: 'blue',
         }
         return colors[self]
 

@@ -255,6 +255,7 @@ class PaymentsAdmin(schema.CategoryTable):
             'id': pk,
             'amount': 10 * fake.pyint(min_value=0, max_value=100),
             'endpoint': fake.word(),
+            'status': fake.random_element(elements=list(TerminalStatuses)).value,
             'whitelist_ips': ['localhost', '0.0.0.0'],
             'description': fake.sentence(nb_words=50),
             'other_field': fake.word(),

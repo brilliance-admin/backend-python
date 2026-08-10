@@ -1,5 +1,4 @@
 from asgiref.sync import sync_to_async
-from brilliance_admin.utils import DeserializeAction
 
 from brilliance_admin.schema.table.fields.base import InlineField
 
@@ -113,12 +112,7 @@ class DjangoInlineField(InlineField):
         fk_field_name = self._get_related_model(type(parent_record))
 
         for line_data in value:
-            deserialized_line = await self.table_schema.deserialize_fields(
-                line_data,
-                DeserializeAction.CREATE,
-                extra={'model': self.table_schema.model},
-            )
-            await self._save_inline_record(parent_record, deserialized_line, fk_field_name)
+            await self._save_inline_record(parent_record, line_data, fk_field_name)
 
     async def update_inline(self, parent_record, field_slug, value, session, user):
         if value is None:
@@ -143,13 +137,8 @@ class DjangoInlineField(InlineField):
             line_id = line_data.pop(pk_name, None)
 
             if line_id is None:
-                deserialized_line = await self.table_schema.deserialize_fields(
-                    line_data,
-                    DeserializeAction.CREATE,
-                    extra={'model': self.table_schema.model},
-                )
                 records_to_add.append(
-                    await self._save_inline_record(parent_record, deserialized_line, fk_field_name)
+                    await self._save_inline_record(parent_record, line_data, fk_field_name)
                 )
                 continue
 
@@ -162,12 +151,7 @@ class DjangoInlineField(InlineField):
                 )
                 raise AttributeError(msg)
 
-            deserialized_line = await self.table_schema.deserialize_fields(
-                line_data,
-                DeserializeAction.UPDATE,
-                extra={'model': self.table_schema.model},
-            )
-            await self._save_inline_record(parent_record, deserialized_line, fk_field_name, line_record)
+            await self._save_inline_record(parent_record, line_data, fk_field_name, line_record)
 
         for record in existing_records:
             if record.pk in seen_ids:

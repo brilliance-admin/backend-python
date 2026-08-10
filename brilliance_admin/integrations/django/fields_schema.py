@@ -415,6 +415,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 DeserializeAction.UPDATE,
                 extra={'model': self.model},
             )
+            return await self.update_from_deserialized(record, deserialized_data)
         except ValidationError as e:
             raise AdminAPIException(
                 APIError(
@@ -423,8 +424,6 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 ),
                 status_code=400,
             ) from e
-
-        return await self.update_from_deserialized(record, deserialized_data)
 
     async def update_from_deserialized(self, record, deserialized_data):
         many_to_many_values = {}

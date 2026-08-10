@@ -10,6 +10,9 @@ from brilliance_admin.utils import DataclassBase, SupportsStr
 class ValidationError(DataclassBase, Exception):
     data: dict
 
+    def __str__(self):
+        return str(self.data)
+
 
 @dataclass
 class FieldError(DataclassBase, Exception):

@@ -55,6 +55,7 @@ class InlineBugRow(models.Model):
         related_name='rows',
     )
     name = models.CharField(max_length=255)
+    starts_at = models.TimeField(null=True, blank=True)
 
     class Meta:
         app_label = 'sections'
@@ -63,7 +64,7 @@ class InlineBugRow(models.Model):
 
 class InlineBugRowSchema(DjangoFieldsSchema):
     model = InlineBugRow
-    fields = ['id', 'target', 'name']
+    fields = ['id', 'target', 'name', 'starts_at']
 
 
 class InlineBugParentAdmin(DjangoAdmin):
@@ -202,6 +203,7 @@ async def test_inline_update_accepts_related_field_payload(language_context, inl
                 {
                     'target': {'key': target.pk, 'title': 'target'},
                     'name': 'item',
+                    'starts_at': '12:00',
                 },
             ],
         },
@@ -214,3 +216,4 @@ async def test_inline_update_accepts_related_field_payload(language_context, inl
 
     assert row.target_id == target.pk
     assert row.name == 'item'
+    assert row.starts_at.isoformat(timespec='minutes') == '12:00'

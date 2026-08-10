@@ -39,7 +39,7 @@ class DjangoExample(models.Model):
         on_delete=models.CASCADE,
         related_name="examples",
     )
-    title = models.CharField(max_length=255, verbose_name=_('Title translated'))
+    title = models.CharField(max_length=255, verbose_name=_('Title translated'), help_text=_('Title help text translated'))
     allowed_ips = ArrayField(models.CharField(max_length=255), default=list, blank=True)
     description = models.CharField(max_length=255, blank=True)
     status = models.CharField(max_length=32, choices=DjangoExampleStatus.choices, default=DjangoExampleStatus.PENDING)

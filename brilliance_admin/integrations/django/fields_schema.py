@@ -186,9 +186,13 @@ class DjangoFieldsSchema(schema.FieldsSchema):
     def generate_model_field(self, model_field):
         from django.db import models
         from django.contrib.postgres.fields import ArrayField as PostgresArrayField
+        from django.utils.encoding import force_str
+
+        help_text = getattr(model_field, "help_text", None)
 
         field_data = {
             "label": self.get_model_field_label(model_field),
+            "help_text": force_str(help_text) if help_text else None,
             "read_only": bool(model_field.primary_key or getattr(model_field, "auto_now_add", False)),
             "required": self.is_required_field(model_field),
         }

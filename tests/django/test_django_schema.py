@@ -247,6 +247,7 @@ FORM_SCHEMA_DATA = {
                 },
                 'title': {
                     'header': {},
+                    'help_text': 'Title help text translated',
                     'label': 'Title translated',
                     'max_length': 255,
                     'password': False,

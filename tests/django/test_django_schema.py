@@ -103,12 +103,15 @@ FORM_SCHEMA_DATA = {
                             'created_at',
                         ],
                         'formset': {
+                            'title': None,
+                            'description': None,
                             'fields': [
                                 'id',
                                 'title',
                                 'is_active',
                                 'created_at',
                             ],
+                            'col_span': None,
                         },
                     },
                     'label': 'Another Examples',
@@ -310,14 +313,14 @@ async def test_generate_category_schema_django(language_context):
                 many=True,
                 table_schema=DjangoFieldsSchema(
                     model=DjangoAnotherExample,
-                    formset={
-                        'fields': [
+                    formset=schema.FormSet(
+                        fields=[
                             'id',
                             'title',
                             'is_active',
                             'created_at',
                         ],
-                    },
+                    ),
                 ),
             ),
         )
@@ -339,12 +342,12 @@ def test_django_formset_missing_fields():
         DjangoFieldsSchema(
             model=DjangoExample,
             fields=['id', 'title', 'allowed_ips'],
-            formset={
-                'fields': [
+            formset=schema.FormSet(
+                fields=[
                     'id',
                     'title',
                 ],
-            },
+            ),
         )
 
 
@@ -353,13 +356,13 @@ def test_django_formset_extra_fields():
         DjangoFieldsSchema(
             model=DjangoExample,
             fields=['id', 'title'],
-            formset={
-                'fields': [
+            formset=schema.FormSet(
+                fields=[
                     'id',
                     'title',
                     'ghost',
                 ],
-            },
+            ),
         )
 
 
@@ -369,11 +372,11 @@ def test_django_formset_excluded_field_is_invalid():
             model=DjangoExample,
             fields=['id', 'title', 'allowed_ips'],
             exclude_fields=['allowed_ips'],
-            formset={
-                'fields': [
+            formset=schema.FormSet(
+                fields=[
                     'id',
                     'title',
                     'allowed_ips',
                 ],
-            },
+            ),
         )

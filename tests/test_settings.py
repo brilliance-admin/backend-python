@@ -36,7 +36,7 @@ async def test_index_context_data():
         'settings_json': '{"base_url": null, "backend_prefix": "http://testserver/admin/", '
         f'"static_prefix": "http://testserver/admin/static/", "version": "{version}", '
         '"api_timeout_ms": 5000, "logo_image": "http://testserver/static/logo-outline.png", '
-        '"default_theme": "deepPurpleDark", "custom_themes": []}',
+        '"default_theme": null, "custom_themes": []}',
         'title': 'Brilliance Admin Demo',
     }
 

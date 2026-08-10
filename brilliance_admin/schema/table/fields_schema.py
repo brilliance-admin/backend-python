@@ -166,6 +166,9 @@ class FieldsSchema:
             self.readonly_fields = readonly_fields
 
         if formset:
+            if not isinstance(formset, FormSet):
+                msg = f'{type(self).__name__}.formset must be a FormSet instance; found: {type(formset).__name__}'
+                raise AttributeError(msg)
             self.formset = formset
 
         generated_fields = self.generate_fields(kwargs)
@@ -296,8 +299,6 @@ class FieldsSchema:
             return result
 
         fields = getattr(formset, 'fields', None)
-        if fields is None and isinstance(formset, dict):
-            fields = formset.get('fields')
 
         if fields is None:
             return result
@@ -305,15 +306,6 @@ class FieldsSchema:
         for item in fields:
             if isinstance(item, str):
                 result.add(item)
-                continue
-
-            if isinstance(item, dict):
-                if item.get('fields'):
-                    result |= self._collect_formset_fields(item)
-                    continue
-                slug = item.get('field') or item.get('slug') or item.get('title')
-                if slug:
-                    result.add(slug)
                 continue
 
             if getattr(item, 'fields', None):

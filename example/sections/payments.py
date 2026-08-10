@@ -18,7 +18,7 @@ logger = get_logger()
 
 
 class PaymentFiltersSchema(schema.FieldsSchema):
-    id = schema.IntegerField(label='ID')
+    id = schema.IntegerField(label='ID', help_text='ID help text\nhelp text')
     created_at = schema.DateTimeField(label=_('created_at'), range=True)
     status = schema.ChoiceField(label='Status', required=True, choices=TerminalStatuses)
 

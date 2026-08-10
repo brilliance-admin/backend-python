@@ -569,9 +569,9 @@ class ChoiceField(TableField):
                 )
             value = value['value']
 
-        if not isinstance(value, str):
+        if isinstance(value, bool) or not isinstance(value, (str, int, float)):
             raise FieldError(
-                f'{type(self).__name__} value must be str, got {type(value)}'
+                f'{type(self).__name__} value must be str, int or float, got {type(value)}'
             )
 
         choice = self.find_choice(value)

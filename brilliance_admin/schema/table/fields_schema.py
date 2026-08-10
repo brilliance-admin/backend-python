@@ -1,5 +1,6 @@
 import inspect
 import json
+from copy import deepcopy
 from typing import Any, ClassVar, Dict, List
 
 from pydantic import Field
@@ -65,6 +66,26 @@ class FormSet(DataclassBase):
     description: SupportsStr | None = None
     fields: list = Field(default_factory=list)
     col_span: int | None = None
+
+    def exclude_fields(self, exclude_fields: set[str]):
+        next_fields = []
+
+        for field in self.fields:
+            if isinstance(field, FormSet):
+                field.exclude_fields(exclude_fields)
+                if field.fields:
+                    next_fields.append(field)
+                continue
+
+            if isinstance(field, FormField):
+                if field.title not in exclude_fields:
+                    next_fields.append(field)
+                continue
+
+            if field not in exclude_fields:
+                next_fields.append(field)
+
+        self.fields = next_fields
 
 
 # pylint: disable=too-many-instance-attributes
@@ -346,6 +367,7 @@ class FieldsSchema:
             exclude_fields=None,
     ) -> FieldsSchemaData:
         exclude_fields = exclude_fields or []
+        removed_fields = set()
         schema_list_display = [
             field_slug
             for field_slug in self.list_display
@@ -353,12 +375,13 @@ class FieldsSchema:
         ]
         fields_schema = FieldsSchemaData(
             list_display=schema_list_display,
-            formset=self.formset,
+            formset=deepcopy(self.formset),
         )
 
         context = {'language_context': language_context}
         for field_slug, field in self.get_fields().items():
             if exclude_fields and field_slug in exclude_fields:
+                removed_fields.add(field_slug)
                 continue
             field_schema: FieldSchemaData = field.generate_field_schema(
                 user,
@@ -367,6 +390,9 @@ class FieldsSchema:
                 schema_type=schema_type,
             )
             fields_schema.fields[field_slug] = field_schema.to_dict(keep_none=False, context=context)
+
+        if removed_fields and fields_schema.formset:
+            fields_schema.formset.exclude_fields(removed_fields)
 
         return fields_schema
 

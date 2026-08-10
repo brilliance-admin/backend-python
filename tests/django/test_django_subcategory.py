@@ -25,6 +25,17 @@ class DjangoAnotherExampleAdmin(DjangoAdmin):
     table_schema = DjangoFieldsSchema(
         model=DjangoAnotherExample,
         fields=['id', 'title', 'example'],
+        formset=schema.FormSet(
+            fields=[
+                schema.FormSet(
+                    fields=[
+                        'id',
+                        'title',
+                        'example',
+                    ],
+                ),
+            ],
+        ),
     )
 
 
@@ -179,16 +190,24 @@ def test_subcategory_schema_removes_reverse_fk(language_context):
         else subcategories['djangoanotherexample']
     )
     subcategory_fields = subcategory_schema['table_info']['table_schema']['fields']
+    subcategory_formset_fields = another_subcategory.table_schema._collect_formset_fields(
+        subcategory_schema['table_info']['table_schema']['formset']
+    )
 
     assert 'example' not in subcategory_fields
+    assert 'example' not in subcategory_formset_fields
 
     direct_subcategory_schema = another_subcategory.generate_category_schema(
         user,
         language_context,
     )
     direct_subcategory_fields = direct_subcategory_schema.table_info.table_schema.fields
+    direct_formset_fields = another_subcategory.table_schema._collect_formset_fields(
+        direct_subcategory_schema.table_info.table_schema.formset
+    )
 
     assert 'example' in direct_subcategory_fields
+    assert 'example' in direct_formset_fields
 
     group_schema = schema.CategoryGroup(
         slug='examples',

@@ -5,35 +5,6 @@ from brilliance_admin.schema.table.fields.base import InlineField
 
 
 class DjangoInlineField(InlineField):
-    def _remove_formset_fields(self, formset, excluded_fields):
-        if formset is None:
-            return None
-
-        fields = getattr(formset, 'fields', None)
-        if fields is None:
-            return formset
-
-        next_fields = []
-        for item in fields:
-            if isinstance(item, str):
-                if item not in excluded_fields:
-                    next_fields.append(item)
-                continue
-
-            item_fields = getattr(item, 'fields', None)
-            if item_fields is not None:
-                self._remove_formset_fields(item, excluded_fields)
-                if item.fields:
-                    next_fields.append(item)
-                continue
-
-            slug = getattr(item, 'field', None) or getattr(item, 'slug', None) or getattr(item, 'title', None)
-            if slug not in excluded_fields:
-                next_fields.append(item)
-
-        formset.fields = next_fields
-        return formset
-
     def remove_reverse_fk_field(self, owner_model):
         # pylint: disable=import-outside-toplevel
         from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
@@ -64,7 +35,7 @@ class DjangoInlineField(InlineField):
             ]
 
         if self.table_schema.formset:
-            self._remove_formset_fields(self.table_schema.formset, set(excluded_fields))
+            self.table_schema.formset.exclude_fields(set(excluded_fields))
             self.table_schema.validate_formset()
 
     def _get_related_model(self, owner_model):

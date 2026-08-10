@@ -191,13 +191,12 @@ class SQLAlchemyRelatedField(RelatedField):
 
         async with db_async_session() as session:
             records = (await session.execute(stmt)).scalars().all()
-
-        for record in records:
-            _record = Record(
-                key=getattr(record, pk.key),
-                title=await sync_to_async(record.__str__)(),
-            )
-            results.append(_record)
+            for record in records:
+                _record = Record(
+                    key=getattr(record, pk.key),
+                    title=await sync_to_async(record.__str__)(),
+                )
+                results.append(_record)
 
         return results
 

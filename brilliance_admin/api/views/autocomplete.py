@@ -41,7 +41,8 @@ async def autocomplete(
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
     except Exception as e:
-        logger.exception('Autocomplete %s.%s exceptoin: %s', e, group, category, extra={'data': data})
-        return JSONResponse({'message': 'Internal autocomplete exception'}, status_code=500)
+        logger.exception('Autocomplete %s.%s exception: %s', group, category, e, extra={'data': data})
+        message = f'Autocomplete error: {e}' if schema.debug else 'Internal autocomplete exception'
+        return JSONResponse({'message': message}, status_code=500)
 
     return JSONResponse(result.model_dump(mode='json', context=context))

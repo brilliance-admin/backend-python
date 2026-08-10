@@ -99,6 +99,7 @@ fees_help_text: 'Здесь создаются комиссии терминал
 currencies: 'Валюты'
 whitelist_ips: 'Белый список IP'
 users: 'Пользователи'
+city_country_filter_help_text: 'Список городов зависит от выбранной страны.'
 field_not_found_in_schema: 'Поле "%(field_slug)s" не найдено среди доступных: %(available)s'
 related_not_found: 'Ошибка при обновлении связей поля %(field_slug)s: запись %(model)s с ключем pk=%(pk)s не найдена. Возможно запись более недоступна.'
 

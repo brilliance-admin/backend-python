@@ -1,6 +1,7 @@
 import json
 
 from asgiref.sync import sync_to_async
+from django.db import IntegrityError
 
 from brilliance_admin import schema
 from brilliance_admin.exceptions import APIError, AdminAPIException, ValidationError
@@ -66,6 +67,15 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 continue
 
             result[field_slug] = self.generate_many_to_many_field(model_field)
+
+        if self.fields is not None:
+            for field_slug in self.fields:
+                if field_slug in result:
+                    continue
+
+                reverse_field = self.generate_reverse_related_field(field_slug)
+                if reverse_field is not None:
+                    result[field_slug] = reverse_field
 
         return result
 
@@ -182,6 +192,22 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             many=True,
             dual_list=True,
         )
+
+    def generate_reverse_related_field(self, field_slug):
+        for model_field in self.model._meta.related_objects:
+            if model_field.get_accessor_name() != field_slug:
+                continue
+
+            return DjangoRelatedField(
+                label=humanize_field_name(field_slug),
+                read_only=False,
+                required=False,
+                rel_name=field_slug,
+                many=True,
+                dual_list=True,
+            )
+
+        return None
 
     def generate_model_field(self, model_field):
         from django.db import models
@@ -362,7 +388,16 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 status_code=400,
             ) from e
 
-        return await self.create_from_deserialized(deserialized_data)
+        try:
+            return await self.create_from_deserialized(deserialized_data)
+        except IntegrityError as e:
+            raise AdminAPIException(
+                APIError(
+                    message=str(e),
+                    code='integrity_error',
+                ),
+                status_code=400,
+            ) from e
 
     async def create_from_deserialized(self, deserialized_data):
         record = await sync_to_async(self.model, thread_sensitive=True)()
@@ -421,6 +456,14 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 APIError(
                     code='validation_error',
                     field_errors=e.data,
+                ),
+                status_code=400,
+            ) from e
+        except IntegrityError as e:
+            raise AdminAPIException(
+                APIError(
+                    message=str(e),
+                    code='integrity_error',
                 ),
                 status_code=400,
             ) from e

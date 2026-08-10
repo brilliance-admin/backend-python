@@ -82,6 +82,35 @@ async def test_list_filter(language_context):
 
 
 @pytest.mark.asyncio
+async def test_list_filter_reverse_relation_with_explicit_fields(language_context):
+    category = DjangoAdmin(
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+        table_filters=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['another_examples'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    example = await DjangoExampleFactory()
+    child = await DjangoAnotherExampleFactory(example=example)
+    await DjangoExampleFactory()
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(filters={'another_examples': child.pk}),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+
+    assert list_result == schema.TableListResult(data=[{'id': example.id}], total_count=1)
+
+
+@pytest.mark.asyncio
 async def test_list_search(language_context):
     category = DjangoAdmin(
         search_fields=['title'],

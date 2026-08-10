@@ -81,6 +81,32 @@ BIG_JSON = {
     }
 }
 
+COUNTRY_CITY_DATA = {
+    "Brazil": ["Sao Paulo", "Rio de Janeiro", "Brasilia", "Salvador", "Fortaleza"],
+    "Canada": ["Toronto", "Montreal", "Vancouver", "Calgary", "Ottawa"],
+    "France": ["Paris", "Lyon", "Marseille", "Toulouse", "Nice"],
+    "Germany": ["Berlin", "Munich", "Hamburg", "Cologne", "Frankfurt"],
+    "India": ["Mumbai", "Delhi", "Bengaluru", "Chennai", "Hyderabad"],
+    "Japan": ["Tokyo", "Osaka", "Kyoto", "Yokohama", "Nagoya"],
+    "Mexico": ["Mexico City", "Guadalajara", "Monterrey", "Puebla", "Tijuana"],
+    "Spain": ["Madrid", "Barcelona", "Valencia", "Seville", "Bilbao"],
+    "United Kingdom": ["London", "Manchester", "Birmingham", "Liverpool", "Leeds"],
+    "United States": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"],
+}
+
+COUNTRY_CODES = {
+    "Brazil": "BR",
+    "Canada": "CA",
+    "France": "FR",
+    "Germany": "DE",
+    "India": "IN",
+    "Japan": "JP",
+    "Mexico": "MX",
+    "Spain": "ES",
+    "United Kingdom": "GB",
+    "United States": "US",
+}
+
 
 class ModelBase(DeclarativeBase):
     pass
@@ -95,9 +121,44 @@ class BaseIDModel(ModelBase):
     )
 
 
+class Country(BaseIDModel):
+    __tablename__ = "country"
+    __search_fields__ = ['name', 'code']
+
+    name: Mapped[str] = mapped_column(String(80), unique=True, index=True, nullable=False)
+    code: Mapped[str] = mapped_column(String(2), unique=True, index=True, nullable=False)
+
+    cities: Mapped[list["City"]] = relationship(back_populates="country")
+    users: Mapped[list["User"]] = relationship(back_populates="country")
+
+    def __str__(self):
+        return self.name
+
+
+class City(BaseIDModel):
+    __tablename__ = "city"
+    __search_fields__ = ['name']
+
+    country_id: Mapped[int] = mapped_column(ForeignKey("country.id"), index=True, nullable=False)
+    country: Mapped["Country"] = relationship(back_populates="cities")
+
+    name: Mapped[str] = mapped_column(String(80), index=True, nullable=False)
+
+    users: Mapped[list["User"]] = relationship(back_populates="city")
+
+    def __str__(self):
+        return f'{self.name}, {self.country.name}'
+
+
 class User(BaseIDModel):
     __tablename__ = "user"
     __search_fields__ = ['id', 'username', 'email']
+
+    country_id: Mapped[int] = mapped_column(ForeignKey("country.id"), index=True, nullable=True)
+    country: Mapped["Country"] = relationship(back_populates="users")
+
+    city_id: Mapped[int] = mapped_column(ForeignKey("city.id"), index=True, nullable=True)
+    city: Mapped["City"] = relationship(back_populates="users")
 
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
     email: Mapped[str] = mapped_column(String(120), unique=True, index=True, nullable=False)
@@ -130,6 +191,20 @@ class UserFactory(SQLAlchemyFactoryBase):
 
     username = factory.Sequence(lambda n: f"user_{n}")
     email = factory.Faker("email")
+
+
+class CountryFactory(SQLAlchemyFactoryBase):
+    class Meta:
+        model = Country
+        sqlalchemy_session_factory = async_sessionmaker_
+        sqlalchemy_session_persistence = "commit"
+
+
+class CityFactory(SQLAlchemyFactoryBase):
+    class Meta:
+        model = City
+        sqlalchemy_session_factory = async_sessionmaker_
+        sqlalchemy_session_persistence = "commit"
 
 
 class DeviceType(Enum):

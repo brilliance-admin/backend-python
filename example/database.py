@@ -48,10 +48,28 @@ async def lifespan(app):
 
     from example.sections import models
 
+    for country_index, (country_name, cities) in enumerate(models.COUNTRY_CITY_DATA.items(), start=1):
+        country = await models.CountryFactory.create_async(
+            id=country_index,
+            name=country_name,
+            code=models.COUNTRY_CODES[country_name],
+        )
+        for city_index, city_name in enumerate(cities, start=1):
+            await models.CityFactory.create_async(
+                id=(country_index - 1) * 5 + city_index,
+                country_id=country.id,
+                name=city_name,
+            )
+
     await models.FeeTypeFactory.create_batch_async(5)
     await models.CurrencyFactory.create_batch_async(5)
     await models.TerminalFactory.create_batch_async(15)
-    await models.UserFactory.create_batch_async(27)
+    for _ in range(27):
+        country_id = models.random.randint(1, len(models.COUNTRY_CITY_DATA))
+        await models.UserFactory.create_async(
+            country_id=country_id,
+            city_id=(country_id - 1) * 5 + models.random.randint(1, 5),
+        )
     await models.UserSessionFactory.create_batch_async(50)
     await models.PrivacyPolicyVersionFactory.create_batch_async(50)
     await models.MerchantFactory.create_batch_async(9)

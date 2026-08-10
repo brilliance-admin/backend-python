@@ -131,7 +131,7 @@ admin_schema = schema.AdminSchema(
         },
     ),
 
-    default_theme='deepPurpleDark',
+    # default_theme='deepPurpleDark',
     custom_themes=custom_themes,
 
     categories=[

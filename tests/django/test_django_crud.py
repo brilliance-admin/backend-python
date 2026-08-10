@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import time
 from unittest import mock
 
 import pytest
@@ -159,6 +160,7 @@ async def test_update(language_context):
             'price': '77.70',
             'rating': '8.5',
             'payload': {'after': True},
+            'event_time': '12:00',
             'timezone': 'Asia/Tokyo',
         },
         user=user,
@@ -179,6 +181,7 @@ async def test_update(language_context):
     assert updated.price == Decimal('77.70')
     assert updated.rating == 8.5
     assert updated.payload == {'after': True}
+    assert updated.event_time == time(12, 0)
     assert str(updated.timezone) == 'Asia/Tokyo'
 
 

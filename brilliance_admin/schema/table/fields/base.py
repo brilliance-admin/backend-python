@@ -363,6 +363,12 @@ class DateTimeField(TableField):
             raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'datetime'})
 
         if isinstance(value, str):
+            if self.include_time and not self.include_date:
+                return datetime.time.fromisoformat(value)
+
+            if self.include_date and not self.include_time:
+                return datetime.date.fromisoformat(value)
+
             return _parse_iso(value)
 
         if isinstance(value, dict):

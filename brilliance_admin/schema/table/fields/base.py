@@ -703,7 +703,16 @@ class InlineField(TableField):
         has_any_error = False
         for line_value in value:
             try:
-                form_data = await self.table_schema.deserialize_fields(line_value, action, extra)
+                line_action = action
+                if action == DeserializeAction.UPDATE and isinstance(line_value, dict):
+                    pk_name = 'id'
+                    model = getattr(self.table_schema, 'model', None)
+                    if model is not None:
+                        pk_name = model._meta.pk.name
+                    if line_value.get(pk_name) is None:
+                        line_action = DeserializeAction.CREATE
+
+                form_data = await self.table_schema.deserialize_fields(line_value, line_action, extra)
                 data.append(form_data)
             except ValidationError as e:
                 has_any_error = True

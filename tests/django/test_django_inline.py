@@ -2,7 +2,7 @@ import pytest
 from django.db import connection, models
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.exceptions import AdminAPIException
+from brilliance_admin.exceptions import AdminAPIException, FieldError
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema, DjangoInlineField
 from example.sections.django_models import (
     DjangoAnotherExample, DjangoAnotherExampleFactory, DjangoExample, DjangoExampleFactory, DjangoUserFactory)
@@ -223,6 +223,40 @@ async def test_inline_update_accepts_related_field_payload(language_context, inl
     assert row.target_id == target.pk
     assert row.name == 'item'
     assert row.starts_at.isoformat(timespec='minutes') == '12:00'
+
+    with pytest.raises(AdminAPIException) as exc:
+        await category.update(
+            pk=parent.pk,
+            data={
+                'title': 'list_342',
+                'items': [
+                    {},
+                ],
+            },
+            user=user,
+            language_context=language_context,
+            debug=True,
+        )
+
+    assert exc.value.status_code == 400
+    assert exc.value.error.code == 'validation_error'
+    assert exc.value.error.field_errors == {
+        'items': FieldError(
+            message=[
+                {
+                    'target': FieldError(
+                        message='Field is required',
+                        code='field_required',
+                    ),
+                    'name': FieldError(
+                        message='Field is required',
+                        code='field_required',
+                    ),
+                },
+            ],
+            code='inline_nested',
+        ),
+    }
 
 
 @pytest.mark.asyncio

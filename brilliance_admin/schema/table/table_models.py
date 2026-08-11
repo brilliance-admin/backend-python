@@ -7,10 +7,22 @@ from brilliance_admin.utils import DataclassBase
 
 
 @dataclass
+class DebugQuery(DataclassBase):
+    sql: str
+    time_ms: float | None = None
+
+
+@dataclass
+class DebugInfo(DataclassBase):
+    db_query_count: int
+    queries: List[DebugQuery]
+
+
+@dataclass
 class TableListResult(DataclassBase):
     data: List[dict]
     total_count: int
-    debug_info: dict | None = None
+    debug_info: DebugInfo | None = None
 
 
 class AutocompleteData(BaseModel):
@@ -50,11 +62,14 @@ class ListData(BaseModel):
 
 class RetrieveResult(BaseModel):
     data: dict
+    debug_info: DebugInfo | None = None
 
 
 class CreateResult(BaseModel):
     pk: Any
+    debug_info: DebugInfo | None = None
 
 
 class UpdateResult(BaseModel):
     pk: Any
+    debug_info: DebugInfo | None = None

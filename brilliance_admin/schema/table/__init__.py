@@ -5,4 +5,5 @@ from .category_table import CategoryTable
 from .fields import *
 from .fields_schema import FieldsSchema, FormField, FormSet
 from .table_models import (
-    AutocompleteData, AutocompleteResult, CreateResult, ListData, RetrieveResult, TableListResult, UpdateResult)
+    AutocompleteData, AutocompleteResult, CreateResult, DebugInfo, DebugQuery, ListData, RetrieveResult, TableListResult,
+    UpdateResult)

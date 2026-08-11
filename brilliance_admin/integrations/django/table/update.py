@@ -37,5 +37,9 @@ class DjangoAdminUpdate:
                 error,
                 status_code=400,
             )
-        await self.table_schema.update(record, user, data)
-        return schema.UpdateResult(pk=pk)
+        debug_info = None
+        if debug:
+            record, debug_info = await self.table_schema.update(record, user, data, debug=True)
+        else:
+            await self.table_schema.update(record, user, data)
+        return schema.UpdateResult(pk=pk, debug_info=debug_info)

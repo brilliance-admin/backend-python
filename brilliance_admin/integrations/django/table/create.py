@@ -28,6 +28,10 @@ class DjangoAdminCreate:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
         data = self.apply_parent_data(data, parent_category, parent_pk)
-        record = await self.table_schema.create(user, data)
+        debug_info = None
+        if debug:
+            record, debug_info = await self.table_schema.create(user, data, debug=True)
+        else:
+            record = await self.table_schema.create(user, data)
         pk_value = getattr(record, self.pk_name, None)
-        return schema.CreateResult(pk=pk_value)
+        return schema.CreateResult(pk=pk_value, debug_info=debug_info)

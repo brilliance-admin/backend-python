@@ -251,6 +251,7 @@ class AdminSchema:
             'static_prefix': static_prefix,
             'version': importlib.metadata.version('brilliance-admin'),
             'api_timeout_ms': self.api_timeout_ms,
+            'backend_debug': self.debug,
             'logo_image': logo_image,
             'default_theme': self.default_theme,
             'custom_themes': self.custom_themes,

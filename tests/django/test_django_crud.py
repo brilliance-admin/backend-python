@@ -101,6 +101,9 @@ async def test_create(language_context):
     )
 
     assert result.pk == 1
+    assert result.debug_info is not None
+    assert result.debug_info.db_query_count > 0
+    assert result.debug_info.queries
 
     record = await DjangoExample.objects.aget(pk=result.pk)
 
@@ -169,6 +172,9 @@ async def test_update(language_context):
     )
 
     assert result.pk == record.pk
+    assert result.debug_info is not None
+    assert result.debug_info.db_query_count > 0
+    assert result.debug_info.queries
 
     updated = await DjangoExample.objects.aget(pk=record.pk)
 
@@ -210,6 +216,9 @@ async def test_retrieve(language_context):
     assert result.data['owner'] == {'key': record.owner_id, 'title': str(record.owner)}
     assert result.data['title'] == 'retrieve title'
     assert result.data['description'] == 'retrieve description'
+    assert result.debug_info is not None
+    assert result.debug_info.db_query_count > 0
+    assert result.debug_info.queries
 
 
 @pytest.mark.asyncio
@@ -226,6 +235,9 @@ async def test_list(language_context):
         language_context=language_context,
         debug=True,
     )
+
+    assert result.debug_info is not None
+    assert result.debug_info.queries
 
     assert result == schema.TableListResult(
         data=[
@@ -273,7 +285,7 @@ async def test_list(language_context):
             },
         ],
         total_count=2,
-        debug_info={'db_query_count': 2},
+        debug_info=schema.DebugInfo(db_query_count=2, queries=result.debug_info.queries),
     )
 
 
@@ -311,6 +323,9 @@ async def test_list_uses_list_display_fields_only(language_context):
         debug=True,
     )
 
+    assert result.debug_info is not None
+    assert result.debug_info.queries
+
     assert result == schema.TableListResult(
         data=[
             {
@@ -325,7 +340,7 @@ async def test_list_uses_list_display_fields_only(language_context):
             },
         ],
         total_count=2,
-        debug_info={'db_query_count': 2},
+        debug_info=schema.DebugInfo(db_query_count=2, queries=result.debug_info.queries),
     )
 
     queryset = category.optimize_list_queryset(category.get_queryset())

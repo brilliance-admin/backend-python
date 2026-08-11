@@ -64,12 +64,25 @@ class DjangoAdminListMixin:
         return queryset.only(*sorted(only_fields))
 
     @staticmethod
+    def get_debug_info_from_context(ctx):
+        return schema.DebugInfo(
+            db_query_count=len(ctx),
+            queries=[
+                schema.DebugQuery(
+                    sql=query['sql'],
+                    time_ms=float(query['time']) * 1000 if query.get('time') else None,
+                )
+                for query in ctx.captured_queries
+            ],
+        )
+
+    @staticmethod
     def _load_page_with_query_count(queryset, offset, limit):
         connection = connections[queryset.db]
         with CaptureQueriesContext(connection) as ctx:
             total_count = queryset.count()
             records = list(queryset[offset:offset + limit])
-        return total_count, records, len(ctx)
+        return total_count, records, DjangoAdminListMixin.get_debug_info_from_context(ctx)
 
     @staticmethod
     def like_to_regex(value: str) -> str:
@@ -212,11 +225,10 @@ class DjangoAdminListMixin:
 
         debug_info = None
         if debug:
-            total_count, records, db_query_count = await sync_to_async(
+            total_count, records, debug_info = await sync_to_async(
                 self._load_page_with_query_count,
                 thread_sensitive=True,
             )(queryset, offset, limit)
-            debug_info = {"db_query_count": db_query_count}
         else:
             total_count = await queryset.acount()
             records = [record async for record in queryset[offset:offset + limit]]

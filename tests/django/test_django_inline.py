@@ -2,6 +2,7 @@ import pytest
 from django.db import connection, models
 
 from brilliance_admin.auth import UserABC
+from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema, DjangoInlineField
 from example.sections.django_models import (
     DjangoAnotherExample, DjangoAnotherExampleFactory, DjangoExample, DjangoExampleFactory, DjangoUserFactory)
@@ -217,3 +218,28 @@ async def test_inline_update_accepts_related_field_payload(language_context, inl
     assert row.target_id == target.pk
     assert row.name == 'item'
     assert row.starts_at.isoformat(timespec='minutes') == '12:00'
+
+
+@pytest.mark.asyncio
+async def test_inline_create_rolls_back_parent_if_inline_save_fails(language_context, inline_bug_schema):
+    category = InlineBugParentAdmin()
+    user = UserABC(username='test')
+
+    with pytest.raises(AdminAPIException):
+        await category.create(
+            data={
+                'title': 'parent',
+                'items': [
+                    {
+                        'target': {'key': 404, 'title': 'missing'},
+                        'name': 'item',
+                    },
+                ],
+            },
+            user=user,
+            language_context=language_context,
+            debug=True,
+        )
+
+    assert await InlineBugParent.objects.acount() == 0
+    assert await InlineBugRow.objects.acount() == 0

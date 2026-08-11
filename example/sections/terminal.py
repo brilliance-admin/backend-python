@@ -1,10 +1,25 @@
 from brilliance_admin import sqlalchemy
 from brilliance_admin.translations import TranslateText as _
-from example.sections.models import Fee, Terminal
+from example.sections.models import Fee, Terminal, TerminalRouting
 
 
 class FeeFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
     model = Fee
+    fields = [
+        'id',
+        'title',
+        'accrual_type',
+        'percent_part',
+        'percent',
+        'fix_part',
+        'fix_type',
+        'fix_amount',
+        'active',
+        'source',
+        'operation_type',
+        'terminal_id',
+        'fee_type_id',
+    ]
     extra_kwargs = {
         'fix_amount': {'min_value': 0},
     }
@@ -23,6 +38,18 @@ class FeeAdmin(sqlalchemy.SQLAlchemyAdmin):
     ]
 
     table_schema = FeeFieldsSchema()
+
+
+class TerminalRoutingFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
+    model = TerminalRouting
+    fields = [
+        'id',
+        'terminal_id',
+        'name',
+        'priority',
+        'reverse',
+        'active',
+    ]
 
 
 class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
@@ -48,14 +75,17 @@ class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
         many=True,
         table_schema=FeeFieldsSchema(),
     )
+    routing = sqlalchemy.SQLAlchemyInlineField(
+        label='Routing',
+        many=True,
+        table_schema=TerminalRoutingFieldsSchema(),
+    )
     extra_kwargs = {
         'secret_key': {'help_text': 'help_text help_text'}
     }
 
 
 class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
-    has_create = False
-
     model = Terminal
     title = _('terminals')
     icon = 'mdi-console-network-outline'

@@ -79,6 +79,8 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
             field_data["help_text"] = info.get('help_text')
 
             field_data["read_only"] = col.primary_key
+            if col.default is not None and col.default.is_scalar:
+                field_data["default"] = col.default.arg
 
             # Whether the field is required on input (best-effort heuristic)
             field_data["required"] = (

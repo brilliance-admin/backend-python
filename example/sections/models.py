@@ -630,6 +630,7 @@ class Terminal(BaseIDModel):
     currency: Mapped["Currency"] = relationship(back_populates="terminals")  # noqa F821
 
     fees: Mapped[list["Fee"]] = relationship(back_populates="terminal")
+    routing: Mapped[list["TerminalRouting"]] = relationship(back_populates="terminal")
 
     is_h2h: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=expression.true())
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=expression.true())
@@ -663,6 +664,21 @@ class Terminal(BaseIDModel):
 
     def __str__(self):
         return self.title
+
+
+class TerminalRouting(BaseIDModel):
+    __tablename__ = "terminal_routing"
+
+    terminal_id: Mapped[int | None] = mapped_column(ForeignKey("terminal.id"), nullable=True)
+    terminal: Mapped["Terminal"] = relationship(back_populates="routing")
+
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    priority: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    reverse: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    def __str__(self):
+        return self.name
 
 
 class TerminalFactory(SQLAlchemyFactoryBase):

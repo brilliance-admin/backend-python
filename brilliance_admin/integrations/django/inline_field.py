@@ -53,7 +53,7 @@ class DjangoInlineField(InlineField):
         )
         raise AttributeError(msg)
 
-    async def _save_inline_record(self, parent_record, line_data, fk_field_name, existing_record=None):
+    def _save_inline_record_sync(self, parent_record, line_data, fk_field_name, existing_record=None):
         # pylint: disable=import-outside-toplevel
         from brilliance_admin.integrations.django.related_field import DjangoRelatedField
 
@@ -75,8 +75,16 @@ class DjangoInlineField(InlineField):
             setattr(record, field_slug, value)
 
         setattr(record, fk_field_name, parent_record)
-        await record.asave()
+        record.save()
         return record
+
+    async def _save_inline_record(self, parent_record, line_data, fk_field_name, existing_record=None):
+        return await sync_to_async(self._save_inline_record_sync, thread_sensitive=True)(
+            parent_record,
+            line_data,
+            fk_field_name,
+            existing_record,
+        )
 
     async def serialize(self, value, extra: dict, *args, **kwargs):
         if value is None:
@@ -113,6 +121,19 @@ class DjangoInlineField(InlineField):
 
         for line_data in value:
             await self._save_inline_record(parent_record, line_data, fk_field_name)
+
+    def create_inline_sync(self, parent_record, field_slug, value, session):
+        if value is None:
+            return
+
+        if not isinstance(value, list):
+            msg = f'{type(self).__name__} value must be list, got {type(value).__name__}'
+            raise TypeError(msg)
+
+        fk_field_name = self._get_related_model(type(parent_record))
+
+        for line_data in value:
+            self._save_inline_record_sync(parent_record, line_data, fk_field_name)
 
     async def update_inline(self, parent_record, field_slug, value, session, user):
         if value is None:
@@ -157,5 +178,45 @@ class DjangoInlineField(InlineField):
             if record.pk in seen_ids:
                 continue
             await record.adelete()
+
+        # Newly created rows are already linked by FK in create_from_deserialized.
+
+    def update_inline_sync(self, parent_record, field_slug, value, session, user):
+        if value is None:
+            return
+
+        if not isinstance(value, list):
+            msg = f'{type(self).__name__} value must be list, got {type(value).__name__}'
+            raise TypeError(msg)
+
+        fk_field_name = self._get_related_model(type(parent_record))
+        existing_records = list(getattr(parent_record, field_slug).all())
+        existing_by_id = {record.pk: record for record in existing_records}
+        seen_ids = set()
+        pk_name = self.table_schema.model._meta.pk.name
+
+        for line_data in value:
+            line_data = dict(line_data)
+            line_id = line_data.pop(pk_name, None)
+
+            if line_id is None:
+                self._save_inline_record_sync(parent_record, line_data, fk_field_name)
+                continue
+
+            seen_ids.add(line_id)
+            line_record = existing_by_id.get(line_id)
+            if line_record is None:
+                msg = (
+                    f'Inline record "{self.table_schema.model.__name__}" #{line_id} '
+                    f'not found for field "{field_slug}"'
+                )
+                raise AttributeError(msg)
+
+            self._save_inline_record_sync(parent_record, line_data, fk_field_name, line_record)
+
+        for record in existing_records:
+            if record.pk in seen_ids:
+                continue
+            record.delete()
 
         # Newly created rows are already linked by FK in create_from_deserialized.

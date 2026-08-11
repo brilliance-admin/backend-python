@@ -62,6 +62,7 @@ class DjangoInlineField(InlineField):
         else:
             record = existing_record
 
+        many_to_many_values = {}
         for field_slug, value in line_data.items():
             if field_slug == self.table_schema.model._meta.pk.name:
                 continue
@@ -69,6 +70,10 @@ class DjangoInlineField(InlineField):
             field = self.table_schema.get_field(field_slug)
             if isinstance(field, DjangoRelatedField):
                 model_field = self.table_schema.model._meta.get_field(field_slug)
+                if getattr(model_field, 'many_to_many', False):
+                    many_to_many_values[field_slug] = value
+                    continue
+
                 setattr(record, model_field.attname, value)
                 continue
 
@@ -76,6 +81,11 @@ class DjangoInlineField(InlineField):
 
         setattr(record, fk_field_name, parent_record)
         record.save()
+
+        for field_slug, value in many_to_many_values.items():
+            relation = getattr(record, field_slug)
+            relation.set([] if value is None else value)
+
         return record
 
     async def _save_inline_record(self, parent_record, line_data, fk_field_name, existing_record=None):

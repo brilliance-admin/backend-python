@@ -57,6 +57,11 @@ class InlineBugRow(models.Model):
     )
     name = models.CharField(max_length=255)
     starts_at = models.TimeField(null=True, blank=True)
+    targets = models.ManyToManyField(
+        InlineBugTarget,
+        related_name='many_rows',
+        blank=True,
+    )
 
     class Meta:
         app_label = 'sections'
@@ -65,7 +70,7 @@ class InlineBugRow(models.Model):
 
 class InlineBugRowSchema(DjangoFieldsSchema):
     model = InlineBugRow
-    fields = ['id', 'target', 'name', 'starts_at']
+    fields = ['id', 'target', 'name', 'starts_at', 'targets']
 
 
 class InlineBugParentAdmin(DjangoAdmin):
@@ -218,6 +223,38 @@ async def test_inline_update_accepts_related_field_payload(language_context, inl
     assert row.target_id == target.pk
     assert row.name == 'item'
     assert row.starts_at.isoformat(timespec='minutes') == '12:00'
+
+
+@pytest.mark.asyncio
+async def test_inline_update_accepts_many_to_many_related_field(language_context, inline_bug_schema):
+    category = InlineBugParentAdmin()
+    user = UserABC(username='test')
+
+    parent = await InlineBugParent.objects.acreate(title='list_342')
+    target = await InlineBugTarget.objects.acreate(id=4, title='target')
+    many_target = await InlineBugTarget.objects.acreate(id=5, title='many target')
+
+    await category.update(
+        pk=parent.pk,
+        data={
+            'title': 'list_342',
+            'items': [
+                {
+                    'target': {'key': target.pk, 'title': 'target'},
+                    'targets': [{'key': many_target.pk, 'title': 'many target'}],
+                    'name': 'item',
+                },
+            ],
+        },
+        user=user,
+        language_context=language_context,
+        debug=True,
+    )
+
+    row = await InlineBugRow.objects.aget(parent=parent)
+    targets = [item async for item in row.targets.all()]
+
+    assert [item.pk for item in targets] == [many_target.pk]
 
 
 @pytest.mark.asyncio

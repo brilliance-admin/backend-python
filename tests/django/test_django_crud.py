@@ -7,6 +7,7 @@ from django.db import connection, models
 
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
+from brilliance_admin.exceptions import AdminAPIException, FieldError
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
 from brilliance_admin.schema.table.admin_action import ActionData
 from brilliance_admin.translations import TranslateText as _
@@ -117,6 +118,32 @@ async def test_create(language_context):
     assert record.rating == 4.5
     assert record.payload == {'key': 'value'}
     assert str(record.timezone) == 'Europe/Moscow'
+
+
+@pytest.mark.asyncio
+async def test_create_validates_required_related_field(language_context):
+    category = DjangoExampleCategory()
+    user = UserABC(username='test')
+
+    with pytest.raises(AdminAPIException) as exc:
+        await category.create(
+            data={
+                'title': 'test title',
+                'description': 'test description',
+            },
+            user=user,
+            language_context=language_context,
+            debug=True,
+        )
+
+    assert exc.value.status_code == 400
+    assert exc.value.error.code == 'validation_error'
+    assert exc.value.error.field_errors == {
+        'owner': FieldError(
+            message='Field is required',
+            code='field_required',
+        ),
+    }
 
 
 @pytest.mark.asyncio

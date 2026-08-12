@@ -16,6 +16,7 @@ class DebugQuery(DataclassBase):
 class DebugInfo(DataclassBase):
     db_query_count: int
     queries: List[DebugQuery]
+    serialize_ms: float | None = None
 
 
 @dataclass

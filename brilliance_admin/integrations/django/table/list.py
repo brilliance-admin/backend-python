@@ -1,4 +1,5 @@
 import re
+import time
 
 from asgiref.sync import sync_to_async
 from django.db import connections
@@ -18,17 +19,19 @@ ORDERING_NOT_ALLOWED = (
 
 class DjangoAdminListMixin:
     table_filters: DjangoFieldsSchema | None
+    filter_only: bool = True
 
     def get_list_field_slugs(self) -> list[str]:
         return list(self.table_schema.list_display or self.table_schema.get_fields().keys())
 
     def optimize_list_queryset(self, queryset):
+        if not self.filter_only:
+            return queryset
+
         model = queryset.model
         model_field_names = {field.name for field in model._meta.fields}
         model_many_to_many_names = {field.name for field in model._meta.many_to_many}
         only_fields = {model._meta.pk.name}
-        select_related_fields = set()
-        prefetch_related_fields = set()
 
         for field_slug in self.get_list_field_slugs():
             field = self.table_schema.get_field(field_slug)
@@ -36,30 +39,14 @@ class DjangoAdminListMixin:
                 continue
 
             if isinstance(field, RelatedField):
-                if field.many:
-                    prefetch_related_fields.add(field.rel_name)
-                    continue
-
                 if field_slug not in model_field_names:
                     continue
 
-                select_related_fields.add(field.rel_name)
                 only_fields.add(field_slug)
-
-                target_model = model._meta.get_field(field_slug).related_model
-                if target_model is not None:
-                    for target_field in target_model._meta.fields:
-                        only_fields.add(f'{field_slug}__{target_field.name}')
                 continue
 
             if field_slug in model_field_names or field_slug in model_many_to_many_names:
                 only_fields.add(field_slug)
-
-        if select_related_fields:
-            queryset = queryset.select_related(*sorted(select_related_fields))
-
-        if prefetch_related_fields:
-            queryset = queryset.prefetch_related(*sorted(prefetch_related_fields))
 
         return queryset.only(*sorted(only_fields))
 
@@ -233,6 +220,7 @@ class DjangoAdminListMixin:
             total_count = await queryset.acount()
             records = [record async for record in queryset[offset:offset + limit]]
 
+        serialize_started_at = time.perf_counter()
         data = []
         for record in records:
             line = await self.table_schema.serialize(
@@ -241,5 +229,8 @@ class DjangoAdminListMixin:
                 field_slugs=list_field_slugs,
             )
             data.append(line)
+
+        if debug_info is not None:
+            debug_info.serialize_ms = (time.perf_counter() - serialize_started_at) * 1000
 
         return schema.TableListResult(data=data, total_count=total_count, debug_info=debug_info)

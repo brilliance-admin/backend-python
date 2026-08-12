@@ -265,6 +265,7 @@ async def test_list(language_context):
 
     assert result.debug_info is not None
     assert result.debug_info.queries
+    assert result.debug_info.serialize_ms is not None
 
     assert result == schema.TableListResult(
         data=[
@@ -312,7 +313,11 @@ async def test_list(language_context):
             },
         ],
         total_count=2,
-        debug_info=schema.DebugInfo(db_query_count=2, queries=result.debug_info.queries),
+        debug_info=schema.DebugInfo(
+            db_query_count=2,
+            queries=result.debug_info.queries,
+            serialize_ms=result.debug_info.serialize_ms,
+        ),
     )
 
 
@@ -352,6 +357,7 @@ async def test_list_uses_list_display_fields_only(language_context):
 
     assert result.debug_info is not None
     assert result.debug_info.queries
+    assert result.debug_info.serialize_ms is not None
 
     assert result == schema.TableListResult(
         data=[
@@ -367,7 +373,11 @@ async def test_list_uses_list_display_fields_only(language_context):
             },
         ],
         total_count=2,
-        debug_info=schema.DebugInfo(db_query_count=2, queries=result.debug_info.queries),
+        debug_info=schema.DebugInfo(
+            db_query_count=2,
+            queries=result.debug_info.queries,
+            serialize_ms=result.debug_info.serialize_ms,
+        ),
     )
 
     queryset = category.optimize_list_queryset(category.get_queryset())

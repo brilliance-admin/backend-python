@@ -185,6 +185,7 @@ class AdminSchema:
 
         if debug:
             add_limited_debug_traceback_middleware(app, self.debug_traceback_limit)
+            self.run_debug_startup_checks()
 
         if default_cors:
             allow_origins = [self.backend_prefix.rstrip('/')] if self.backend_prefix else ["*"]
@@ -227,6 +228,19 @@ class AdminSchema:
             return JSONResponse(api_error.model_dump(mode='json', context=context), status_code=400)
 
         return app
+
+    def run_debug_startup_checks(self):
+        for category in self.iter_categories():
+            check = getattr(category, 'run_debug_startup_checks', None)
+            if check is not None:
+                check()
+
+    def iter_categories(self):
+        stack = list(self.categories)
+        while stack:
+            category = stack.pop(0)
+            yield category
+            stack.extend(getattr(category, 'subcategories', []) or [])
 
     async def get_index_context_data(self, request: Request) -> dict:
         language_context = self.get_language_context(language_slug=None)

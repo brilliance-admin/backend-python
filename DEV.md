@@ -25,3 +25,9 @@ docker compose -f .configs/docker/docker-compose.yml run --rm backend uv run ruf
 ```shell
 docker compose -f .configs/docker/docker-compose.yml run --rm backend uv sync --all-groups --all-extras
 ```
+
+## Profiling
+
+```shell
+docker compose -f .configs/docker/docker-compose.yml run --rm backend uv run pytest tests/django/test_payment_list_timing.py -s -m benchmark -vvv
+```

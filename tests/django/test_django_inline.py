@@ -24,6 +24,9 @@ class DjangoExampleInlineAdmin(DjangoAdmin):
         ),
     )
 
+    def get_queryset(self):
+        return super().get_queryset().select_related('owner')
+
 
 class InlineBugParent(models.Model):
     title = models.CharField(max_length=255)

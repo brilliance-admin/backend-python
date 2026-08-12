@@ -38,6 +38,9 @@ class DjangoAnotherExampleAdmin(DjangoAdmin):
         ),
     )
 
+    def get_queryset(self):
+        return super().get_queryset().select_related('example', 'example__owner')
+
 
 def get_example_another_subcategory():
     example_category = DjangoExampleAdmin(

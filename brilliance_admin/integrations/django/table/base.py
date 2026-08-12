@@ -1,8 +1,46 @@
+from django.db import models
+
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
+from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_models import AutocompleteData
+from brilliance_admin.utils import get_logger
+
+logger = get_logger()
+
+
+def warn_if_list_related_fields_not_selected(category):
+    queryset = category.get_queryset()
+    select_related = queryset.query.select_related
+    if select_related is True:
+        return
+
+    selected_fields = set(select_related or {})
+    model_field_names = {field.name for field in category.model._meta.fields}
+
+    for field_slug in category.get_list_field_slugs():
+        field = category.table_schema.get_field(field_slug)
+        if not isinstance(field, RelatedField):
+            continue
+        if field.many or field_slug not in model_field_names:
+            continue
+
+        model_field = category.model._meta.get_field(field_slug)
+        if not isinstance(model_field, (models.ForeignKey, models.OneToOneField)):
+            continue
+        if field_slug in selected_fields:
+            continue
+
+        logger.warning(
+            "DjangoAdmin list_display related field is not selected: category=%s model=%s field=%s. "
+            "Add select_related('%s') to get_queryset().",
+            type(category).__name__,
+            category.model.__name__,
+            field_slug,
+            field_slug,
+        )
 
 
 class DjangoAdminBase(CategoryTable):
@@ -183,3 +221,6 @@ class DjangoAdminBase(CategoryTable):
 
     def get_queryset(self):
         return self.model.objects.all()
+
+    def run_debug_startup_checks(self):
+        warn_if_list_related_fields_not_selected(self)

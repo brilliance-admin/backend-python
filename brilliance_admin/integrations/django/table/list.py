@@ -231,6 +231,6 @@ class DjangoAdminListMixin:
             data.append(line)
 
         if debug_info is not None:
-            debug_info.serialize_ms = (time.perf_counter() - serialize_started_at) * 1000
+            debug_info.serialize_ms = round((time.perf_counter() - serialize_started_at) * 1000, 2)
 
         return schema.TableListResult(data=data, total_count=total_count, debug_info=debug_info)

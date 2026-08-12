@@ -1,6 +1,5 @@
 import inspect
 
-from asgiref.sync import sync_to_async
 from django.core.exceptions import SynchronousOnlyOperation
 from pydantic import BaseModel
 
@@ -192,9 +191,10 @@ class DjangoRelatedField(RelatedField):
             ))
 
         if self.many:
-            related = await sync_to_async(lambda: list(getattr(record, self.rel_name).all()), thread_sensitive=True)()
-            if related is None:
+            manager = getattr(record, self.rel_name, None)
+            if manager is None:
                 raise FieldError(MANY_RELATED_MISSING.format(rel_name=self.rel_name, record=record))
+            related = [obj async for obj in manager.all()]
             return [
                 {'key': obj.pk, 'title': await get_record_title(obj)}
                 for obj in related

@@ -1,5 +1,3 @@
-from asgiref.sync import sync_to_async
-
 from brilliance_admin.schema.table.fields.base import InlineField
 
 
@@ -89,12 +87,39 @@ class DjangoInlineField(InlineField):
         return record
 
     async def _save_inline_record(self, parent_record, line_data, fk_field_name, existing_record=None):
-        return await sync_to_async(self._save_inline_record_sync, thread_sensitive=True)(
-            parent_record,
-            line_data,
-            fk_field_name,
-            existing_record,
-        )
+        # pylint: disable=import-outside-toplevel
+        from brilliance_admin.integrations.django.related_field import DjangoRelatedField
+
+        if existing_record is None:
+            record = self.table_schema.model()
+        else:
+            record = existing_record
+
+        many_to_many_values = {}
+        for field_slug, value in line_data.items():
+            if field_slug == self.table_schema.model._meta.pk.name:
+                continue
+
+            field = self.table_schema.get_field(field_slug)
+            if isinstance(field, DjangoRelatedField):
+                model_field = self.table_schema.model._meta.get_field(field_slug)
+                if getattr(model_field, 'many_to_many', False):
+                    many_to_many_values[field_slug] = value
+                    continue
+
+                setattr(record, model_field.attname, value)
+                continue
+
+            setattr(record, field_slug, value)
+
+        setattr(record, fk_field_name, parent_record)
+        await record.asave()
+
+        for field_slug, value in many_to_many_values.items():
+            relation = getattr(record, field_slug)
+            await relation.aset([] if value is None else value)
+
+        return record
 
     async def serialize(self, value, extra: dict, *args, **kwargs):
         if value is None:
@@ -106,7 +131,7 @@ class DjangoInlineField(InlineField):
             raise AttributeError(msg)
 
         if hasattr(value, 'all'):
-            value = await sync_to_async(list, thread_sensitive=True)(value.all())
+            value = [record async for record in value.all()]
 
         if not isinstance(value, list):
             msg = f'{type(self).__name__} value must be list, got {type(value).__name__}'
@@ -154,10 +179,7 @@ class DjangoInlineField(InlineField):
             raise TypeError(msg)
 
         fk_field_name = self._get_related_model(type(parent_record))
-        existing_records = await sync_to_async(
-            lambda: list(getattr(parent_record, field_slug).all()),
-            thread_sensitive=True,
-        )()
+        existing_records = [record async for record in getattr(parent_record, field_slug).all()]
         existing_by_id = {record.pk: record for record in existing_records}
         seen_ids = set()
         records_to_add = []

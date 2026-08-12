@@ -1,7 +1,8 @@
+import inspect
 from typing import Any, List
 
-from asgiref.sync import sync_to_async
 from pydantic.dataclasses import dataclass
+from sqlalchemy.exc import MissingGreenlet
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
@@ -12,6 +13,9 @@ from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_models import AutocompleteData, Record
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
+from brilliance_admin.utils import get_logger
+
+logger = get_logger()
 
 FIELD_NOT_FOUND_ON_MODEL = 'Field "{field_slug}" is not found on model "{model}"'
 FIELD_NOT_RELATIONSHIP_OR_FK = 'Field "{field_slug}" is not a relationship and not a FK column'
@@ -35,6 +39,39 @@ RELATED_MISSING_ON_RECORD = (
 )
 EXPECTED_INT_FOR_FILTER = 'Expected int for filter {rel_name}'
 EXPECTED_LIST_FOR_FILTER = 'Expected list[int] for filter {rel_name}'
+ASYNC_LAZY_RELATED_LOAD_ERROR = (
+    'Async unsafe lazy related load: field="{field}" model="{model}". '
+    'Add selectinload({model}.{field}) or joinedload({model}.{field}) to get_queryset().'
+)
+TITLE_ASYNC_UNSAFE_ERROR = (
+    'Async unsafe title load: model="{model}". '
+    'Add required selectinload()/joinedload() to get_queryset(), or avoid lazy relation access in __str__().'
+    '{source}'
+)
+
+
+def get_str_source(record) -> str:
+    try:
+        source = inspect.getsource(type(record).__str__)
+    except (OSError, TypeError):
+        return ''
+
+    return f'\n__str__ source:\n{source}'
+
+
+def get_record_title(record) -> str:
+    try:
+        return str(record)
+    except MissingGreenlet as e:
+        msg = TITLE_ASYNC_UNSAFE_ERROR.format(
+            model=type(record).__name__,
+            source=get_str_source(record),
+        )
+        logger.exception('SQLAlchemy async unsafe title load: model=%s', type(record).__name__)
+        raise AdminAPIException(
+            APIError(message=msg, code='async_unsafe_title_load'),
+            status_code=500,
+        ) from e
 
 
 @dataclass
@@ -194,7 +231,7 @@ class SQLAlchemyRelatedField(RelatedField):
             for record in records:
                 _record = Record(
                     key=getattr(record, pk.key),
-                    title=await sync_to_async(record.__str__)(),
+                    title=get_record_title(record),
                 )
                 results.append(_record)
 
@@ -235,17 +272,32 @@ class SQLAlchemyRelatedField(RelatedField):
                 record_type=type(record).__name__,
             ))
 
-        related = getattr(record, self.rel_name, None)
+        try:
+            related = getattr(record, self.rel_name, None)
+        except MissingGreenlet as e:
+            msg = ASYNC_LAZY_RELATED_LOAD_ERROR.format(
+                field=self.rel_name,
+                model=type(record).__name__,
+            )
+            logger.exception(
+                'SQLAlchemy async unsafe lazy related load: field=%s model=%s',
+                self.rel_name,
+                type(record).__name__,
+            )
+            raise AdminAPIException(
+                APIError(message=msg, code='async_lazy_related_load'),
+                status_code=500,
+            ) from e
 
         if self.many:
             if related is None:
                 raise FieldError(MANY_RELATED_MISSING.format(rel_name=self.rel_name, record=record))
-            return [{'key': get_pk(obj), 'title': str(obj)} for obj in related]
+            return [{'key': get_pk(obj), 'title': get_record_title(obj)} for obj in related]
 
         if related is None:
             return None
 
-        return {'key': get_pk(related), 'title': str(related)}
+        return {'key': get_pk(related), 'title': get_record_title(related)}
 
     async def update_related(self, record, field_slug, value, session):
         """

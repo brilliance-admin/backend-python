@@ -419,7 +419,46 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             ) from e
 
     async def create_from_deserialized(self, deserialized_data):
-        return await sync_to_async(self.create_from_deserialized_sync, thread_sensitive=True)(deserialized_data)
+        record = self.model()
+        many_to_many_values = {}
+        inline_values = {}
+
+        for field_slug, value in deserialized_data.items():
+            field = self.get_field(field_slug)
+
+            if isinstance(field, DjangoInlineField):
+                inline_values[field_slug] = value
+                continue
+
+            if isinstance(field, DjangoRelatedField):
+                model_field = self.model._meta.get_field(field_slug)
+                if value is None and self.should_skip_none_on_create(model_field):
+                    continue
+
+                if getattr(model_field, 'many_to_many', False):
+                    many_to_many_values[field_slug] = value
+                    continue
+
+                setattr(record, model_field.attname, value)
+                continue
+
+            model_field = self.model._meta.get_field(field_slug)
+            if value is None and self.should_skip_none_on_create(model_field):
+                continue
+
+            setattr(record, field_slug, value)
+
+        await record.asave()
+
+        for field_slug, value in many_to_many_values.items():
+            relation = getattr(record, field_slug)
+            await relation.aset([] if value is None else value)
+
+        for field_slug, value in inline_values.items():
+            field = self.get_field(field_slug)
+            await field.create_inline(record, field_slug, value, None)
+
+        return record
 
     async def create_from_deserialized_with_debug(self, deserialized_data):
         return await sync_to_async(
@@ -505,7 +544,39 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             ) from e
 
     async def update_from_deserialized(self, record, deserialized_data):
-        return await sync_to_async(self.update_from_deserialized_sync, thread_sensitive=True)(record, deserialized_data)
+        many_to_many_values = {}
+        inline_values = {}
+
+        for field_slug, value in deserialized_data.items():
+            field = self.get_field(field_slug)
+
+            if isinstance(field, DjangoInlineField):
+                inline_values[field_slug] = value
+                continue
+
+            if isinstance(field, DjangoRelatedField):
+                model_field = self.model._meta.get_field(field_slug)
+
+                if getattr(model_field, 'many_to_many', False):
+                    many_to_many_values[field_slug] = value
+                    continue
+
+                setattr(record, model_field.attname, value)
+                continue
+
+            setattr(record, field_slug, value)
+
+        await record.asave()
+
+        for field_slug, value in many_to_many_values.items():
+            relation = getattr(record, field_slug)
+            await relation.aset([] if value is None else value)
+
+        for field_slug, value in inline_values.items():
+            field = self.get_field(field_slug)
+            await field.update_inline(record, field_slug, value, None, None)
+
+        return record
 
     async def update_from_deserialized_with_debug(self, record, deserialized_data):
         return await sync_to_async(

@@ -43,6 +43,12 @@ class CategoryTable(BaseCategory):
         super().__init__(*args, **kwargs)
 
         if subcategories:
+            if self.subcategories:
+                msg = (
+                    f'{type(self).__name__} already has default subcategories; '
+                    'passing subcategories to __init__ would overwrite them'
+                )
+                raise ValueError(msg)
             self.subcategories = subcategories
 
         for category in self.subcategories:

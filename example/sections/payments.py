@@ -180,7 +180,7 @@ class PaymentsAdmin(schema.CategoryTable):
     ]
 
     subcategories = [
-        LogsAdmin()
+        LogsAdmin(),
     ]
 
     @admin_action(

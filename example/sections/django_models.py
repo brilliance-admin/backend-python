@@ -3,6 +3,7 @@ import factory
 import timezone_field
 
 from django.contrib.postgres.fields import ArrayField
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from example.utils import DjangoFactoryBase
@@ -53,7 +54,12 @@ class DjangoExample(models.Model):
     event_time = models.TimeField(null=True, blank=True)
     timezone = timezone_field.TimeZoneField(default='UTC')
     ttl = models.DurationField(null=True, blank=True)
-    file = models.FileField(upload_to="django_example/files/", null=True, blank=True)
+    file = models.FileField(
+        upload_to="django_example/files/",
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(allowed_extensions=["jpeg", "jpg", "png", "svg", "bmp"])],
+    )
     image = models.ImageField(upload_to="django_example/images/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

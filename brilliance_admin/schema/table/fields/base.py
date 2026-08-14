@@ -1,4 +1,6 @@
 import abc
+import base64
+import binascii
 import datetime
 import inspect
 import re
@@ -31,6 +33,34 @@ def normalize_field_choices(choices, field_name: str):
 
     msg = f'{field_name}.choices is not suppored: {choices}'
     raise NotImplementedError(msg)
+
+
+def deserialize_base64_file(value):
+    from django.core.files.base import ContentFile
+
+    if value is None:
+        return None
+
+    if isinstance(value, str):
+        return value
+
+    if not isinstance(value, dict):
+        raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'file'})
+
+    name = value.get('name')
+    file_data = value.get('file')
+    if not name or not isinstance(file_data, str):
+        raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'base64 file'})
+
+    if ',' in file_data:
+        file_data = file_data.split(',', 1)[1]
+
+    try:
+        content = base64.b64decode(file_data, validate=True)
+    except (binascii.Error, ValueError):
+        raise FieldError('Invalid base64 file', 'invalid_base64_file') from None
+
+    return ContentFile(content, name=name)
 
 
 @dataclass
@@ -482,6 +512,26 @@ class ArrayField(TableField):
 @dataclass
 class FileField(TableField):
     _type = 'file'
+    allowed_extensions: list[str] | None = None
+
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+    ) -> FieldSchemaData:
+        schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
+        schema.allowed_extensions = self.allowed_extensions
+        return schema
+
+    async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
+        url = getattr(value, 'url', None) if value else None
+        return {'url': url}
+
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
+        return deserialize_base64_file(value)
 
 
 @dataclass
@@ -490,6 +540,7 @@ class ImageField(TableField):
 
     preview_max_height: int = 100
     preview_max_width: int = 100
+    allowed_extensions: list[str] | None = None
 
     def generate_field_schema(
         self,
@@ -506,10 +557,17 @@ class ImageField(TableField):
         if self.preview_max_width is not None:
             schema.preview_max_width = self.preview_max_width
 
+        schema.allowed_extensions = self.allowed_extensions
+
         return schema
 
     async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
-        return {'url': value}
+        url = getattr(value, 'url', None) if value else None
+        return {'url': url}
+
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
+        return deserialize_base64_file(value)
 
 
 @dataclass

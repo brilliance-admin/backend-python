@@ -1,7 +1,45 @@
+import inspect
+from typing import Any, Callable
+
+from pydantic.dataclasses import dataclass
+
 from brilliance_admin.schema.table.fields.base import InlineField
 
+INLINE_GET_QUERYSET_RESULT_ERROR = (
+    '{class_name}.get_queryset() must return Django QuerySet, got {result_type}'
+)
 
+
+@dataclass
 class DjangoInlineField(InlineField):
+    get_queryset: Callable[[Any, dict], Any] | None = None
+    select_related: list[str] | None = None
+    prefetch_related: list[str] | None = None
+
+    async def _get_queryset(self, value, extra):
+        # pylint: disable=import-outside-toplevel
+        from django.db.models import QuerySet
+
+        if self.get_queryset is None:
+            queryset = value.all()
+            if self.select_related:
+                queryset = queryset.select_related(*self.select_related)
+            if self.prefetch_related:
+                queryset = queryset.prefetch_related(*self.prefetch_related)
+        elif inspect.iscoroutinefunction(self.get_queryset):
+            queryset = await self.get_queryset(value, extra)
+        else:
+            queryset = self.get_queryset(value, extra)
+
+        if not isinstance(queryset, QuerySet):
+            msg = INLINE_GET_QUERYSET_RESULT_ERROR.format(
+                class_name=type(self).__name__,
+                result_type=type(queryset).__name__,
+            )
+            raise TypeError(msg)
+
+        return queryset
+
     def remove_reverse_fk_field(self, owner_model):
         # pylint: disable=import-outside-toplevel
         from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
@@ -131,7 +169,8 @@ class DjangoInlineField(InlineField):
             raise AttributeError(msg)
 
         if hasattr(value, 'all'):
-            value = [record async for record in value.all()]
+            queryset = await self._get_queryset(value, extra)
+            value = [record async for record in queryset]
 
         if not isinstance(value, list):
             msg = f'{type(self).__name__} value must be list, got {type(value).__name__}'

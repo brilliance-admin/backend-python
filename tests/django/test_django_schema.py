@@ -180,6 +180,7 @@ FORM_SCHEMA_DATA = {
                     'type': 'duration',
                 },
                 'file': {
+                    'allowed_extensions': ['jpeg', 'jpg', 'png', 'svg', 'bmp'],
                     'header': {},
                     'label': 'File',
                     'read_only': False,
@@ -335,6 +336,29 @@ async def test_generate_category_schema_django(language_context):
     assert {'value': 'UTC', 'title': 'UTC', 'tag_color': None} in timezone_field['choices']
     assert all(isinstance(choice['value'], str) for choice in timezone_field['choices'])
     assert schema_data == FORM_SCHEMA_DATA, new_schema.model_dump()
+
+
+@pytest.mark.asyncio
+async def test_django_search_help_uses_field_titles_by_line(language_context):
+    category = DjangoAdmin(
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(model=DjangoExample),
+        search_fields=['title', 'owner__username', 'payload__phone'],
+    )
+
+    category_schema = category.generate_category_schema(UserABC(username="test"), language_context)
+
+    assert category_schema.table_info.search_help == (
+        '<b>Доступные поля для поиска:</b>\n'
+        '- <b>Title translated</b><br>'
+        '- <b>Owner Username</b><br>'
+        '- <b>Payload Phone</b>\n'
+        '\n'
+        '<b>Доступные операторы:</b>\n'
+        '<b>""</b> - кавычки для точного совпадения\n'
+        '<b>%</b> - любая последовательность символов\n'
+        '<b>_</b> - один любой символ\n'
+    )
 
 
 def test_django_formset_missing_fields():

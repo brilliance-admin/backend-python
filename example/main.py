@@ -19,6 +19,7 @@ from example.sections.merchant import MerchantAdmin
 from example.sections.payments import PaymentsAdmin
 from example.sections.privacy_policy import PrivacyPolicyVersionAdmin
 from example.sections.terminal import FeeAdmin, TerminalAdmin
+from example.sections.terminal_dashboard import TerminalDashboard
 from example.sections.user_session import UserSessionAdmin
 from example.sections.users import UserAdmin
 
@@ -184,6 +185,7 @@ admin_schema = schema.AdminSchema(
                 TerminalAdmin(
                     db_async_session=async_sessionmaker_,
                     subcategories=[
+                        TerminalDashboard(),
                         FeeAdmin(db_async_session=async_sessionmaker_),
                     ],
                 ),

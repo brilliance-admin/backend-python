@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.encoding import force_str
 
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
@@ -6,7 +7,7 @@ from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_models import AutocompleteData
-from brilliance_admin.utils import get_logger
+from brilliance_admin.utils import get_logger, humanize_field_name
 
 logger = get_logger()
 
@@ -68,7 +69,6 @@ class DjangoAdminBase(CategoryTable):
 
         if self.search_fields:
             self.search_enabled = True
-            self.search_help = _('sqlalchemy_search_help') % {'fields': ', '.join(self.search_fields)}
 
         if default_ordering:
             self.default_ordering = default_ordering
@@ -125,10 +125,47 @@ class DjangoAdminBase(CategoryTable):
             meta = self.model._meta
             verbose_name = getattr(meta, 'verbose_name_plural', None) or getattr(meta, 'verbose_name', None)
             if verbose_name:
-                from django.utils.encoding import force_str
                 self.title = force_str(verbose_name)
 
-        return super().generate_category_schema(user, language_context, parent_category)
+        category_schema = super().generate_category_schema(user, language_context, parent_category)
+        if self.search_fields and self.search_help is None:
+            category_schema.table_info.search_help = language_context.get_text(
+                _('sqlalchemy_search_help') % {'fields': self.get_search_help_fields()}
+            )
+        return category_schema
+
+    def get_search_help_fields(self):
+        return '<br>'.join(
+            f'- <b>{self.get_search_field_title(field)}</b>'
+            for field in self.search_fields
+        )
+
+    def get_search_field_title(self, field_path):
+        model = self.model
+        titles = []
+
+        for part in field_path.split('__'):
+            try:
+                model_field = model._meta.get_field(part)
+            except Exception:
+                titles.append(humanize_field_name(part))
+                break
+
+            title = force_str(getattr(model_field, 'verbose_name', None)) or humanize_field_name(part)
+            if title == part.replace('_', ' '):
+                title = humanize_field_name(part)
+            titles.append(title)
+
+            if model_field.get_internal_type() == 'JSONField':
+                continue
+
+            related_model = getattr(model_field, 'related_model', None)
+            if related_model is None:
+                break
+
+            model = related_model
+
+        return ' '.join(titles)
 
     def validate_fields(self):
         model_fields = {field.name for field in self.model._meta.fields}

@@ -8,7 +8,7 @@ from pydantic.dataclasses import dataclass
 from pydantic_core import core_schema
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.exceptions import FieldError, ValidationError
+from brilliance_admin.exceptions import APIError, AdminAPIException, AsyncUnsafeTitleLoad, FieldError, ValidationError
 from brilliance_admin.schema.category import FieldSchemaData, FieldsSchemaData
 from brilliance_admin.schema.table.fields.base import TableField
 from brilliance_admin.schema.table.fields.function_field import FunctionField
@@ -403,6 +403,20 @@ class FieldsSchema:
             except FieldError as e:
                 e.field_slug = field_slug
                 raise e
+            except AsyncUnsafeTitleLoad as e:
+                parent_record = e.parent_record
+                message = (
+                    f'Async unsafe title load: field="{field_slug}" rel_name="{e.rel_name}" '
+                    f'parent_model="{type(parent_record).__name__ if parent_record is not None else None}" '
+                    f'parent_pk={getattr(parent_record, "pk", None)} '
+                    f'model="{type(e.record).__name__}" pk={getattr(e.record, "pk", None)}. '
+                    f'{e.hint}'
+                    f'{e.source}'
+                )
+                raise AdminAPIException(
+                    APIError(message=message, code='async_unsafe_title_load'),
+                    status_code=500,
+                ) from e
 
         return result
 

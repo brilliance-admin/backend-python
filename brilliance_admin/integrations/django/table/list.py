@@ -19,7 +19,7 @@ ORDERING_NOT_ALLOWED = (
 
 class DjangoAdminListMixin:
     table_filters: DjangoFieldsSchema | None
-    filter_only: bool = True
+    filter_only: bool = False
 
     def get_list_field_slugs(self) -> list[str]:
         return list(self.table_schema.list_display or self.table_schema.get_fields().keys())

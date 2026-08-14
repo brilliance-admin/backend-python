@@ -13,6 +13,10 @@ class DjangoAnotherExampleInlineSchema(DjangoFieldsSchema):
     fields = ['id', 'title']
 
 
+async def get_another_examples_queryset(value, extra):
+    return value.all().select_related('example', 'example__owner')
+
+
 class DjangoExampleInlineAdmin(DjangoAdmin):
     model = DjangoExample
     table_schema = DjangoFieldsSchema(
@@ -21,6 +25,7 @@ class DjangoExampleInlineAdmin(DjangoAdmin):
         another_examples=DjangoInlineField(
             many=True,
             table_schema=DjangoAnotherExampleInlineSchema(),
+            get_queryset=get_another_examples_queryset,
         ),
     )
 
@@ -84,6 +89,7 @@ class InlineBugParentAdmin(DjangoAdmin):
         items=DjangoInlineField(
             many=True,
             table_schema=InlineBugRowSchema(),
+            select_related=['target'],
         ),
     )
 

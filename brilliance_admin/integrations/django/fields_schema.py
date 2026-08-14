@@ -48,6 +48,10 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             result[pk_slug] = self.generate_model_field(pk_field)
 
         for field_slug, field in self.generate_related_fields():
+            if field_slug in generated_fields:
+                result[field_slug] = generated_fields[field_slug]
+                continue
+
             if field_slug not in result:
                 result[field_slug] = field
 
@@ -210,6 +214,16 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
         return None
 
+    @staticmethod
+    def get_allowed_extensions(model_field):
+        from django.core.validators import FileExtensionValidator
+
+        for validator in model_field.validators:
+            if isinstance(validator, FileExtensionValidator):
+                return list(validator.allowed_extensions)
+
+        return None
+
     def generate_model_field(self, model_field):
         from django.db import models
         from django.db.models import NOT_PROVIDED
@@ -302,10 +316,14 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             return schema.JSONField(**field_data)
 
         if isinstance(model_field, models.ImageField):
-            return schema.ImageField(**field_data)
+            field = schema.ImageField(**field_data)
+            field.allowed_extensions = self.get_allowed_extensions(model_field)
+            return field
 
         if isinstance(model_field, models.FileField):
-            return schema.FileField(**field_data)
+            field = schema.FileField(**field_data)
+            field.allowed_extensions = self.get_allowed_extensions(model_field)
+            return field
 
         msg = (
             f'Django autogenerate ORM field {self.model.__name__}.{model_field.name} '

@@ -26,6 +26,26 @@ class FieldError(DataclassBase, Exception):
             raise AttributeError(msg)
 
 
+class AsyncUnsafeTitleLoad(Exception):
+    def __init__(
+        self,
+        record,
+        source: str,
+        *,
+        rel_name: str | None = None,
+        parent_record=None,
+        backend: str,
+        hint: str,
+    ):
+        self.record = record
+        self.source = source
+        self.rel_name = rel_name
+        self.parent_record = parent_record
+        self.backend = backend
+        self.hint = hint
+        super().__init__(type(record).__name__)
+
+
 @dataclass
 class APIError(DataclassBase):
     message: SupportsStr | None = None

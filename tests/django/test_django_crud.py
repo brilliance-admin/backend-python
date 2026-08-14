@@ -3,6 +3,8 @@ from datetime import time
 from unittest import mock
 
 import pytest
+from django.conf import settings
+from django.core.files.base import ContentFile
 from django.db import connection, models
 
 from brilliance_admin import schema
@@ -219,6 +221,31 @@ async def test_update(language_context):
 
 
 @pytest.mark.asyncio
+async def test_update_file_from_base64_payload(language_context, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
+    category = DjangoExampleCategory()
+    user = UserABC(username='test')
+    record = await DjangoExampleFactory(title='before')
+
+    result = await category.update(
+        pk=record.pk,
+        data={
+            'file': {
+                'name': 'logo.jpg',
+                'file': 'data:image/jpeg;base64,aGVsbG8=',
+            },
+        },
+        user=user,
+        language_context=language_context,
+        debug=True,
+    )
+
+    updated = await DjangoExample.objects.aget(pk=result.pk)
+    assert updated.file.name == 'django_example/files/logo.jpg'
+    assert updated.file.read() == b'hello'
+
+
+@pytest.mark.asyncio
 async def test_retrieve(language_context):
     category = DjangoExampleCategory()
     user = UserABC(username='test')
@@ -249,12 +276,13 @@ async def test_retrieve(language_context):
 
 
 @pytest.mark.asyncio
-async def test_list(language_context):
+async def test_list(language_context, tmp_path):
+    settings.MEDIA_ROOT = tmp_path
     category = DjangoExampleCategory()
     user = UserABC(username='test')
 
-    first = await DjangoExampleFactory(title='first')
-    second = await DjangoExampleFactory(title='second')
+    first = await DjangoExampleFactory(title='first', file=ContentFile(b'first file', name='first.png'))
+    second = await DjangoExampleFactory(title='second', file=ContentFile(b'second file', name='second.png'))
 
     result = await category.get_list(
         list_data=schema.ListData(),
@@ -286,7 +314,7 @@ async def test_list(language_context):
                 'event_time': None,
                 'timezone': {'value': 'UTC', 'title': 'UTC'},
                 'ttl': None,
-                'file': mock.ANY,
+                'file': {'url': mock.ANY},
                 'image': {'url': mock.ANY},
                 'created_at': mock.ANY,
             },
@@ -307,7 +335,7 @@ async def test_list(language_context):
                 'event_time': None,
                 'timezone': {'value': 'UTC', 'title': 'UTC'},
                 'ttl': None,
-                'file': mock.ANY,
+                'file': {'url': mock.ANY},
                 'image': {'url': mock.ANY},
                 'created_at': mock.ANY,
             },

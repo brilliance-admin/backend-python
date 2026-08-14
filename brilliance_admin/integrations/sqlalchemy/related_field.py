@@ -2,10 +2,9 @@ import inspect
 from typing import Any, List
 
 from pydantic.dataclasses import dataclass
-from sqlalchemy.exc import MissingGreenlet
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
+from brilliance_admin.exceptions import AdminAPIException, APIError, AsyncUnsafeTitleLoad, FieldError
 from brilliance_admin.integrations.sqlalchemy.utils import get_pk
 from brilliance_admin.schema.category import FieldSchemaData
 from brilliance_admin.schema.table.fields.base import RelatedField
@@ -43,10 +42,9 @@ ASYNC_LAZY_RELATED_LOAD_ERROR = (
     'Async unsafe lazy related load: field="{field}" model="{model}". '
     'Add selectinload({model}.{field}) or joinedload({model}.{field}) to get_queryset().'
 )
-TITLE_ASYNC_UNSAFE_ERROR = (
-    'Async unsafe title load: model="{model}". '
-    'Add required selectinload()/joinedload() to get_queryset(), or avoid lazy relation access in __str__().'
-    '{source}'
+TITLE_ASYNC_UNSAFE_HINT = (
+    'Add required selectinload()/joinedload() to get_queryset(), '
+    'or avoid lazy relation access in __str__().'
 )
 
 
@@ -62,15 +60,18 @@ def get_str_source(record) -> str:
 def get_record_title(record) -> str:
     try:
         return str(record)
-    except MissingGreenlet as e:
-        msg = TITLE_ASYNC_UNSAFE_ERROR.format(
-            model=type(record).__name__,
-            source=get_str_source(record),
-        )
-        logger.exception('SQLAlchemy async unsafe title load: model=%s', type(record).__name__)
-        raise AdminAPIException(
-            APIError(message=msg, code='async_unsafe_title_load'),
-            status_code=500,
+    except Exception as e:
+        # pylint: disable=import-outside-toplevel
+        from sqlalchemy.exc import MissingGreenlet
+
+        if not isinstance(e, MissingGreenlet):
+            raise
+
+        raise AsyncUnsafeTitleLoad(
+            record,
+            get_str_source(record),
+            backend='sqlalchemy',
+            hint=TITLE_ASYNC_UNSAFE_HINT,
         ) from e
 
 
@@ -229,9 +230,30 @@ class SQLAlchemyRelatedField(RelatedField):
         async with db_async_session() as session:
             records = (await session.execute(stmt)).scalars().all()
             for record in records:
+                try:
+                    title = get_record_title(record)
+                except AsyncUnsafeTitleLoad as e:
+                    message = (
+                        f'Async unsafe title load: field="{data.field_slug}" rel_name="{self.rel_name}" '
+                        f'parent_model="{None}" parent_pk=None '
+                        f'model="{type(e.record).__name__}" pk={get_pk(e.record)}. '
+                        f'{e.hint}'
+                        f'{e.source}'
+                    )
+                    logger.exception(
+                        'SQLAlchemy async unsafe autocomplete title load: field=%s rel_name=%s model=%s pk=%s',
+                        data.field_slug,
+                        self.rel_name,
+                        type(e.record).__name__,
+                        get_pk(e.record),
+                    )
+                    raise AdminAPIException(
+                        APIError(message=message, code='async_unsafe_title_load'),
+                        status_code=500,
+                    ) from e
                 _record = Record(
                     key=getattr(record, pk.key),
-                    title=get_record_title(record),
+                    title=title,
                 )
                 results.append(_record)
 
@@ -274,7 +296,13 @@ class SQLAlchemyRelatedField(RelatedField):
 
         try:
             related = getattr(record, self.rel_name, None)
-        except MissingGreenlet as e:
+        except Exception as e:
+            # pylint: disable=import-outside-toplevel
+            from sqlalchemy.exc import MissingGreenlet
+
+            if not isinstance(e, MissingGreenlet):
+                raise
+
             msg = ASYNC_LAZY_RELATED_LOAD_ERROR.format(
                 field=self.rel_name,
                 model=type(record).__name__,
@@ -292,12 +320,37 @@ class SQLAlchemyRelatedField(RelatedField):
         if self.many:
             if related is None:
                 raise FieldError(MANY_RELATED_MISSING.format(rel_name=self.rel_name, record=record))
-            return [{'key': get_pk(obj), 'title': get_record_title(obj)} for obj in related]
+            result = []
+            for obj in related:
+                try:
+                    title = get_record_title(obj)
+                except AsyncUnsafeTitleLoad as e:
+                    self._raise_title_load_error(e, record)
+                result.append({'key': get_pk(obj), 'title': title})
+            return result
 
         if related is None:
             return None
 
-        return {'key': get_pk(related), 'title': get_record_title(related)}
+        try:
+            title = get_record_title(related)
+        except AsyncUnsafeTitleLoad as e:
+            self._raise_title_load_error(e, record)
+
+        return {'key': get_pk(related), 'title': title}
+
+    def _raise_title_load_error(self, error: AsyncUnsafeTitleLoad, parent_record):
+        error.rel_name = self.rel_name
+        error.parent_record = parent_record
+        logger.exception(
+            'SQLAlchemy async unsafe title load: rel_name=%s parent_model=%s parent_pk=%s model=%s pk=%s',
+            self.rel_name,
+            type(parent_record).__name__,
+            get_pk(parent_record),
+            type(error.record).__name__,
+            get_pk(error.record),
+        )
+        raise error
 
     async def update_related(self, record, field_slug, value, session):
         """

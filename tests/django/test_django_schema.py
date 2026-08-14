@@ -1,4 +1,5 @@
 import pytest
+from django.db import models
 from fastapi.testclient import TestClient
 
 from brilliance_admin import schema
@@ -300,6 +301,37 @@ FORM_SCHEMA_DATA = {
 client = TestClient(admin_app)
 
 
+class SearchHelpProvider(models.Model):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        app_label = 'sections'
+        db_table = 'test_search_help_provider'
+
+
+class SearchHelpEndpoint(models.Model):
+    provider = models.ForeignKey(SearchHelpProvider, models.PROTECT, verbose_name=None)
+
+    class Meta:
+        app_label = 'sections'
+        db_table = 'test_search_help_endpoint'
+
+
+@pytest.fixture
+def search_help_models_schema():
+    from django.db import connection
+
+    with connection.schema_editor() as schema_editor:
+        schema_editor.create_model(SearchHelpProvider)
+        schema_editor.create_model(SearchHelpEndpoint)
+
+    yield
+
+    with connection.schema_editor() as schema_editor:
+        schema_editor.delete_model(SearchHelpEndpoint)
+        schema_editor.delete_model(SearchHelpProvider)
+
+
 @pytest.mark.asyncio
 async def test_generate_category_schema_django(language_context):
     category = DjangoAdmin(
@@ -350,9 +382,31 @@ async def test_django_search_help_uses_field_titles_by_line(language_context):
 
     assert category_schema.table_info.search_help == (
         '<b>Доступные поля для поиска:</b>\n'
-        '- <b>Title translated</b><br>'
-        '- <b>Owner Username</b><br>'
-        '- <b>Payload Phone</b>\n'
+        '- Title translated<br>'
+        '- Owner Username<br>'
+        '- Payload Phone\n'
+        '\n'
+        '<b>Доступные операторы:</b>\n'
+        '<b>""</b> - кавычки для точного совпадения\n'
+        '<b>%</b> - любая последовательность символов\n'
+        '<b>_</b> - один любой символ\n'
+    )
+
+
+@pytest.mark.asyncio
+async def test_django_search_help_related_title_does_not_render_none(search_help_models_schema, language_context):
+    category = DjangoAdmin(
+        model=SearchHelpEndpoint,
+        table_schema=DjangoFieldsSchema(model=SearchHelpEndpoint),
+        search_fields=['provider__name'],
+    )
+
+    category_schema = category.generate_category_schema(UserABC(username="test"), language_context)
+
+    assert 'None' not in category_schema.table_info.search_help
+    assert category_schema.table_info.search_help == (
+        '<b>Доступные поля для поиска:</b>\n'
+        '- Provider Name\n'
         '\n'
         '<b>Доступные операторы:</b>\n'
         '<b>""</b> - кавычки для точного совпадения\n'

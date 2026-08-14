@@ -136,7 +136,7 @@ class DjangoAdminBase(CategoryTable):
 
     def get_search_help_fields(self):
         return '<br>'.join(
-            f'- <b>{self.get_search_field_title(field)}</b>'
+            f'- {self.get_search_field_title(field)}'
             for field in self.search_fields
         )
 
@@ -151,15 +151,17 @@ class DjangoAdminBase(CategoryTable):
                 titles.append(humanize_field_name(part))
                 break
 
-            title = force_str(getattr(model_field, 'verbose_name', None)) or humanize_field_name(part)
-            if title == part.replace('_', ' '):
+            related_model = getattr(model_field, 'related_model', None)
+            title = force_str(getattr(model_field, 'verbose_name', None) or '')
+            if not title or title == 'None':
+                title = humanize_field_name(related_model.__name__ if related_model else part)
+            elif title == part.replace('_', ' '):
                 title = humanize_field_name(part)
             titles.append(title)
 
             if model_field.get_internal_type() == 'JSONField':
                 continue
 
-            related_model = getattr(model_field, 'related_model', None)
             if related_model is None:
                 break
 

@@ -248,11 +248,11 @@ class AdminSchema:
         resolved_base_url = self.base_url
 
         backend_prefix = self.backend_prefix
-        if backend_prefix is not None:
+        if backend_prefix is None:
             backend_prefix = '/admin/'
 
         static_prefix = self.static_prefix
-        if static_prefix is not None:
+        if static_prefix is None:
             static_prefix = '/admin/static/'
 
         logo_image = self.logo_image

@@ -25,6 +25,7 @@ class DjangoExampleCategory(DjangoAdmin):
 
 class DjangoExampleCompactCategory(DjangoAdmin):
     model = DjangoExample
+    filter_only = True
     table_schema = DjangoFieldsSchema(
         model=DjangoExample,
         list_display=['id', 'owner', 'title'],

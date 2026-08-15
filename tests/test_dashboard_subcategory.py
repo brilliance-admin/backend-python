@@ -24,5 +24,5 @@ def test_dashboard_subcategory_uses_query_param_like_table():
         'container',
         'container',
     ]
-    assert data['components'][0]['components'][0]['component_type'] == 'period_graph'
-    assert data['components'][1]['components'][0]['title'] == 'Payments'
+    assert data['components'][0]['components'][0]['component_type'] == 'chart'
+    assert data['components'][0]['components'][0]['options']['plugins']['title']['text'] == 'Payments: count and amount'

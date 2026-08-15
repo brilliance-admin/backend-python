@@ -5,7 +5,8 @@ on:
 
 jobs:
   install-docker:
-    runs-on: self-hosted
+    # runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Install Docker and allow runner to use it
         uses: appleboy/ssh-action@master
@@ -50,4 +51,3 @@ jobs:
             sudo docker compose version
             ls -l /var/run/docker.sock
             getfacl /var/run/docker.sock
-

@@ -5,7 +5,8 @@ on:
 
 jobs:
   setup-https:
-    runs-on: self-hosted
+    # runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       - name: Setup HTTPS with nginx and certbot

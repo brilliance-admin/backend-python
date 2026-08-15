@@ -383,8 +383,8 @@ async def test_django_search_help_uses_field_titles_by_line(language_context):
     assert category_schema.table_info.search_help == (
         '<b>Доступные поля для поиска:</b>\n'
         '- Title translated<br>'
-        '- Owner Username<br>'
-        '- Payload Phone\n'
+        '- Owner - Username<br>'
+        '- Payload - Phone\n'
         '\n'
         '<b>Доступные операторы:</b>\n'
         '<b>""</b> - кавычки для точного совпадения\n'
@@ -406,7 +406,7 @@ async def test_django_search_help_related_title_does_not_render_none(search_help
     assert 'None' not in category_schema.table_info.search_help
     assert category_schema.table_info.search_help == (
         '<b>Доступные поля для поиска:</b>\n'
-        '- Provider Name\n'
+        '- Provider - Name\n'
         '\n'
         '<b>Доступные операторы:</b>\n'
         '<b>""</b> - кавычки для точного совпадения\n'

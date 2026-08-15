@@ -167,7 +167,7 @@ class DjangoAdminBase(CategoryTable):
 
             model = related_model
 
-        return ' '.join(titles)
+        return ' - '.join(titles)
 
     def validate_fields(self):
         model_fields = {field.name for field in self.model._meta.fields}

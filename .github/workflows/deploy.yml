@@ -56,15 +56,20 @@ jobs:
 
       - name: Deploy containers
         uses: appleboy/ssh-action@master
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         with:
           host: ${{ vars.SERVER_HOST }}
           username: deploy
           key: ${{ secrets.SERVER_SSH_KEY }}
+          envs: POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD
           script: |
             set -e
             sudo chown -R deploy:deploy /home/deploy/apps/backend-python
             cd /home/deploy/apps/backend-python
-            docker compose -f .configs/docker/docker-compose.yml up -d --build
+            docker compose -f .configs/docker/docker-compose.prod.yml up -d --build
             sudo ln -sf /home/deploy/apps/backend-python/.configs/nginx/example.conf /etc/nginx/sites-enabled/example
             sudo rm -f /etc/nginx/sites-enabled/default
             sudo nginx -t
@@ -72,19 +77,24 @@ jobs:
 
       - name: Wait backend healthy
         uses: appleboy/ssh-action@master
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         with:
           host: ${{ vars.SERVER_HOST }}
           username: deploy
           key: ${{ secrets.SERVER_SSH_KEY }}
+          envs: POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD
           script: |
             set -e
             cd /home/deploy/apps/backend-python
 
-            CONTAINER="$(docker compose -f .configs/docker/docker-compose.yml ps -q backend)"
+            CONTAINER="$(docker compose -f .configs/docker/docker-compose.prod.yml ps -q backend)"
 
             if [ -z "$CONTAINER" ]; then
               echo "Backend container not found"
-              docker compose -f .configs/docker/docker-compose.yml ps
+              docker compose -f .configs/docker/docker-compose.prod.yml ps
               exit 1
             fi
 

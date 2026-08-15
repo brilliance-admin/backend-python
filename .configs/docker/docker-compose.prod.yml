@@ -2,6 +2,7 @@ name: brilliance
 
 services:
   backend:
+    restart: unless-stopped
     build:
       context: ./../..
       dockerfile: .configs/docker/Dockerfile
@@ -11,21 +12,16 @@ services:
       - backend_venv:/app/.venv
       - uv_cache:/root/.cache/uv
       - uv_python:/root/.local/share/uv
-
-      - ~/.ssh/id_rsa:/root/.ssh/id_rsa:delegated
-      - ~/.ssh/known_hosts:/root/.ssh/known_hosts:delegated
-
-      - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      POSTGRES_DB: brilliance
-      POSTGRES_USER: brilliance
-      POSTGRES_PASSWORD: brilliance
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: postgres
     tmpfs:
       - /tmp
     ports:
       - 8082:8082
-    command: uv run uvicorn example.main:app --host 0.0.0.0 --port 8082 --reload
+    command: uv run uvicorn example.main:app --host 0.0.0.0 --port 8082
     depends_on:
       postgres:
         condition: service_healthy
@@ -38,15 +34,16 @@ services:
       retries: 3
 
   postgres:
+    restart: unless-stopped
     image: postgres:alpine
     environment:
-      POSTGRES_DB: brilliance
-      POSTGRES_USER: brilliance
-      POSTGRES_PASSWORD: brilliance
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
       - 5432:5432
     healthcheck:
-      test: ['CMD', 'pg_isready', '-h', 'localhost', '-p', '5432', '-U', 'brilliance']
+      test: ['CMD-SHELL', 'pg_isready -h localhost -p 5432 -U "$$POSTGRES_USER"']
       interval: 2s
       timeout: 2s
       retries: 10

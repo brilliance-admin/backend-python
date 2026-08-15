@@ -245,18 +245,18 @@ class AdminSchema:
     async def get_index_context_data(self, request: Request) -> dict:
         language_context = self.get_language_context(language_slug=None)
         context = {'language_context': language_context}
-        resolved_base_url = self.base_url or str(request.base_url)
+        resolved_base_url = self.base_url
 
         backend_prefix = self.backend_prefix
-        if not backend_prefix:
-            backend_prefix = urljoin(resolved_base_url, '/admin/')
+        if backend_prefix is not None:
+            backend_prefix = '/admin/'
 
         static_prefix = self.static_prefix
-        if not static_prefix:
-            static_prefix = urljoin(resolved_base_url, '/admin/static/')
+        if static_prefix is not None:
+            static_prefix = '/admin/static/'
 
         logo_image = self.logo_image
-        if logo_image and logo_image.startswith('/'):
+        if logo_image and logo_image.startswith('/') and resolved_base_url is not None:
             logo_image = urljoin(resolved_base_url, logo_image)
 
         settings_json = {

@@ -33,10 +33,10 @@ async def test_index_context_data():
     version = importlib.metadata.version('brilliance-admin')
     assert result == {
         'favicon_image': '/static/favicon.jpg',
-        'settings_json': '{"base_url": null, "backend_prefix": "http://testserver/admin/", '
-        f'"static_prefix": "http://testserver/admin/static/", "version": "{version}", '
+        'settings_json': '{"base_url": null, "backend_prefix": null, '
+        f'"static_prefix": null, "version": "{version}", '
         '"api_timeout_ms": 5000, "backend_debug": true, '
-        '"logo_image": "http://testserver/static/logo-outline.png", '
+        '"logo_image": "/static/logo-outline.png", '
         '"default_theme": null, "custom_themes": []}',
         'title': 'Brilliance Admin Demo',
     }

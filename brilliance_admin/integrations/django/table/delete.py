@@ -1,3 +1,4 @@
+from asgiref.sync import sync_to_async
 from django.db.models.deletion import ProtectedError
 
 from brilliance_admin.exceptions import AdminAPIException, APIError
@@ -51,8 +52,12 @@ class DjangoDeleteAction:
         try:
             await queryset.adelete()
         except ProtectedError as e:
+            error_message = await sync_to_async(
+                self._format_protected_delete_error,
+                thread_sensitive=True,
+            )(action_data, e)
             raise AdminAPIException(
-                APIError(message=self._format_protected_delete_error(action_data, e), code='protected_error'),
+                APIError(message=error_message, code='protected_error'),
                 status_code=400,
             ) from e
         return ActionResult(_('deleted_successfully'))

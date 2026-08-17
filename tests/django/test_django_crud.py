@@ -63,6 +63,9 @@ class CallableDefaultOwner(models.Model):
         app_label = 'sections'
         db_table = 'test_callable_default_owner'
 
+    def __str__(self):
+        return f'{self.title} -> {self.target.name}'
+
 
 class CallableDefaultOwnerAdmin(DjangoAdmin):
     model = CallableDefaultOwner
@@ -396,7 +399,7 @@ async def test_delete_protected_related_record_returns_400_with_error_text(calla
     assert error_data['message'] == (
         'Невозможно удалить callable default target #1:\n'
         'существуют связанные записи:\n'
-        'callable default owner - CallableDefaultOwner object (1)\n'
+        'callable default owner - owner -> protected\n'
     )
     assert await CallableDefaultTarget.objects.filter(pk=target.pk).aexists() is True
 

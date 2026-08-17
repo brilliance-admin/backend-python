@@ -16,6 +16,10 @@ errors:
   method_not_allowed: 'Ошибка, данный метод недоступен.'
   filter_error: 'Проишла ошибка при фильтрации: %(error)s'
   items_not_found: "Элементы не найдены: %(ids)s"
+  delete_protected: |
+    Невозможно удалить %(model)s #%(pks)s:
+    существуют связанные записи:
+    %(details)s
   delete_integrity_error: "Невозможно удалить: существуют связанные записи: %(detail)s"
   db_integrity_error: "Ошибка целостности базы данных: %(detail)s"
 

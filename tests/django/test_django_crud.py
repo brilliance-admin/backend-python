@@ -68,6 +68,10 @@ class CallableDefaultOwnerAdmin(DjangoAdmin):
     model = CallableDefaultOwner
 
 
+class CallableDefaultTargetAdmin(DjangoAdmin):
+    model = CallableDefaultTarget
+
+
 @pytest.fixture
 def callable_default_schema():
     with connection.schema_editor() as schema_editor:
@@ -367,6 +371,34 @@ async def test_delete(language_context):
 
     assert result.message == _('deleted_successfully')
     assert await DjangoExample.objects.filter(pk=record.pk).aexists() is False
+
+
+@pytest.mark.asyncio
+async def test_delete_protected_related_record_returns_400_with_error_text(callable_default_schema, language_context):
+    category = CallableDefaultTargetAdmin()
+    target = await CallableDefaultTarget.objects.acreate(name='protected')
+    await CallableDefaultOwner.objects.acreate(title='owner', target=target)
+
+    with pytest.raises(AdminAPIException) as exc:
+        await category.delete(
+            action_data=ActionData(
+                pks=[target.pk],
+                send_to_all=False,
+                form_data={},
+                filters={},
+                search=None,
+            ),
+        )
+
+    assert exc.value.status_code == 400
+    assert exc.value.error.code == 'protected_error'
+    error_data = exc.value.error.model_dump(mode='json', context={'language_context': language_context})
+    assert error_data['message'] == (
+        'Невозможно удалить callable default target #1:\n'
+        'существуют связанные записи:\n'
+        'callable default owner - CallableDefaultOwner object (1)\n'
+    )
+    assert await CallableDefaultTarget.objects.filter(pk=target.pk).aexists() is True
 
 
 @pytest.mark.asyncio

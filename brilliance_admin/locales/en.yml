@@ -16,6 +16,10 @@ errors:
   method_not_allowed: 'Error, method not allowed. This action is not permitted.'
   filter_error: 'An error occurred during filtering: %(error)s'
   items_not_found: "Items not found: %(ids)s"
+  delete_protected: |
+    Cannot delete %(model)s #%(pks)s:
+    related records exist:
+    %(details)s
   delete_integrity_error: "Cannot delete: related records exist: %(detail)s"
   db_integrity_error: "Database integrity error: %(detail)s"
 

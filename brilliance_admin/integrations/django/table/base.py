@@ -51,6 +51,9 @@ class DjangoAdminBase(CategoryTable):
     search_fields = []
     table_schema: DjangoFieldsSchema = None
 
+    # If True - Exception would be thorown in case of SynchronousOnlyOperation
+    raise_async_unsafe = False
+
     def __init__(
         self,
         *args,
@@ -59,10 +62,14 @@ class DjangoAdminBase(CategoryTable):
         ordering_fields=None,
         default_ordering=None,
         search_fields=None,
+        raise_async_unsafe=None,
         **kwargs,
     ):
         if model is not None:
             self.model = model
+
+        if raise_async_unsafe is not None:
+            self.raise_async_unsafe = raise_async_unsafe
 
         if search_fields:
             self.search_fields = search_fields
@@ -250,6 +257,7 @@ class DjangoAdminBase(CategoryTable):
     def get_extra_autocomplete(self, data: AutocompleteData) -> dict:
         extra = super().get_extra_autocomplete(data)
         extra['model'] = self.model
+        extra['raise_async_unsafe'] = self.raise_async_unsafe
 
         if data.inline_field_slug:
             inline_field = self.table_schema.get_field(data.inline_field_slug)

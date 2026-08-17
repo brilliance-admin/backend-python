@@ -57,7 +57,15 @@ def get_str_source(record) -> str:
     return f'\n__str__ source:\n{source}'
 
 
-def get_record_title(record) -> str:
+def get_record_title(
+    record,
+    raise_async_unsafe=True,
+    *,
+    parent_record=None,
+    field_slug: str | None = None,
+    rel_name: str | None = None,
+    debug: bool = False,
+) -> str:
     try:
         return str(record)
     except Exception as e:
@@ -67,12 +75,29 @@ def get_record_title(record) -> str:
         if not isinstance(e, MissingGreenlet):
             raise
 
-        raise AsyncUnsafeTitleLoad(
+        error = AsyncUnsafeTitleLoad(
             record,
             get_str_source(record),
             backend='sqlalchemy',
             hint=TITLE_ASYNC_UNSAFE_HINT,
-        ) from e
+        )
+        if raise_async_unsafe:
+            raise error from e
+        if debug:
+            logger.warning(
+                'Async unsafe title load: field="%s" rel_name="%s" '
+                'parent_model="%s" parent_pk=%s '
+                'model="%s" pk=%s. %s%s',
+                field_slug,
+                rel_name,
+                type(parent_record).__name__ if parent_record is not None else None,
+                get_pk(parent_record) if parent_record is not None else None,
+                type(error.record).__name__,
+                get_pk(error.record),
+                error.hint,
+                error.source,
+            )
+        return f'{type(record).__name__}#{get_pk(record)}'
 
 
 @dataclass
@@ -216,7 +241,15 @@ class SQLAlchemyRelatedField(RelatedField):
             value = None
         return stmt.where(pk == value)
 
-    async def autocomplete(self, data: AutocompleteData, user, *, extra: dict | None = None) -> List[Record]:
+    async def autocomplete(
+        self,
+        data: AutocompleteData,
+        user,
+        extra: dict | None = None,
+        parent_category=None,
+        parent_pk=None,
+        debug: bool = False,
+    ) -> List[Record]:
         if extra is None or extra.get('db_async_session') is None:
             msg = AUTOCOMPLETE_REQUIRES_SESSION.format(class_name=type(self).__name__)
             raise AttributeError(msg)
@@ -231,7 +264,13 @@ class SQLAlchemyRelatedField(RelatedField):
             records = (await session.execute(stmt)).scalars().all()
             for record in records:
                 try:
-                    title = get_record_title(record)
+                    title = get_record_title(
+                        record,
+                        extra.get('raise_async_unsafe'),
+                        field_slug=data.field_slug,
+                        rel_name=self.rel_name,
+                        debug=debug,
+                    )
                 except AsyncUnsafeTitleLoad as e:
                     message = (
                         f'Async unsafe title load: field="{data.field_slug}" rel_name="{self.rel_name}" '
@@ -259,7 +298,14 @@ class SQLAlchemyRelatedField(RelatedField):
 
         return results
 
-    async def autocomplete_total_count(self, data: AutocompleteData, user, *, extra: dict | None = None) -> int:
+    async def autocomplete_total_count(
+        self,
+        data: AutocompleteData,
+        user,
+        extra: dict | None = None,
+        parent_category=None,
+        parent_pk=None,
+    ) -> int:
         if extra is None or extra.get('db_async_session') is None:
             msg = AUTOCOMPLETE_REQUIRES_SESSION.format(class_name=type(self).__name__)
             raise AttributeError(msg)
@@ -273,7 +319,15 @@ class SQLAlchemyRelatedField(RelatedField):
         async with db_async_session() as session:
             return await session.scalar(count_stmt)
 
-    async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
+    async def _load_related_fallback(self, value, extra: dict):
+        db_async_session = extra.get('db_async_session')
+        if db_async_session is None or self.target_model is None:
+            return None
+
+        async with db_async_session() as session:
+            return await session.get(self.target_model, value)
+
+    async def serialize(self, value, extra: dict, field_slug: str | None = None, *args, **kwargs) -> Any:
         """
         Сериализация related-поля.
 
@@ -307,15 +361,21 @@ class SQLAlchemyRelatedField(RelatedField):
                 field=self.rel_name,
                 model=type(record).__name__,
             )
-            logger.exception(
-                'SQLAlchemy async unsafe lazy related load: field=%s model=%s',
-                self.rel_name,
-                type(record).__name__,
-            )
-            raise AdminAPIException(
-                APIError(message=msg, code='async_lazy_related_load'),
-                status_code=500,
-            ) from e
+            if extra.get('raise_async_unsafe'):
+                logger.exception(
+                    'SQLAlchemy async unsafe lazy related load: field=%s model=%s',
+                    self.rel_name,
+                    type(record).__name__,
+                )
+                raise AdminAPIException(
+                    APIError(message=msg, code='async_lazy_related_load'),
+                    status_code=500,
+                ) from e
+            if extra.get('debug'):
+                logger.warning(msg)
+            if self.many:
+                return []
+            related = await self._load_related_fallback(value, extra)
 
         if self.many:
             if related is None:
@@ -323,9 +383,16 @@ class SQLAlchemyRelatedField(RelatedField):
             result = []
             for obj in related:
                 try:
-                    title = get_record_title(obj)
+                    title = get_record_title(
+                        obj,
+                        extra.get('raise_async_unsafe'),
+                        parent_record=record,
+                        field_slug=field_slug,
+                        rel_name=self.rel_name,
+                        debug=extra.get('debug', False),
+                    )
                 except AsyncUnsafeTitleLoad as e:
-                    self._raise_title_load_error(e, record)
+                    self._raise_title_load_error(e, record, field_slug)
                 result.append({'key': get_pk(obj), 'title': title})
             return result
 
@@ -333,24 +400,46 @@ class SQLAlchemyRelatedField(RelatedField):
             return None
 
         try:
-            title = get_record_title(related)
+            title = get_record_title(
+                related,
+                extra.get('raise_async_unsafe'),
+                parent_record=record,
+                field_slug=field_slug,
+                rel_name=self.rel_name,
+                debug=extra.get('debug', False),
+            )
         except AsyncUnsafeTitleLoad as e:
-            self._raise_title_load_error(e, record)
+            self._raise_title_load_error(e, record, field_slug)
 
         return {'key': get_pk(related), 'title': title}
 
-    def _raise_title_load_error(self, error: AsyncUnsafeTitleLoad, parent_record):
-        error.rel_name = self.rel_name
-        error.parent_record = parent_record
+    def _raise_title_load_error(
+        self,
+        error: AsyncUnsafeTitleLoad,
+        parent_record,
+        field_slug: str | None = None,
+    ):
+        message = (
+            f'Async unsafe title load: field="{field_slug}" rel_name="{self.rel_name}" '
+            f'parent_model="{type(parent_record).__name__ if parent_record is not None else None}" '
+            f'parent_pk={get_pk(parent_record)} '
+            f'model="{type(error.record).__name__}" pk={get_pk(error.record)}. '
+            f'{error.hint}'
+            f'{error.source}'
+        )
         logger.exception(
-            'SQLAlchemy async unsafe title load: rel_name=%s parent_model=%s parent_pk=%s model=%s pk=%s',
+            'SQLAlchemy async unsafe title load: field=%s rel_name=%s parent_model=%s parent_pk=%s model=%s pk=%s',
+            field_slug,
             self.rel_name,
             type(parent_record).__name__,
             get_pk(parent_record),
             type(error.record).__name__,
             get_pk(error.record),
         )
-        raise error
+        raise AdminAPIException(
+            APIError(message=message, code='async_unsafe_title_load'),
+            status_code=500,
+        ) from error
 
     async def update_related(self, record, field_slug, value, session):
         """

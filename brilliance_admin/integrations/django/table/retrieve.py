@@ -63,6 +63,11 @@ class DjangoAdminRetrieveMixin:
             )
         data = await self.table_schema.serialize(
             record,
-            extra={"record": record, "user": user, "debug": debug},
+            extra={
+                "record": record,
+                "user": user,
+                "debug": debug,
+                "raise_async_unsafe": self.raise_async_unsafe,
+            },
         )
         return schema.RetrieveResult(data=data, debug_info=debug_info)

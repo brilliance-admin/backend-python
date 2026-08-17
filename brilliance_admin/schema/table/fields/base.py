@@ -672,7 +672,15 @@ class RelatedField(TableField):
         schema.dual_list = self.dual_list
         return schema
 
-    async def autocomplete(self, data, user, extra):
+    async def autocomplete(
+        self,
+        data,
+        user,
+        extra,
+        parent_category=None,
+        parent_pk=None,
+        debug: bool = False,
+    ):
         raise NotImplementedError('autocomplete is not implemented')
 
     async def deserialize_field(self, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:

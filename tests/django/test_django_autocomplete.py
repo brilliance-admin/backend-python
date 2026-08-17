@@ -54,6 +54,7 @@ async def test_django_related_autocomplete(language_context):
 async def test_django_related_autocomplete_title_error_shows_field(language_context):
     category = DjangoAdmin(
         model=DjangoAnotherExample,
+        raise_async_unsafe=True,
         table_schema=DjangoFieldsSchema(
             model=DjangoAnotherExample,
             fields=['example'],
@@ -82,7 +83,7 @@ async def test_django_related_autocomplete_title_error_shows_field(language_cont
             'Async unsafe title load: field="example" rel_name="example" '
             'parent_model="None" parent_pk=None '
             'model="DjangoExample" pk=1. '
-            'Add required select_related() to get_queryset(), or define async admin_title().'
+            'SynchronousOnlyOperation: Add required select_related() to get_queryset(), or define async admin_title().'
             '\n__str__ source:\n'
             '    def __str__(self):\n'
             "        return f'#{self.pk} {self.title} (owner: {self.owner.username})'\n"

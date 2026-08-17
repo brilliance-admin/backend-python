@@ -399,7 +399,7 @@ class FieldsSchema:
             value = data.get(field_slug)
 
             try:
-                result[field_slug] = await field.serialize(value, extra)
+                result[field_slug] = await field.serialize(value, extra, field_slug=field_slug)
             except FieldError as e:
                 e.field_slug = field_slug
                 raise e

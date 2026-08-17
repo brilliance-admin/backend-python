@@ -15,6 +15,7 @@ Model fields = {model_attrs}
 class SQLAlchemyAdminBase(CategoryTable):
     model: Any
     slug = None
+    raise_async_unsafe = False
     ordering_fields = []
 
     search_fields = []
@@ -32,10 +33,14 @@ class SQLAlchemyAdminBase(CategoryTable):
             ordering_fields=None,
             default_ordering=None,
             search_fields=None,
+            raise_async_unsafe=None,
             **kwargs,
     ):
         if model:
             self.model = model
+
+        if raise_async_unsafe is not None:
+            self.raise_async_unsafe = raise_async_unsafe
 
         if search_fields:
             self.search_fields = search_fields
@@ -95,6 +100,7 @@ class SQLAlchemyAdminBase(CategoryTable):
         extra = super().get_extra_autocomplete(data)
         extra['db_async_session'] = self.db_async_session
         extra['model'] = self.model
+        extra['raise_async_unsafe'] = self.raise_async_unsafe
 
         # Inline model
         if data.inline_field_slug:

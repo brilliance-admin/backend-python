@@ -1,6 +1,7 @@
 import inspect
 from typing import Any, Callable
 
+from asgiref.sync import sync_to_async
 from django.core.exceptions import SynchronousOnlyOperation
 from pydantic.dataclasses import dataclass
 from pydantic import BaseModel
@@ -27,16 +28,17 @@ AUTOCOMPLETE_REQUIRES_MODEL = (
 RELATED_LOAD_ERROR = (
     "Failed to load related field \"{field}\" for model \"{model}\" pk={pk}: {error}"
 )
-ASYNC_LAZY_RELATED_LOAD_ERROR = (
-    "Async unsafe lazy related load: field=\"{field}\" model=\"{model}\" pk={pk}. "
-    "Add select_related('{field}') to get_queryset(), or avoid sync lazy relation access "
-    "in async serialization; use async ORM in admin_title() when extra data is needed."
-)
 ADMIN_TITLE_MUST_BE_ASYNC = (
     '{model}.admin_title must be async def, got {value_type}'
 )
+
+ASYNC_LAZY_RELATED_LOAD_ERROR = (
+    "SynchronousOnlyOperation: Async unsafe lazy related load: field=\"{field}\" model=\"{model}\" pk={pk}. "
+    "Add select_related('{field}') to get_queryset(), or avoid sync lazy relation access "
+    "in async serialization; use async ORM in admin_title() when extra data is needed."
+)
 TITLE_ASYNC_UNSAFE_HINT = (
-    'Add required select_related() to get_queryset(), or define async admin_title().'
+    'SynchronousOnlyOperation: Add required select_related() to get_queryset(), or define async admin_title().'
 )
 
 
@@ -49,18 +51,43 @@ def get_str_source(record) -> str:
     return f'\n__str__ source:\n{source}'
 
 
-async def get_record_title(record) -> str:
+async def get_record_title(
+    record,
+    raise_async_unsafe,
+    *,
+    parent_record=None,
+    field_slug: str | None = None,
+    rel_name: str | None = None,
+    debug: bool = False,
+) -> str:
     admin_title = getattr(record, 'admin_title', None)
     if admin_title is None:
         try:
             return record.__str__()
         except SynchronousOnlyOperation as e:
-            raise AsyncUnsafeTitleLoad(
+            error = AsyncUnsafeTitleLoad(
                 record,
                 get_str_source(record),
                 backend='django',
                 hint=TITLE_ASYNC_UNSAFE_HINT,
-            ) from e
+            )
+            if raise_async_unsafe:
+                raise error from e
+            if debug:
+                logger.warning(
+                    'Async unsafe title load: field="%s" rel_name="%s" '
+                    'parent_model="%s" parent_pk=%s '
+                    'model="%s" pk=%s. %s%s',
+                    field_slug,
+                    rel_name,
+                    type(parent_record).__name__ if parent_record is not None else None,
+                    getattr(parent_record, 'pk', None),
+                    type(error.record).__name__,
+                    getattr(error.record, 'pk', None),
+                    error.hint,
+                    error.source,
+                )
+            return await sync_to_async(str, thread_sensitive=True)(record)
 
     if not inspect.iscoroutinefunction(admin_title):
         msg = ADMIN_TITLE_MUST_BE_ASYNC.format(
@@ -196,14 +223,28 @@ class DjangoRelatedField(RelatedField):
         except (TypeError, ValueError):
             return queryset.none()
 
-    async def autocomplete(self, data: AutocompleteData, user, extra: dict | None = None) -> list[Record]:
+    async def autocomplete(
+        self,
+        data: AutocompleteData,
+        user,
+        extra: dict | None = None,
+        parent_category=None,
+        parent_pk=None,
+        debug: bool = False,
+    ) -> list[Record]:
         queryset, pk_name = await self._get_autocomplete_queryset(data, user, extra)
         queryset = self._apply_autocomplete_search(queryset, data, pk_name)
         records = [record async for record in queryset[: min(150, data.limit)]]
         result = []
         for record in records:
             try:
-                title = await get_record_title(record)
+                title = await get_record_title(
+                    record,
+                    extra.get('raise_async_unsafe'),
+                    field_slug=data.field_slug,
+                    rel_name=self.rel_name,
+                    debug=debug,
+                )
             except AsyncUnsafeTitleLoad as e:
                 message = (
                     f'Async unsafe title load: field="{data.field_slug}" rel_name="{self.rel_name}" '
@@ -226,7 +267,14 @@ class DjangoRelatedField(RelatedField):
             result.append(Record(key=getattr(record, pk_name), title=title))
         return result
 
-    async def autocomplete_total_count(self, data: AutocompleteData, user, extra: dict | None = None) -> int:
+    async def autocomplete_total_count(
+        self,
+        data: AutocompleteData,
+        user,
+        extra: dict | None = None,
+        parent_category=None,
+        parent_pk=None,
+    ) -> int:
         queryset, _ = await self._get_autocomplete_queryset(data, user, extra)
         return await queryset.acount()
 
@@ -243,7 +291,7 @@ class DjangoRelatedField(RelatedField):
         )
         raise error
 
-    async def serialize(self, value, extra: dict, *args, **kwargs):
+    async def serialize(self, value, extra: dict, field_slug: str | None = None, *args, **kwargs):
         if not value:
             return None
 
@@ -266,7 +314,14 @@ class DjangoRelatedField(RelatedField):
             result = []
             for obj in related:
                 try:
-                    title = await get_record_title(obj)
+                    title = await get_record_title(
+                        obj,
+                        extra.get('raise_async_unsafe'),
+                        parent_record=record,
+                        field_slug=field_slug,
+                        rel_name=self.rel_name,
+                        debug=extra.get('debug', False),
+                    )
                 except AsyncUnsafeTitleLoad as e:
                     self._raise_title_load_error(e, record)
                 result.append({'key': obj.pk, 'title': title})
@@ -280,16 +335,23 @@ class DjangoRelatedField(RelatedField):
                 model=type(record).__name__,
                 pk=getattr(record, 'pk', None),
             )
-            logger.exception(
-                'Async unsafe lazy related load: field=%s model=%s pk=%s',
-                self.rel_name,
-                type(record).__name__,
-                getattr(record, 'pk', None),
-            )
-            raise AdminAPIException(
-                APIError(message=msg, code='async_lazy_related_load'),
-                status_code=500,
-            ) from e
+            if extra.get('raise_async_unsafe'):
+                logger.exception(
+                    'Async unsafe lazy related load: field=%s model=%s pk=%s',
+                    self.rel_name,
+                    type(record).__name__,
+                    getattr(record, 'pk', None),
+                )
+                raise AdminAPIException(
+                    APIError(message=msg, code='async_lazy_related_load'),
+                    status_code=500,
+                ) from e
+            if extra.get('debug'):
+                logger.warning(msg)
+            related = await sync_to_async(
+                getattr,
+                thread_sensitive=True,
+            )(record, self.rel_name, None)
         except Exception as e:
             logger.exception(
                 'Related load failed: field=%s model=%s pk=%s error=%s',
@@ -313,7 +375,14 @@ class DjangoRelatedField(RelatedField):
             return None
 
         try:
-            title = await get_record_title(related)
+            title = await get_record_title(
+                related,
+                extra.get('raise_async_unsafe'),
+                parent_record=record,
+                field_slug=field_slug,
+                rel_name=self.rel_name,
+                debug=extra.get('debug', False),
+            )
         except AsyncUnsafeTitleLoad as e:
             self._raise_title_load_error(e, record)
 

@@ -225,7 +225,12 @@ class DjangoAdminListMixin:
         for record in records:
             line = await self.table_schema.serialize(
                 record,
-                extra={"record": record, "user": user, "debug": debug},
+                extra={
+                    "record": record,
+                    "user": user,
+                    "debug": debug,
+                    "raise_async_unsafe": self.raise_async_unsafe,
+                },
                 field_slugs=list_field_slugs,
             )
             data.append(line)

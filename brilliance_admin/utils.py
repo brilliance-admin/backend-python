@@ -110,6 +110,16 @@ def humanize_field_name(name: str) -> str:
     return " ".join(cap(p) for p in parts)
 
 
+def format_limited_items(items, limit: int = 5) -> str:
+    items = list(items)
+    shown = ', '.join(str(item) for item in items[:limit])
+
+    if len(items) > limit:
+        return f'{shown}, ... (total {len(items)})'
+
+    return shown
+
+
 def iter_locale_files(directory) -> list[Path]:
     if isinstance(directory, str):
         directory = Path(directory)

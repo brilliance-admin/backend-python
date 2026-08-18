@@ -2,6 +2,7 @@ from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.integrations.sqlalchemy.utils import extract_integrity_detail
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult, admin_action
 from brilliance_admin.translations import TranslateText as _
+from brilliance_admin.utils import format_limited_items
 
 
 class SQLAlchemyDeleteAction:
@@ -43,7 +44,7 @@ class SQLAlchemyDeleteAction:
                     found_ids = {str(getattr(obj, self.pk_name)) for obj in results}
                     missing = [pk for pk in typed_pks if str(pk) not in found_ids]
                     raise AdminAPIException(
-                        APIError(message=_('errors.items_not_found') % {'ids': ', '.join(str(pk) for pk in missing)}),
+                        APIError(message=_('errors.items_not_found') % {'ids': format_limited_items(missing)}),
                         status_code=404,
                     )
 

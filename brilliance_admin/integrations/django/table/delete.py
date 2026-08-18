@@ -4,7 +4,7 @@ from django.db.models.deletion import ProtectedError
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult, admin_action
 from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.utils import SupportsStr
+from brilliance_admin.utils import SupportsStr, format_limited_items
 
 
 class DjangoDeleteAction:
@@ -12,7 +12,7 @@ class DjangoDeleteAction:
 
     def _format_protected_delete_error(self, action_data: ActionData, error: ProtectedError) -> SupportsStr:
         deleted_model = self.model._meta.verbose_name
-        deleted_pks = ', '.join(str(pk) for pk in action_data.pks)
+        deleted_pks = format_limited_items(action_data.pks)
         protected_objects_by_model = {}
 
         for protected_object in error.protected_objects:

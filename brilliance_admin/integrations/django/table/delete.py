@@ -12,7 +12,7 @@ class DjangoDeleteAction:
 
     def _format_protected_delete_error(self, action_data: ActionData, error: ProtectedError) -> SupportsStr:
         deleted_model = self.model._meta.verbose_name
-        deleted_pks = format_limited_items(action_data.pks)
+        deleted_pks = ', '.join(str(pk) for pk in action_data.pks)
         protected_objects_by_model = {}
 
         for protected_object in error.protected_objects:
@@ -20,7 +20,7 @@ class DjangoDeleteAction:
             protected_objects_by_model.setdefault(protected_model, []).append(str(protected_object))
 
         details = '\n'.join(
-            f'{model_name} - {", ".join(objects)}'
+            f'{model_name} - {format_limited_items(objects)}'
             for model_name, objects in protected_objects_by_model.items()
         )
         return _('errors.delete_protected') % {

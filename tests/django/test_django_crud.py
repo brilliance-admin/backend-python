@@ -380,7 +380,8 @@ async def test_delete(language_context):
 async def test_delete_protected_related_record_returns_400_with_error_text(callable_default_schema, language_context):
     category = CallableDefaultTargetAdmin()
     target = await CallableDefaultTarget.objects.acreate(name='protected')
-    await CallableDefaultOwner.objects.acreate(title='owner', target=target)
+    for index in range(1, 7):
+        await CallableDefaultOwner.objects.acreate(title=f'owner {index}', target=target)
 
     with pytest.raises(AdminAPIException) as exc:
         await category.delete(
@@ -399,7 +400,8 @@ async def test_delete_protected_related_record_returns_400_with_error_text(calla
     assert error_data['message'] == (
         'Невозможно удалить callable default target #1:\n'
         'существуют связанные записи:\n'
-        'callable default owner - owner -> protected\n'
+        'callable default owner - owner 1 -> protected, owner 2 -> protected, owner 3 -> protected, '
+        'owner 4 -> protected, owner 5 -> protected, ... (total 6)\n'
     )
     assert await CallableDefaultTarget.objects.filter(pk=target.pk).aexists() is True
 

@@ -38,6 +38,10 @@ jobs:
           host: ${{ vars.SERVER_HOST }}
           username: deploy
           key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 120s
+          command_timeout: 10m
+          retry_count: 5
+          retry_delay: 15s
           script: |
             set -e
             sudo apt update
@@ -64,6 +68,10 @@ jobs:
           host: ${{ vars.SERVER_HOST }}
           username: deploy
           key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 120s
+          command_timeout: 10m
+          retry_count: 5
+          retry_delay: 15s
           envs: POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD
           script: |
             set -e
@@ -85,6 +93,10 @@ jobs:
           host: ${{ vars.SERVER_HOST }}
           username: deploy
           key: ${{ secrets.SERVER_SSH_KEY }}
+          timeout: 120s
+          command_timeout: 10m
+          retry_count: 5
+          retry_delay: 15s
           envs: POSTGRES_DB,POSTGRES_USER,POSTGRES_PASSWORD
           script: |
             set -e

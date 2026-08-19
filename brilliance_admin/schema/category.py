@@ -79,7 +79,7 @@ class FieldsSchemaData(DataclassBase):
 
 @dataclass
 class TableOptions(DataclassBase):
-    overflow: bool = True
+    fit_screen: bool = False
 
 
 # pylint: disable=too-many-instance-attributes

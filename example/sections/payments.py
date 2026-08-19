@@ -17,6 +17,50 @@ from example.sections.models import TerminalStatuses
 logger = get_logger()
 
 
+EXAMPLE_PROVIDER_REQUEST_LOG = (
+    'SEND_REQUEST PaymentProvider POST '
+    'url:https://api.example.test/v1/money_movements '
+    'status_code:201 elapsed_ms:1843 retry_count:0 trace_id:trace_REDACTED '
+    "request_data:{'source_id':'cp_REDACTED','destination_id':'acc_REDACTED','amount':1000,"
+    "'metadata':{'r2p_rail':'pse','description_to_payer':'Payment',"
+    "'description_to_payee':'Payment','redirect_url':'https://example.test/redirect',"
+    "'financial_institution_code':'507','customer_reference':'ref_REDACTED',"
+    "'merchant_reference':'merchant_REDACTED','long_note':'"
+    "REDACTED_NOTE_REDACTED_NOTE_REDACTED_NOTE_REDACTED_NOTE_REDACTED_NOTE_"
+    "REDACTED_NOTE_REDACTED_NOTE_REDACTED_NOTE_REDACTED_NOTE_REDACTED_NOTE'},"
+    "'external_id':'uuid_REDACTED','audit':{'created_by':'system_REDACTED',"
+    "'source':'backoffice','session':'session_REDACTED','tags':['payment','pse','provider',"
+    "'request','example','long-log-row']}} "
+    "request_headers:{'Content-Type':'application/json','Authorization':'Bearer REDACTED_TOKEN_"
+    "REDACTED_TOKEN_REDACTED_TOKEN_REDACTED_TOKEN_REDACTED_TOKEN_REDACTED_TOKEN_"
+    "REDACTED_TOKEN_REDACTED_TOKEN_REDACTED_TOKEN_REDACTED_TOKEN_REDACTED_TOKEN_"
+    "REDACTED_TOKEN_REDACTED_TOKEN_REDACTED_TOKEN_REDACTED_TOKEN_REDACTED_TOKEN',"
+    "'idempotency':'uuid_REDACTED','x-request-id':'req_REDACTED','x-forwarded-for':'ip_REDACTED',"
+    "'user-agent':'PayPlanetBackoffice/REDACTED Python/REDACTED aiohttp/REDACTED',"
+    "'accept':'application/json','accept-encoding':'gzip, deflate, br',"
+    "'x-correlation-id':'corr_REDACTED','x-provider-account':'provider_REDACTED'} "
+    'response:{"id":"mm_REDACTED","status":{"state":"initiated","code":"","description":""},'
+    '"metadata":{"financial_institution_code":"507","description_to_payee":"Payment",'
+    '"description_to_payer":"Payment","r2p_rail":"pse","redirect_url":"https://example.test/redirect"},'
+    '"creator":"cli_REDACTED","external_id":"uuid_REDACTED","checker_approval":false,'
+    '"type":"r2p_pse","geo":"col","source_id":"cp_REDACTED","destination_id":"acc_REDACTED",'
+    '"currency":"cop","amount":1000,"created_at":"2026-08-19T12:13:31Z",'
+    '"links":{"self":"https://api.example.test/v1/money_movements/mm_REDACTED",'
+    '"redirect":"https://example.test/redirect","receipt":"https://example.test/receipt/mm_REDACTED"},'
+    '"events":[{"name":"created","at":"2026-08-19T12:13:31Z","actor":"api_REDACTED"},'
+    '{"name":"provider_accepted","at":"2026-08-19T12:13:32Z","actor":"provider_REDACTED"},'
+    '{"name":"notification_scheduled","at":"2026-08-19T12:13:33Z","actor":"system_REDACTED"}],'
+    '"raw_provider_payload":"REDACTED_PAYLOAD_REDACTED_PAYLOAD_REDACTED_PAYLOAD_'
+    'REDACTED_PAYLOAD_REDACTED_PAYLOAD_REDACTED_PAYLOAD_REDACTED_PAYLOAD"} '
+    'response_headers:{"date":"Wed, 19 Aug 2026 12:13:31 GMT","content-type":"application/json",'
+    '"cache-control":"no-store","x-envoy-upstream-service-time":"181","server":"cloudflare",'
+    '"cf-ray":"ray_REDACTED","strict-transport-security":"max-age=31536000; includeSubDomains"} '
+    'alt-svc:h3=":443"; ma=93600 http_version:20 '
+    'debug_context:worker=payments-provider-consumer queue=provider-requests shard=07 '
+    'span=span_REDACTED parent_span=span_PARENT_REDACTED tenant=tenant_REDACTED'
+)
+
+
 class PaymentFiltersSchema(schema.FieldsSchema):
     id = schema.IntegerField(label='ID', help_text='ID help text\nhelp text')
     created_at = schema.DateTimeField(label=_('created_at'), range=True)
@@ -127,9 +171,10 @@ class LogsAdmin(schema.CategoryTable):
     has_update = False
     has_create = False
     slug = 'logs'
-    options = schema.TableOptions(overflow=True)
+    options = schema.TableOptions(fit_screen=True)
 
     table_schema = schema.FieldsSchema(
+        created_at=schema.DateTimeField(label=_('created_at')),
         log=schema.StringField(label=_('Log')),
     )
 
@@ -154,7 +199,10 @@ class LogsAdmin(schema.CategoryTable):
             if pk < 0:
                 continue
 
-            line_data = {'log': fake.sentence(nb_words=20)}
+            line_data = {
+                'created_at': datetime.datetime.now() - datetime.timedelta(minutes=i),
+                'log': EXAMPLE_PROVIDER_REQUEST_LOG if i == 0 else fake.sentence(nb_words=80),
+            }
             line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
             data.append(line)
 

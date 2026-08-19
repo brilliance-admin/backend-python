@@ -80,6 +80,7 @@ class FieldsSchemaData(DataclassBase):
 @dataclass
 class TableOptions(DataclassBase):
     fit_screen: bool = False
+    density: str | None = None
 
 
 # pylint: disable=too-many-instance-attributes

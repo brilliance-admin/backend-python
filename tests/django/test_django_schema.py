@@ -35,7 +35,7 @@ FORM_SCHEMA_DATA = {
         'can_update': True,
         'default_ordering': '-id',
         'ordering_fields': [],
-        'options': {'density': None, 'fit_screen': False},
+        'options': {'cell_padding': None, 'density': None, 'fit_screen': False, 'font_size': None},
         'pk_name': 'id',
         'search_enabled': False,
         'search_help': None,

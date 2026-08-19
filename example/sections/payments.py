@@ -127,6 +127,7 @@ class LogsAdmin(schema.CategoryTable):
     has_update = False
     has_create = False
     slug = 'logs'
+    options = schema.TableOptions(overflow=True)
 
     table_schema = schema.FieldsSchema(
         log=schema.StringField(label=_('Log')),

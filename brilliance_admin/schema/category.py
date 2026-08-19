@@ -77,10 +77,16 @@ class FieldsSchemaData(DataclassBase):
     formset: Any = None
 
 
+@dataclass
+class TableOptions(DataclassBase):
+    overflow: bool = True
+
+
 # pylint: disable=too-many-instance-attributes
 @dataclass
 class TableInfoSchemaData(DataclassBase):
     table_schema: FieldsSchemaData
+    options: TableOptions = Field(default_factory=TableOptions)
 
     search_enabled: bool = Field(default=False)
     search_help: str | None = Field(default=None)

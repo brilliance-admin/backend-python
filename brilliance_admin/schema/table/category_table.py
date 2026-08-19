@@ -8,7 +8,7 @@ from pydantic import Field
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationError
-from brilliance_admin.schema.category import BaseCategory, TableInfoSchemaData
+from brilliance_admin.schema.category import BaseCategory, TableInfoSchemaData, TableOptions
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields.base import InlineField
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
@@ -31,6 +31,7 @@ class CategoryTable(BaseCategory):
 
     table_schema: FieldsSchema = None
     table_filters: FieldsSchema | None = None
+    options: TableOptions = Field(default_factory=TableOptions)
 
     list_display: List[str] | None = None
 
@@ -122,6 +123,7 @@ class CategoryTable(BaseCategory):
 
         table = TableInfoSchemaData(
             table_schema=self._get_form_schema(user, language_context, parent_category),
+            options=self.options,
             ordering_fields=self.ordering_fields,
             default_ordering=self.default_ordering,
 

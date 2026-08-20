@@ -28,6 +28,9 @@ class UserSessionAdmin(sqlalchemy.SQLAlchemyAdmin):
 
     table_schema = sqlalchemy.SQLAlchemyFieldsSchema(
         model=UserSession,
+        extra_kwargs={
+            'user_agent': {'read_only': True},
+        },
     )
 
     table_filters = sqlalchemy.SQLAlchemyFieldsSchema(

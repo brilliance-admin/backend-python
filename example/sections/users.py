@@ -40,9 +40,9 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
         },
         formset=schema.FormSet(
             fields=[
-                'id',
                 schema.FormSet(
                     fields=[
+                        'id',
                         'username',
                         'email',
                     ],

@@ -87,6 +87,13 @@ payment_create_result: |
 
 description: 'Description'
 status: 'Status'
+refund_status: 'Refund status'
+approved_status: 'Approved status'
+remote_id: 'Provider ID'
+currency: 'Currency'
+buyer: 'Bueyr data'
+new_amount: 'New amount'
+test_mode: 'Тестовый режим'
 endpoint: 'Endpoint'
 action_with_exception: 'Action with exception'
 is_throw_error: 'Is throw error?'
@@ -110,6 +117,7 @@ terminal_errors: 'Errors'
 whitelist_ips__help_text: 'A whitelist of ip addresses.'
 
 statuses:
+  none: 'None'
   process: 'Process'
   success: 'Success'
   error: 'Error'

@@ -42,36 +42,57 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     ]
 
     id = schema.IntegerField(label='ID', read_only=True)
+    remote_id = schema.StringField(label=_('remote_id'), read_only=True)
+    test_mode = schema.BooleanField(label=_('test_mode'), read_only=True)
     amount = schema.IntegerField(label=_('amount'), read_only=True, required=True)
-    endpoint = schema.StringField(label=_('endpoint'))
-    description = schema.StringField(label=_('description'), help_text='help text example')
-    other_field = schema.StringField(read_only=True)
+    new_amount = schema.IntegerField(label=_('new_amount'), read_only=True, required=True)
+    endpoint = schema.RelatedField(label=_('endpoint'))
+    currency = schema.RelatedField(label=_('currency'))
+    buyer = schema.RelatedField(label=_('buyer'))
+
     status = schema.ChoiceField(label=_('status'), required=True, choices=TerminalStatuses)
+    refund_status = schema.ChoiceField(label=_('refund_status'), required=True, choices=TerminalStatuses)
+    approved_status = schema.ChoiceField(label=_('approved_status'), required=True, choices=TerminalStatuses)
+
+    description = schema.StringField(label=_('description'))
+    other_field = schema.StringField(read_only=True)
     whitelist_ips = schema.ArrayField(label=_('whitelist_ips'), help_text=_('whitelist_ips__help_text'))
     # image = schema.ImageField(label=_('image'))
     gateway_settings = schema.JSONField(help_text='help text', read_only=True)
     created_at = schema.DateTimeField(label=_('created_at'), read_only=True)
+    update_at = schema.DateTimeField(label=_('update_at'), read_only=True)
 
     formset = schema.FormSet(
         fields=[
             schema.FormSet(
                 fields=[
                     'id',
+                    'remote_id',
+                    'test_mode',
+                    'amount',
+                    'new_amount',
+                    'endpoint',
+                    'currency',
+                    'buyer',
+                    'description',
+                ],
+                col_span=7,
+            ),
+            schema.FormSet(
+                fields=[
+                    'status',
+                    'refund_status',
+                    'approved_status',
                     'get_provider_registry',
                     'get_provider_registry_info',
-                    'status',
-                ]
-            ),
-            schema.FormSet(
-                fields=[
-                    'endpoint',
-                    'amount',
                 ],
-                col_span=6,
+                col_span=5,
             ),
             schema.FormSet(
                 fields=[
+                    schema.FormField('other_field', col_span=6),
                     'created_at',
+                    'update_at',
                 ],
                 col_span=6,
             ),
@@ -80,10 +101,9 @@ class PaymentFieldsSchema(schema.FieldsSchema):
                 description='form description form description form description form description',
                 fields=[
                     schema.FormField('other_field', col_span=6),
-                    schema.FormField('description', col_span=6),
                     'gateway_settings',
                     'whitelist_ips',
-                ]
+                ],
             ),
             'disputes',
         ]
@@ -110,7 +130,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
             manager=schema.RelatedField(label=_('Manager')),
             errors=schema.JSONField(help_text='This is errors', read_only=True),
             created_at=schema.DateTimeField(label=_('created_at'), read_only=True),
-        )
+        ),
     )
 
 
@@ -143,13 +163,13 @@ class LogsAdmin(schema.CategoryTable):
 
     # pylint: disable=too-many-arguments
     async def get_list(
-            self,
-            list_data: schema.ListData,
-            user: auth.UserABC,
-            language_context: LanguageContext,
-            debug: bool,
-            parent_category=None,
-            parent_pk=None,
+        self,
+        list_data: schema.ListData,
+        user: auth.UserABC,
+        language_context: LanguageContext,
+        debug: bool,
+        parent_category=None,
+        parent_pk=None,
     ) -> schema.TableListResult:
         await asyncio.sleep(0.2)
 
@@ -158,7 +178,7 @@ class LogsAdmin(schema.CategoryTable):
         total_count = LOGS['total_count']
         offset = max(list_data.page - 1, 0) * list_data.limit
 
-        for line_data in logs[offset:offset + list_data.limit]:
+        for line_data in logs[offset : offset + list_data.limit]:
             line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
             data.append(line)
 
@@ -177,8 +197,8 @@ class PaymentsAdmin(schema.CategoryTable):
     search_enabled = True
     search_help = _('payments_search_fields')
 
-    table_filters = PaymentFiltersSchema()
     table_schema = PaymentFieldsSchema()
+    table_filters = PaymentFiltersSchema()
     pk_name = 'id'
     ordering_fields = [
         'id',
@@ -223,7 +243,8 @@ class PaymentsAdmin(schema.CategoryTable):
             raise RuntimeError('test')
         except Exception as e:
             raise Exception(
-                _('exception_example') % {
+                _('exception_example')
+                % {
                     'traceback': ''.join(traceback.format_stack()),
                 }
             ) from e
@@ -258,11 +279,18 @@ class PaymentsAdmin(schema.CategoryTable):
 
         return {
             'id': pk,
+            'remote_id': '',
             'amount': 10 * fake.pyint(min_value=0, max_value=100),
-            'endpoint': fake.word(),
+            'endpoint': {"key": 471, "title": "PAY-161/NewProviderTest (Merchant id: 109)"},
+            'currency': {"key": 1, "title": "EUR"},
+            'buyer': {"key": 1, "title": "John Doe"},
+
             'status': fake.random_element(elements=list(TerminalStatuses)).value,
+            'refund_status': fake.random_element(elements=TerminalStatuses).value,
+            'approved_status': fake.random_element(elements=TerminalStatuses).value,
+
             'whitelist_ips': ['localhost', '0.0.0.0'],
-            'description': fake.sentence(nb_words=50),
+            'description': '',  # fake.sentence(nb_words=50),
             'other_field': fake.word(),
             'image': f'https://picsum.photos/id/{5039-pk+1}/200/300',
             'gateway_settings': ['first', 'second'],
@@ -287,19 +315,19 @@ class PaymentsAdmin(schema.CategoryTable):
                     'reason': 'Reason title 2',
                     'manager': {'key': 1, 'title': 'Manager second'},
                     'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
-                }
+                },
             ],
         }
 
     # pylint: disable=too-many-arguments
     async def get_list(
-            self,
-            list_data: schema.ListData,
-            user: auth.UserABC,
-            language_context: LanguageContext,
-            debug: bool,
-            parent_category=None,
-            parent_pk=None,
+        self,
+        list_data: schema.ListData,
+        user: auth.UserABC,
+        language_context: LanguageContext,
+        debug: bool,
+        parent_category=None,
+        parent_pk=None,
     ) -> schema.TableListResult:
         await asyncio.sleep(0.2)
 
@@ -318,40 +346,40 @@ class PaymentsAdmin(schema.CategoryTable):
         return schema.TableListResult(data=data, total_count=total_count)
 
     async def retrieve(
-            self,
-            pk: Any,
-            user: auth.UserABC,
-            language_context: LanguageContext,
-            debug: bool,
-            parent_category=None,
-            parent_pk=None,
+        self,
+        pk: Any,
+        user: auth.UserABC,
+        language_context: LanguageContext,
+        debug: bool,
+        parent_category=None,
+        parent_pk=None,
     ) -> schema.RetrieveResult:
         line_data = self._get_data(int(pk))
         line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
         return schema.RetrieveResult(data=line)
 
     async def update(
-            self,
-            pk: Any,
-            data: dict,
-            user: auth.UserABC,
-            language_context: LanguageContext,
-            debug: bool,
-            parent_category=None,
-            parent_pk=None,
+        self,
+        pk: Any,
+        data: dict,
+        user: auth.UserABC,
+        language_context: LanguageContext,
+        debug: bool,
+        parent_category=None,
+        parent_pk=None,
     ) -> schema.UpdateResult:
         logger.info('Updated pk=%s data=%s', pk, data)
         await asyncio.sleep(0.5)
         return schema.UpdateResult(pk=0)
 
     async def create(
-            self,
-            data: dict,
-            user: auth.UserABC,
-            language_context: LanguageContext,
-            debug: bool,
-            parent_category=None,
-            parent_pk=None,
+        self,
+        data: dict,
+        user: auth.UserABC,
+        language_context: LanguageContext,
+        debug: bool,
+        parent_category=None,
+        parent_pk=None,
     ) -> schema.CreateResult:
         logger.info('Create data=%s', data)
         return schema.CreateResult(pk=0)

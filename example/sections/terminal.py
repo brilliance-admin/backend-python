@@ -81,7 +81,8 @@ class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
         table_schema=TerminalRoutingFieldsSchema(),
     )
     extra_kwargs = {
-        'secret_key': {'help_text': 'help_text help_text'}
+        'secret_key': {'help_text': 'help_text help_text'},
+        'test_mode': {'read_only': True},
     }
 
 

@@ -122,6 +122,11 @@ CATEGORY_SCHEMA_DATA = {
                     'choices': [
                         {
                             'tag_color': 'grey-lighten-1',
+                            'title': 'Отсутствует',
+                            'value': 'none',
+                        },
+                        {
+                            'tag_color': 'yellow',
                             'title': 'В процессе',
                             'value': 'process',
                         },

@@ -571,6 +571,7 @@ class FeeFactory(SQLAlchemyFactoryBase):
 
 
 class TerminalStatuses(Enum):
+    NONE = 'none'
     PROCESS = 'process'
     SUCCESS = 'success'
     ERROR = 'error'
@@ -579,6 +580,7 @@ class TerminalStatuses(Enum):
     @property
     def label(self):
         labels = {
+            self.NONE: _('statuses.none'),
             self.PROCESS: _('statuses.process'),
             self.SUCCESS: _('statuses.success'),
             self.ERROR: _('statuses.error'),
@@ -589,7 +591,8 @@ class TerminalStatuses(Enum):
     @property
     def tag_color(self):
         colors = {
-            self.PROCESS: 'grey-lighten-1',
+            self.NONE: 'grey-lighten-1',
+            self.PROCESS: 'yellow',
             self.SUCCESS: 'green-darken-1',
             self.ERROR: 'red-lighten-2',
             self.MODERATION: 'blue',

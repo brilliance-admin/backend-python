@@ -87,6 +87,13 @@ payment_create_result: |
 
 description: 'Описание'
 status: 'Статус'
+refund_status: 'Статус рефанда'
+approved_status: 'Статус одобрения'
+remote_id: 'ID от провайдера'
+currency: 'Валюта'
+buyer: 'Данные покупателя'
+new_amount: 'Обновлённая сумма'
+test_mode: 'Test mode'
 endpoint: 'Эндпоинт'
 action_with_exception: 'Действие с ошибкой'
 is_throw_error: 'Выбросить ошибку?'
@@ -110,6 +117,7 @@ terminal_errors: 'Ошибки'
 whitelist_ips__help_text: 'Белый список ip адресов.'
 
 statuses:
+  none: 'Отсутствует'
   process: 'В процессе'
   success: 'Успех'
   error: 'Ошибка'

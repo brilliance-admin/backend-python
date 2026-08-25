@@ -44,8 +44,8 @@ password:
 
 validation:
   bad_type_error: 'Invalid data type: %(type)s but %(expected)s expected'
+  bad_duration_format: 'Invalid duration format'
   min_value_error: 'Value must be at least %(min)s'
   max_value_error: 'Value must be at most %(max)s'
   min_length_error: 'Length must be at least %(min)s characters'
   max_length_error: 'Length must be at most %(max)s characters'
-

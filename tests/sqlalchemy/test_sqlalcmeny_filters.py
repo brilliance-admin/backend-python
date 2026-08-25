@@ -181,6 +181,48 @@ async def test_filter_related_many(postgres_sessionmaker, language_context):
 
 
 @pytest.mark.asyncio
+async def test_filter_scalar_related_as_many(postgres_sessionmaker, language_context):
+    category = sqlalchemy.SQLAlchemyAdmin(
+        model=Terminal,
+        db_async_session=postgres_sessionmaker,
+        table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
+            model=Terminal,
+            fields=['id'],
+        ),
+        table_filters=sqlalchemy.SQLAlchemyFieldsSchema(
+            model=Terminal,
+            fields=['currency_id'],
+            extra_kwargs={
+                'currency_id': {'many': True},
+            },
+        ),
+    )
+    user = auth.UserABC(username='test')
+
+    merchant = await MerchantFactory()
+    currency_1 = await CurrencyFactory()
+    terminal_1 = await TerminalFactory(merchant=merchant, currency=currency_1)
+    currency_2 = await CurrencyFactory()
+    terminal_2 = await TerminalFactory(merchant=merchant, currency=currency_2)
+
+    list_result: dict = await category.get_list(
+        list_data=schema.ListData(filters={
+            'currency_id': [
+                {'key': currency_1.id, 'title': 'test'},
+                {'key': currency_2.id, 'title': 'test'},
+            ],
+        }),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+
+    assert list_result == schema.TableListResult(
+        data=[{'id': terminal_2.id}, {'id': terminal_1.id}], total_count=2,
+    )
+
+
+@pytest.mark.asyncio
 async def test_list_bad_search_field(postgres_sessionmaker):
     with pytest.raises(AttributeError) as e:
         sqlalchemy.SQLAlchemyAdmin(

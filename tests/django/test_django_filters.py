@@ -472,6 +472,41 @@ async def test_filter_related_many(language_context):
 
 
 @pytest.mark.asyncio
+async def test_filter_related_many_empty_list(language_context):
+    category = DjangoAdmin(
+        model=DjangoAnotherExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoAnotherExample,
+            fields=['id'],
+        ),
+        table_filters=DjangoFieldsSchema(
+            model=DjangoAnotherExample,
+            fields=['example'],
+            extra_kwargs={
+                'example': {'many': True},
+            },
+        ),
+    )
+    user = UserABC(username='test')
+
+    example_1 = await DjangoExampleFactory()
+    another_1 = await DjangoAnotherExampleFactory(example=example_1)
+    example_2 = await DjangoExampleFactory()
+    another_2 = await DjangoAnotherExampleFactory(example=example_2)
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(filters={'example': []}),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+
+    assert list_result == schema.TableListResult(
+        data=[{'id': another_2.id}, {'id': another_1.id}], total_count=2,
+    )
+
+
+@pytest.mark.asyncio
 async def test_list_bad_search_field():
     with pytest.raises(AttributeError) as e:
         DjangoAdmin(

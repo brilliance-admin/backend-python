@@ -443,7 +443,7 @@ class DurationField(TableField):
         try:
             return _parse_duration(value)
         except ValueError as e:
-            raise FieldError(str(e), 'bad_duration_format') from e
+            raise FieldError(_('validation.bad_duration_format'), 'bad_duration_format') from e
 
 
 @dataclass

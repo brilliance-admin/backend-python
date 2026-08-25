@@ -108,4 +108,7 @@ class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
             'merchant_id',
             'currency_id',
         ],
+        extra_kwargs={
+            'currency_id': {'many': True},
+        },
     )

@@ -153,6 +153,9 @@ class DjangoAdminListMixin:
                     f'{type(self.table_filters).__name__} filter "{field_slug}" not found'
                 )
 
+            if isinstance(raw_value, list) and not raw_value:
+                continue
+
             if isinstance(field, RelatedField):
                 if isinstance(raw_value, dict):
                     queryset = queryset.filter(**{field_slug: raw_value.get('key')})

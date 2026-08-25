@@ -46,6 +46,7 @@ password:
 
 validation:
   bad_type_error: 'Некорректный тип данных: %(type)s; ожидается %(expected)s'
+  bad_duration_format: 'Некорректный формат продолжительности'
   min_value_error: 'Значение должно быть не меньше %(min)s'
   max_value_error: 'Значение должно быть не больше %(max)s'
   min_length_error: 'Длина должна быть не меньше %(min)s символов'

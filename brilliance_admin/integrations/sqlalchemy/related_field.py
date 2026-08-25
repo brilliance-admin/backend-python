@@ -520,4 +520,6 @@ class SQLAlchemyRelatedField(RelatedField):
         # many=True: one-to-many / many-to-many
         if not isinstance(value, list):
             raise FieldError(EXPECTED_LIST_FOR_FILTER.format(rel_name=self.rel_name))
+        if not rel.property.uselist:
+            return stmt.where(rel.has(pk_col.in_(value)))
         return stmt.where(rel.any(pk_col.in_(value)))

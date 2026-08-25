@@ -188,6 +188,7 @@ class LogsAdmin(schema.CategoryTable):
 class PaymentsAdmin(schema.CategoryTable):
     has_update = False
     has_create = False
+    options = schema.TableOptions(fixed_header=True)
 
     slug = 'payments'
     title = _('payments')

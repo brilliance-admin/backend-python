@@ -80,6 +80,7 @@ class FieldsSchemaData(DataclassBase):
 @dataclass
 class TableOptions(DataclassBase):
     fit_screen: bool = False
+    fixed_header: bool = False
     density: str | None = None
     font_size: str | None = None
     cell_padding: str | None = None

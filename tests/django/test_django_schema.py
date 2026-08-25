@@ -4,9 +4,11 @@ from fastapi.testclient import TestClient
 
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
+from brilliance_admin.exceptions import FieldError
 from brilliance_admin.integrations.django import DjangoFieldsSchema
 from brilliance_admin.integrations.django.inline_field import DjangoInlineField
 from brilliance_admin.integrations.django.table import DjangoAdmin
+from brilliance_admin.utils import DeserializeAction
 from example.main import admin_app
 from example.sections.django_models import DjangoAnotherExample, DjangoExample
 
@@ -35,7 +37,7 @@ FORM_SCHEMA_DATA = {
         'can_update': True,
         'default_ordering': '-id',
         'ordering_fields': [],
-        'options': {'cell_padding': None, 'density': None, 'fit_screen': False, 'font_size': None},
+        'options': {'cell_padding': None, 'density': None, 'fit_screen': False, 'fixed_header': False, 'font_size': None},
         'pk_name': 'id',
         'search_enabled': False,
         'search_help': None,
@@ -368,6 +370,11 @@ async def test_generate_category_schema_django(language_context):
     assert timezone_field['type'] == 'choice'
     assert {'value': 'UTC', 'title': 'UTC', 'tag_color': None} in timezone_field['choices']
     assert all(isinstance(choice['value'], str) for choice in timezone_field['choices'])
+    count_field = category.table_schema.get_field('count')
+    assert count_field.min_value == 0
+    assert count_field.max_value == 100
+    with pytest.raises(FieldError):
+        await count_field.deserialize_field(101, DeserializeAction.UPDATE, extra={})
     assert schema_data == FORM_SCHEMA_DATA, new_schema.model_dump()
 
 

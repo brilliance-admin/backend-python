@@ -1,7 +1,8 @@
 import json
 
 from asgiref.sync import sync_to_async
-from django.db import IntegrityError, connections, transaction
+from django.core.validators import MaxValueValidator, MinValueValidator
+from django.db import DataError, IntegrityError, connections, transaction
 from django.test.utils import CaptureQueriesContext
 
 from brilliance_admin import schema
@@ -246,6 +247,24 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             return field
 
         if isinstance(model_field, (models.AutoField, models.BigAutoField, models.IntegerField)):
+            for validator in model_field._validators:
+                if not isinstance(validator, (MinValueValidator, MaxValueValidator)):
+                    continue
+
+                limit_value = validator.limit_value
+                if callable(limit_value):
+                    limit_value = limit_value()
+
+                if isinstance(validator, MinValueValidator):
+                    min_value = field_data.get('min_value')
+                    if min_value is None or limit_value > min_value:
+                        field_data['min_value'] = limit_value
+
+                if isinstance(validator, MaxValueValidator):
+                    max_value = field_data.get('max_value')
+                    if max_value is None or limit_value < max_value:
+                        field_data['max_value'] = limit_value
+
             return schema.IntegerField(**field_data)
 
         if isinstance(model_field, models.DecimalField):
@@ -435,6 +454,14 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 ),
                 status_code=400,
             ) from e
+        except DataError as e:
+            raise AdminAPIException(
+                APIError(
+                    message=str(e),
+                    code='data_error',
+                ),
+                status_code=400,
+            ) from e
 
     async def create_from_deserialized(self, deserialized_data):
         record = self.model()
@@ -557,6 +584,14 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 APIError(
                     message=str(e),
                     code='integrity_error',
+                ),
+                status_code=400,
+            ) from e
+        except DataError as e:
+            raise AdminAPIException(
+                APIError(
+                    message=str(e),
+                    code='data_error',
                 ),
                 status_code=400,
             ) from e

@@ -3,7 +3,7 @@ import factory
 import timezone_field
 
 from django.contrib.postgres.fields import ArrayField
-from django.core.validators import FileExtensionValidator
+from django.core.validators import FileExtensionValidator, MaxValueValidator, MinValueValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from example.utils import DjangoFactoryBase
@@ -45,7 +45,13 @@ class DjangoExample(models.Model):
     description = models.CharField(max_length=255, blank=True)
     status = models.CharField(max_length=32, choices=DjangoExampleStatus.choices, default=DjangoExampleStatus.PENDING)
     is_active = models.BooleanField(default=True)
-    count = models.IntegerField(default=0)
+    count = models.IntegerField(
+        default=0,
+        validators=[
+            MinValueValidator(0),
+            MaxValueValidator(100),
+        ],
+    )
     uuid = models.UUIDField(default=uuid.uuid4, unique=True)
     price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     rating = models.FloatField(default=0)

@@ -137,10 +137,11 @@ async def test_create_validates_required_related_field(language_context):
 
     with pytest.raises(AdminAPIException) as exc:
         await category.create(
-            data={
-                'title': 'test title',
-                'description': 'test description',
-            },
+                data={
+                    'title': 'test title',
+                    'description': 'test description',
+                    'count': 0,
+                },
             user=user,
             language_context=language_context,
             debug=True,

@@ -247,6 +247,34 @@ async def test_list_search_uuid_invalid_value_returns_empty_result(language_cont
 
 
 @pytest.mark.asyncio
+async def test_list_search_uuid_with_integer_id_field(language_context):
+    category = DjangoAdmin(
+        search_fields=['id', 'uuid'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    uuid = UUID('f1f431b3-83e8-4ff4-a86f-97557f6ee3c8')
+    match = await DjangoExampleFactory(uuid=uuid)
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search=str(uuid)),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+
+    assert list_result == schema.TableListResult(
+        data=[{'id': match.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
 async def test_list_search_uuid_partial_operator(language_context):
     category = DjangoAdmin(
         search_fields=['uuid'],

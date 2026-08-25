@@ -1,6 +1,7 @@
 import importlib.metadata
 import json
 import traceback
+from copy import deepcopy
 from html import escape
 from importlib import resources
 from typing import Any, Dict, List, Optional
@@ -16,7 +17,7 @@ from pydantic.dataclasses import dataclass
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.docs import build_redoc_docs, build_scalar_docs
-from brilliance_admin.schema.category import BaseCategory
+from brilliance_admin.schema.category import BaseCategory, TableOptions
 from brilliance_admin.translations import LanguageContext, LanguageManager
 from brilliance_admin.utils import DataclassBase, SupportsStr, get_logger
 
@@ -104,14 +105,23 @@ class AdminSchema:
 
     default_theme: str | None = None
     custom_themes: List[dict] = Field(default_factory=list)
+    default_table_options: TableOptions = Field(default_factory=TableOptions)
 
     def __post_init__(self):
         for category in self.categories:
             if not issubclass(category.__class__, BaseCategory):
                 raise TypeError(f'Root category "{category}" is not subclass of BaseCategory')
+            self._apply_default_table_options(category)
 
         if not self.language_manager:
             self.language_manager = LanguageManager(DEFAULT_LANGUAGES)
+
+    def _apply_default_table_options(self, category: BaseCategory) -> None:
+        if getattr(category, '_type_slug', None) == 'table' and category.options is None:
+            category.options = deepcopy(self.default_table_options)
+
+        for subcategory in getattr(category, 'subcategories', []):
+            self._apply_default_table_options(subcategory)
 
     def get_language_context(self, language_slug: str | None) -> LanguageContext:
         return LanguageContext(language_slug, language_manager=self.language_manager)

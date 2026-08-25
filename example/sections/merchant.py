@@ -62,5 +62,5 @@ class MerchantAdmin(sqlalchemy.SQLAlchemyAdmin):
             'created_at',
             'terminals',
         ],
-        created_at=schema.DateTimeField(range=True),
+        created_at=schema.DateTimeField(range=True, label='Created at long-long label'),
     )

@@ -31,7 +31,7 @@ class CategoryTable(BaseCategory):
 
     table_schema: FieldsSchema = None
     table_filters: FieldsSchema | None = None
-    options: TableOptions = Field(default_factory=TableOptions)
+    options: TableOptions | None = None
 
     list_display: List[str] | None = None
 
@@ -123,7 +123,7 @@ class CategoryTable(BaseCategory):
 
         table = TableInfoSchemaData(
             table_schema=self._get_form_schema(user, language_context, parent_category),
-            options=self.options,
+            options=self.options or TableOptions(),
             ordering_fields=self.ordering_fields,
             default_ordering=self.default_ordering,
 

@@ -31,7 +31,7 @@ CATEGORY_SCHEMA_DATA = {
         'can_update': True,
         'ordering_fields': [],
         'default_ordering': '-id',
-        'options': {'cell_padding': None, 'density': None, 'fit_screen': False, 'font_size': None},
+        'options': {'cell_padding': None, 'density': None, 'fit_screen': False, 'fixed_header': False, 'font_size': None},
         'pk_name': 'id',
         'search_enabled': True,
         'search_help': mock.ANY,

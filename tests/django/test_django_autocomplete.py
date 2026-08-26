@@ -51,6 +51,43 @@ async def test_django_related_autocomplete(language_context):
 
 
 @pytest.mark.asyncio
+async def test_django_related_autocomplete_keeps_existing_choices_and_other_results(language_context):
+    category = DjangoAdmin(
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['owner'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    owner_1 = await DjangoUserFactory(username='first_owner')
+    owner_2 = await DjangoUserFactory(username='second_owner')
+
+    result = await category.autocomplete(
+        data=AutocompleteData(
+            search_string='second',
+            field_slug='owner',
+            is_filter=False,
+            form_data={},
+            existed_choices=[{'key': owner_1.pk, 'title': str(owner_1)}],
+            limit=30,
+        ),
+        user=user,
+        language_context=language_context,
+        debug=True,
+    )
+
+    assert result.model_dump() == {
+        'results': [
+            {'key': owner_1.pk, 'title': str(owner_1)},
+            {'key': owner_2.pk, 'title': str(owner_2)},
+        ],
+        'total_count': 2,
+    }
+
+
+@pytest.mark.asyncio
 async def test_django_related_autocomplete_title_error_shows_field(language_context):
     category = DjangoAdmin(
         model=DjangoAnotherExample,

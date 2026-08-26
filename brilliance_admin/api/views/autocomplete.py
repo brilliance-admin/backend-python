@@ -18,10 +18,14 @@ async def autocomplete(
         request: Request,
         group: str,
         category: str,
+        field_slug: str,
         data: AutocompleteData,
         subcategory: str | None = None,
         parent_pk: str | None = None,
+        inline_field_slug: str | None = None,
 ):
+    data.field_slug = field_slug
+    data.inline_field_slug = inline_field_slug
     schema: AdminSchema = request.app.state.schema
     schema_category, user, parent_category = await get_category(request, group, category, subcategory)
 

@@ -26,7 +26,11 @@ async def test_autocomplete_filter_fn(mocker):
         existed_choices=[],
         limit=30,
     )
-    response = client.post(url, json=request_data.model_dump(mode='json'))
+    response = client.post(
+        url,
+        params={'field_slug': request_data.field_slug},
+        json=request_data.model_dump(mode='json', exclude={'field_slug'}),
+    )
     assert response.status_code == 200, response.content.decode()
     response_data = {
         'results': [

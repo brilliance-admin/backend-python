@@ -3,8 +3,8 @@ from typing import Any, Callable
 
 from asgiref.sync import sync_to_async
 from django.core.exceptions import SynchronousOnlyOperation, ValidationError as DjangoValidationError
-from pydantic.dataclasses import dataclass
 from pydantic import BaseModel
+from pydantic.dataclasses import dataclass
 
 from brilliance_admin.exceptions import AdminAPIException, APIError, AsyncUnsafeTitleLoad, FieldError
 from brilliance_admin.schema.table.fields.base import RelatedField
@@ -193,23 +193,6 @@ class DjangoRelatedField(RelatedField):
         self._validate_queryset(queryset)
         pk_field = target_model._meta.pk
         pk_name = pk_field.name
-        pk_python = pk_field.to_python
-
-        if data.existed_choices:
-            pks = []
-            for item in data.existed_choices:
-                if isinstance(item, BaseModel):
-                    item = item.model_dump()
-                if isinstance(item, dict) and 'key' in item:
-                    try:
-                        pks.append(pk_python(item['key']))
-                    except (TypeError, ValueError) as e:
-                        raise AdminAPIException(
-                            APIError(message=f'Invalid existed_choices value "{item["key"]}"'),
-                            status_code=500,
-                        ) from e
-            if pks:
-                queryset = queryset.filter(**{f'{pk_name}__in': pks})
 
         if self.filter_fn:
             if inspect.iscoroutinefunction(self.filter_fn):
@@ -239,6 +222,28 @@ class DjangoRelatedField(RelatedField):
         except (TypeError, ValueError):
             return queryset.none()
 
+    @staticmethod
+    def _get_existing_choices_queryset(queryset, data: AutocompleteData, pk_name: str):
+        if not data.existed_choices:
+            return queryset.none()
+
+        pk_field = queryset.model._meta.pk
+        pks = []
+        for item in data.existed_choices:
+            if isinstance(item, BaseModel):
+                item = item.model_dump()
+            if not isinstance(item, dict) or 'key' not in item:
+                continue
+            try:
+                pks.append(pk_field.to_python(item['key']))
+            except (TypeError, ValueError) as e:
+                raise AdminAPIException(
+                    APIError(message=f'Invalid existed_choices value "{item["key"]}"'),
+                    status_code=500,
+                ) from e
+
+        return queryset.filter(**{f'{pk_name}__in': pks})
+
     async def autocomplete(
         self,
         data: AutocompleteData,
@@ -249,7 +254,9 @@ class DjangoRelatedField(RelatedField):
         debug: bool = False,
     ) -> list[Record]:
         queryset, pk_name = await self._get_autocomplete_queryset(data, user, extra)
-        queryset = self._apply_autocomplete_search(queryset, data, pk_name)
+        existing_queryset = self._get_existing_choices_queryset(queryset, data, pk_name)
+        search_queryset = self._apply_autocomplete_search(queryset, data, pk_name)
+        queryset = (existing_queryset | search_queryset).distinct()
         records = [record async for record in queryset[: min(150, data.limit)]]
         result = []
         for record in records:
@@ -291,8 +298,10 @@ class DjangoRelatedField(RelatedField):
         parent_category=None,
         parent_pk=None,
     ) -> int:
-        queryset, _ = await self._get_autocomplete_queryset(data, user, extra)
-        return await queryset.acount()
+        queryset, pk_name = await self._get_autocomplete_queryset(data, user, extra)
+        existing_queryset = self._get_existing_choices_queryset(queryset, data, pk_name)
+        search_queryset = self._apply_autocomplete_search(queryset, data, pk_name)
+        return await (existing_queryset | search_queryset).distinct().acount()
 
     def _raise_title_load_error(self, error: AsyncUnsafeTitleLoad, parent_record):
         error.rel_name = self.rel_name

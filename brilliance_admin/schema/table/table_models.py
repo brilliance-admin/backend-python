@@ -27,7 +27,7 @@ class TableListResult(DataclassBase):
 
 
 class AutocompleteData(BaseModel):
-    field_slug: str
+    field_slug: str = ''
     search_string: str = ''
     form_data: dict = Field(default_factory=dict)
     existed_choices: List[Any] = Field(default_factory=list)

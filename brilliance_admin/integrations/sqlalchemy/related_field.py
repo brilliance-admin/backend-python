@@ -36,7 +36,6 @@ RELATED_MISSING_ON_RECORD = (
     'Inline related field "{rel_name}" cannot be serialized from record "{record_type}". '
     'Expected inline row model to contain this relation.'
 )
-EXPECTED_INT_FOR_FILTER = 'Expected int for filter {rel_name}'
 EXPECTED_LIST_FOR_FILTER = 'Expected list[int] for filter {rel_name}'
 ASYNC_LAZY_RELATED_LOAD_ERROR = (
     'Async unsafe lazy related load: field="{field}" model="{model}". '
@@ -123,6 +122,15 @@ class SQLAlchemyRelatedField(RelatedField):
     #   session.get(target_model, pk)
     #   select(target_model).where(target_model.id.in_(...))
     target_model: Any | None = None
+
+    def _cast_pk(self, value, pk_type):
+        if isinstance(value, pk_type):
+            return value
+
+        try:
+            return pk_type(value)
+        except (TypeError, ValueError) as e:
+            raise FieldError(f'Invalid key for filter {self.rel_name}: {value}') from e
 
     def generate_field_schema(
             self,
@@ -510,16 +518,17 @@ class SQLAlchemyRelatedField(RelatedField):
 
         rel = getattr(model, self.rel_name)
         pk_col = inspect(self.target_model).primary_key[0]
+        pk_type = pk_col.type.python_type
 
         # many=False: FK (many-to-one)
         if not self.many:
-            if not isinstance(value, int):
-                raise FieldError(EXPECTED_INT_FOR_FILTER.format(rel_name=self.rel_name))
+            value = self._cast_pk(value, pk_type)
             return stmt.where(rel.has(pk_col == value))
 
         # many=True: one-to-many / many-to-many
         if not isinstance(value, list):
             raise FieldError(EXPECTED_LIST_FOR_FILTER.format(rel_name=self.rel_name))
+        value = [self._cast_pk(item, pk_type) for item in value]
         if not rel.property.uselist:
             return stmt.where(rel.has(pk_col.in_(value)))
         return stmt.where(rel.any(pk_col.in_(value)))

@@ -2,14 +2,14 @@ import inspect
 from typing import Any, Callable
 
 from asgiref.sync import sync_to_async
-from django.core.exceptions import SynchronousOnlyOperation
+from django.core.exceptions import SynchronousOnlyOperation, ValidationError as DjangoValidationError
 from pydantic.dataclasses import dataclass
 from pydantic import BaseModel
 
 from brilliance_admin.exceptions import AdminAPIException, APIError, AsyncUnsafeTitleLoad, FieldError
 from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.table_models import AutocompleteData, Record
-from brilliance_admin.utils import get_logger
+from brilliance_admin.utils import DeserializeAction, get_logger
 
 logger = get_logger()
 
@@ -104,6 +104,22 @@ class DjangoRelatedField(RelatedField):
     get_queryset: Callable[[Any, dict], Any] | None = None
     select_related: list[str] | None = None
     prefetch_related: list[str] | None = None
+
+    def _cast_pk(self, value, model):
+        target_model = model._meta.get_field(self.rel_name).related_model
+        try:
+            return target_model._meta.pk.to_python(value)
+        except (TypeError, ValueError, DjangoValidationError) as e:
+            raise FieldError(str(e)) from e
+
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs):
+        value = await super().deserialize_field(value, action, extra, *args, **kwargs)
+        if value is None or action != DeserializeAction.FILTERS:
+            return value
+
+        if isinstance(value, list):
+            return [self._cast_pk(pk, extra['model']) for pk in value]
+        return self._cast_pk(value, extra['model'])
 
     def _validate_queryset(self, queryset):
         # pylint: disable=import-outside-toplevel

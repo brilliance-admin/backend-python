@@ -1,4 +1,5 @@
 import json
+import re
 
 from asgiref.sync import sync_to_async
 from django.core.validators import MaxValueValidator, MinValueValidator
@@ -8,7 +9,7 @@ from django.test.utils import CaptureQueriesContext
 from brilliance_admin import schema
 from brilliance_admin.exceptions import APIError, AdminAPIException, ValidationError
 from brilliance_admin.schema.table.fields_schema import FORMSET_EXTRA_FIELDS, FORMSET_MISSING_FIELDS
-from brilliance_admin.schema.table.fields.base import InlineField
+from brilliance_admin.schema.table.fields.base import DateTimeField, InlineField, RelatedField
 from brilliance_admin.integrations.django.inline_field import DjangoInlineField
 from brilliance_admin.integrations.django.related_field import DjangoRelatedField
 from brilliance_admin.utils import DeserializeAction
@@ -103,6 +104,72 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                         field_slug=field_slug,
                     )
                 )
+
+    @staticmethod
+    def like_to_regex(value: str) -> str:
+        parts = []
+        for char in value:
+            if char == '%':
+                parts.append('.*')
+            elif char == '_':
+                parts.append('.')
+            else:
+                parts.append(re.escape(char))
+        return '^' + ''.join(parts) + '$'
+
+    async def apply_filters(self, queryset, filters: dict):
+        for field_slug in filters:
+            if self.get_field(field_slug) is None:
+                raise AttributeError(f'{type(self).__name__} filter "{field_slug}" not found')
+
+        filters = {
+            field_slug: value
+            for field_slug, value in filters.items()
+            if not isinstance(value, list) or value
+        }
+        try:
+            deserialized_filters = await self.deserialize_fields(
+                filters,
+                DeserializeAction.FILTERS,
+                extra={'model': self.model},
+            )
+        except ValidationError as e:
+            raise AdminAPIException(
+                APIError(code='validation_error', field_errors=e.data),
+                status_code=400,
+            ) from e
+
+        for field_slug, value in deserialized_filters.items():
+            field = self.get_field(field_slug)
+
+            if isinstance(field, RelatedField):
+                if isinstance(value, list):
+                    queryset = queryset.filter(**{f'{field_slug}__in': value})
+                else:
+                    queryset = queryset.filter(**{field_slug: value})
+                continue
+
+            if isinstance(field, DateTimeField) and field.range and isinstance(value, dict):
+                if value.get('from') is not None:
+                    queryset = queryset.filter(**{f'{field_slug}__gte': value['from']})
+                if value.get('to') is not None:
+                    queryset = queryset.filter(**{f'{field_slug}__lte': value['to']})
+                continue
+
+            if isinstance(value, str):
+                if '%' in value or '_' in value:
+                    queryset = queryset.filter(**{f'{field_slug}__iregex': self.like_to_regex(value)})
+                else:
+                    queryset = queryset.filter(**{field_slug: value})
+                continue
+
+            if isinstance(value, list):
+                queryset = queryset.filter(**{f'{field_slug}__in': value})
+                continue
+
+            queryset = queryset.filter(**{field_slug: value})
+
+        return queryset
 
     def _is_deferred_inline_fk_field(self, field_slug):
         from django.db import models

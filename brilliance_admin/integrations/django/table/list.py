@@ -8,7 +8,7 @@ from django.test.utils import CaptureQueriesContext
 from brilliance_admin import schema
 from brilliance_admin.exceptions import FieldError
 from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
-from brilliance_admin.schema.table.fields.base import DateTimeField, RelatedField
+from brilliance_admin.schema.table.fields.base import RelatedField
 
 ORDERING_NOT_ALLOWED = (
     'Ordering "{ordering}" is not allowed;'
@@ -146,47 +146,13 @@ class DjangoAdminListMixin:
         if not self.table_filters or not list_data.filters:
             return queryset
 
-        for field_slug, raw_value in list_data.filters.items():
-            field = self.table_filters.get_field(field_slug)
-            if field is None:
-                raise AttributeError(
-                    f'{type(self.table_filters).__name__} filter "{field_slug}" not found'
-                )
+        if not isinstance(self.table_filters, DjangoFieldsSchema):
+            raise AttributeError(
+                f'{type(self).__name__}.table_filters must be DjangoFieldsSchema, '
+                f'got {type(self.table_filters).__name__}'
+            )
 
-            if isinstance(raw_value, list) and not raw_value:
-                continue
-
-            if isinstance(field, RelatedField):
-                if isinstance(raw_value, dict):
-                    queryset = queryset.filter(**{field_slug: raw_value.get('key')})
-                elif isinstance(raw_value, list):
-                    values = [item.get('key') for item in raw_value if isinstance(item, dict) and 'key' in item]
-                    queryset = queryset.filter(**{f'{field_slug}__in': values})
-                else:
-                    queryset = queryset.filter(**{field_slug: raw_value})
-                continue
-
-            if isinstance(field, DateTimeField) and field.range and isinstance(raw_value, dict):
-                if raw_value.get('from') is not None:
-                    queryset = queryset.filter(**{f'{field_slug}__gte': raw_value['from']})
-                if raw_value.get('to') is not None:
-                    queryset = queryset.filter(**{f'{field_slug}__lte': raw_value['to']})
-                continue
-
-            if isinstance(raw_value, str):
-                if '%' in raw_value or '_' in raw_value:
-                    queryset = queryset.filter(**{f'{field_slug}__iregex': self.like_to_regex(raw_value)})
-                else:
-                    queryset = queryset.filter(**{field_slug: raw_value})
-                continue
-
-            if isinstance(raw_value, list):
-                queryset = queryset.filter(**{f'{field_slug}__in': raw_value})
-                continue
-
-            queryset = queryset.filter(**{field_slug: raw_value})
-
-        return queryset
+        return await self.table_filters.apply_filters(queryset, list_data.filters)
 
     async def get_list(
         self,

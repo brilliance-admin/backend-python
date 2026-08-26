@@ -298,10 +298,8 @@ class DjangoRelatedField(RelatedField):
         parent_category=None,
         parent_pk=None,
     ) -> int:
-        queryset, pk_name = await self._get_autocomplete_queryset(data, user, extra)
-        existing_queryset = self._get_existing_choices_queryset(queryset, data, pk_name)
-        search_queryset = self._apply_autocomplete_search(queryset, data, pk_name)
-        return await (existing_queryset | search_queryset).distinct().acount()
+        queryset, _ = await self._get_autocomplete_queryset(data, user, extra)
+        return await queryset.acount()
 
     def _raise_title_load_error(self, error: AsyncUnsafeTitleLoad, parent_record):
         error.rel_name = self.rel_name

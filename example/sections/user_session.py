@@ -30,6 +30,7 @@ class UserSessionAdmin(sqlalchemy.SQLAlchemyAdmin):
         model=UserSession,
         extra_kwargs={
             'user_agent': {'read_only': True},
+            'country_code': {'label': 'Country ISO-Code value'},
         },
     )
 

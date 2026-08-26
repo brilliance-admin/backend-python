@@ -19,14 +19,29 @@ logger = get_logger()
 
 
 class PaymentFiltersSchema(schema.FieldsSchema):
-    id = schema.IntegerField(label='ID', help_text='ID help text\nhelp text')
     created_at = schema.DateTimeField(label=_('created_at'), range=True)
     status = schema.ChoiceField(label='Status', required=True, choices=TerminalStatuses)
+    endpoint = schema.ChoiceField(
+        label=_('endpoint'),
+        choices=[{'value': 471, 'title': 'PAY-161/NewProviderTest'}],
+    )
+    currency = schema.ChoiceField(
+        label=_('currency'),
+        choices=[{'value': 1, 'title': 'EUR'}],
+    )
+    provider = schema.ChoiceField(
+        label='Provider',
+        choices=[{'value': 'new_provider', 'title': 'New Provider'}],
+    )
+    test_mode = schema.BooleanField(label=_('test_mode'))
 
     fields = [
-        'id',
-        'status',
         'created_at',
+        'status',
+        'endpoint',
+        'currency',
+        'provider',
+        'test_mode',
     ]
 
 
@@ -187,7 +202,7 @@ class LogsAdmin(schema.CategoryTable):
 
 class PaymentsAdmin(schema.CategoryTable):
     has_update = False
-    has_create = False
+    has_create = True
     options = schema.TableOptions(fixed_header=True)
 
     slug = 'payments'

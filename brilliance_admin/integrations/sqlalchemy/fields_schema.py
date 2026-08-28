@@ -82,13 +82,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
             if col.default is not None and col.default.is_scalar:
                 field_data["default"] = col.default.arg
 
-            # Whether the field is required on input (best-effort heuristic)
-            field_data["required"] = (
-                not col.nullable
-                and col.default is None
-                and col.server_default is None
-                and not col.primary_key
-            )
+            field_data["required"] = not col.nullable and not col.primary_key
 
             col_type = col.type
             try:
@@ -228,12 +222,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
             field_data["help_text"] = info.get('help_text')
 
             field_data["read_only"] = False
-            field_data["required"] = (
-                not col.nullable
-                and col.default is None
-                and col.server_default is None
-                and not col.primary_key
-            )
+            field_data["required"] = not col.nullable and not col.primary_key
 
             field_data["rel_name"] = rel_obj.key
             field_data["many"] = rel_obj.uselist

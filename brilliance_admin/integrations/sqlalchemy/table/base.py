@@ -110,7 +110,7 @@ class SQLAlchemyAdminBase(CategoryTable):
 
         return extra
 
-    def _get_form_schema(self, user, language_context, parent_category=None):
+    def _get_form_schema(self, user, language_context, parent_category=None, admin_schema=None):
         exclude_fields = []
 
         if isinstance(parent_category, SQLAlchemyAdminBase):
@@ -126,6 +126,7 @@ class SQLAlchemyAdminBase(CategoryTable):
             language_context,
             schema_type=SchemaType.TABLE,
             exclude_fields=exclude_fields,
+            admin_schema=admin_schema,
         )
 
     def validate_fields(self):

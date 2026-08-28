@@ -75,9 +75,10 @@ class CategoryDashboard(BaseCategory):
         self,
         user,
         language_context: LanguageContext,
+        admin_schema,
         parent_category=None,
     ) -> DashboardInfoSchemaData:
-        schema = super().generate_category_schema(user, language_context, parent_category)
+        schema = super().generate_category_schema(user, language_context, admin_schema, parent_category)
         dashboard_info = DashboardInfoSchemaData(
             search_enabled=self.search_enabled,
             search_help=language_context.get_text(self.search_help),
@@ -88,6 +89,7 @@ class CategoryDashboard(BaseCategory):
                 user,
                 language_context,
                 schema_type=SchemaType.FILTERS,
+                admin_schema=admin_schema,
             )
 
         schema.dashboard_info = dashboard_info

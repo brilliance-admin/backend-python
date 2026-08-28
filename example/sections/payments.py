@@ -62,7 +62,11 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     amount = schema.IntegerField(label=_('amount'), read_only=True, required=True)
     new_amount = schema.IntegerField(label=_('new_amount'), read_only=True, required=True)
     endpoint = schema.RelatedField(label=_('endpoint'))
-    currency = schema.RelatedField(label=_('currency'))
+    currency = schema.RelatedField(
+        label=_('currency'),
+        related_group='currencies',
+        related_category='currency',
+    )
     buyer = schema.RelatedField(label=_('buyer'))
 
     status = schema.ChoiceField(label=_('status'), required=True, choices=TerminalStatuses)

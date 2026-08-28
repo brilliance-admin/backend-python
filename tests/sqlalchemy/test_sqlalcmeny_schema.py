@@ -4,7 +4,8 @@ import pytest
 
 from brilliance_admin import schema, sqlalchemy
 from brilliance_admin.auth import UserABC
-from example.sections.models import Terminal
+from example.main import admin_schema
+from example.sections.models import Currency, Terminal
 
 CATEGORY_SCHEMA_DATA = {
     'dashboard_info': None,
@@ -57,6 +58,8 @@ CATEGORY_SCHEMA_DATA = {
                     'many': False,
                     'read_only': False,
                     'rel_name': 'currency',
+                    'related_category': 'currency',
+                    'related_group': 'currencies',
                     'required': True,
                     'type': 'related',
                 },
@@ -80,7 +83,7 @@ CATEGORY_SCHEMA_DATA = {
                     'header': {},
                     'label': 'Is H2H',
                     'read_only': False,
-                    'required': False,
+                    'required': True,
                     'type': 'boolean',
                 },
                 'merchant_id': {
@@ -90,6 +93,8 @@ CATEGORY_SCHEMA_DATA = {
                     'many': False,
                     'read_only': False,
                     'rel_name': 'merchant',
+                    'related_category': 'merchant',
+                    'related_group': 'payments',
                     'required': True,
                     'type': 'related',
                 },
@@ -106,7 +111,7 @@ CATEGORY_SCHEMA_DATA = {
                     'max_length': 255,
                     'password': False,
                     'read_only': False,
-                    'required': False,
+                    'required': True,
                     'type': 'string',
                 },
                 'title': {
@@ -208,6 +213,14 @@ FIELDS = [
 ]
 
 
+def test_non_nullable_column_with_default_is_required():
+    fields_schema = sqlalchemy.SQLAlchemyFieldsSchema(model=Currency)
+    depth = fields_schema.get_field('depth')
+
+    assert depth.default == 2
+    assert depth.required is True
+
+
 @pytest.mark.asyncio
 async def test_generate_category_schema_sqlalchemy(postgres_sessionmaker, language_context):
     category = sqlalchemy.SQLAlchemyAdmin(
@@ -220,5 +233,5 @@ async def test_generate_category_schema_sqlalchemy(postgres_sessionmaker, langua
             created_at=schema.DateTimeField(range=True),
         ),
     )
-    new_schema = category.generate_category_schema(UserABC(username="test"), language_context)
+    new_schema = category.generate_category_schema(UserABC(username="test"), language_context, admin_schema)
     assert new_schema.model_dump() == CATEGORY_SCHEMA_DATA, new_schema.model_dump()

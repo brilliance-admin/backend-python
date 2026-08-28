@@ -137,7 +137,11 @@ class AdminSchema:
                 raise AttributeError(msg)
 
             try:
-                category_schema = category.generate_category_schema(user, language_context)
+                category_schema = category.generate_category_schema(
+                    user,
+                    language_context,
+                    admin_schema=self,
+                )
                 result.categories[category.slug] = category_schema.to_dict(keep_none=False)
             except Exception as e:
                 msg = f'Root category "{category.slug}" generate_schema error: {e}'

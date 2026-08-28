@@ -357,6 +357,7 @@ class FieldsSchema:
             language_context: LanguageContext,
             schema_type: SchemaType = SchemaType.TABLE,
             exclude_fields=None,
+            admin_schema=None,
     ) -> FieldsSchemaData:
         exclude_fields = exclude_fields or []
         removed_fields = set()
@@ -365,7 +366,7 @@ class FieldsSchema:
             for field_slug in self.list_display
             if field_slug not in exclude_fields
         ]
-        fields_schema = FieldsSchemaData(
+        fields_schema_data = FieldsSchemaData(
             list_display=schema_list_display,
             formset=deepcopy(self.formset),
         )
@@ -378,15 +379,17 @@ class FieldsSchema:
             field_schema: FieldSchemaData = field.generate_field_schema(
                 user,
                 field_slug,
-                language_context,
+                fields_schema=self,
+                admin_schema=admin_schema,
+                language_context=language_context,
                 schema_type=schema_type,
             )
-            fields_schema.fields[field_slug] = field_schema.to_dict(keep_none=False, context=context)
+            fields_schema_data.fields[field_slug] = field_schema.to_dict(keep_none=False, context=context)
 
-        if removed_fields and fields_schema.formset:
-            fields_schema.formset.exclude_fields(removed_fields)
+        if removed_fields and fields_schema_data.formset:
+            fields_schema_data.formset.exclude_fields(removed_fields)
 
-        return fields_schema
+        return fields_schema_data
 
     async def serialize(self, data: Any, extra: dict, field_slugs: list[str] | None = None) -> dict:
         result = {}

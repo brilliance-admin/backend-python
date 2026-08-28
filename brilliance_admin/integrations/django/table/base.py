@@ -110,7 +110,7 @@ class DjangoAdminBase(CategoryTable):
 
         super().__init__(*args, **kwargs)
 
-    def _get_form_schema(self, user, language_context, parent_category=None):
+    def _get_form_schema(self, user, language_context, parent_category=None, admin_schema=None):
         exclude_fields = []
 
         if isinstance(parent_category, DjangoAdminBase):
@@ -125,16 +125,17 @@ class DjangoAdminBase(CategoryTable):
             language_context,
             schema_type=SchemaType.TABLE,
             exclude_fields=exclude_fields,
+            admin_schema=admin_schema,
         )
 
-    def generate_category_schema(self, user, language_context, parent_category=None):
+    def generate_category_schema(self, user, language_context, admin_schema, parent_category=None):
         if self.title is None:
             meta = self.model._meta
             verbose_name = getattr(meta, 'verbose_name_plural', None) or getattr(meta, 'verbose_name', None)
             if verbose_name:
                 self.title = force_str(verbose_name)
 
-        category_schema = super().generate_category_schema(user, language_context, parent_category)
+        category_schema = super().generate_category_schema(user, language_context, admin_schema, parent_category)
         if self.search_fields and self.search_help is None:
             category_schema.table_info.search_help = language_context.get_text(
                 _('sqlalchemy_search_help') % {'fields': self.get_search_help_fields()}

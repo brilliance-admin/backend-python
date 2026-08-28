@@ -6,6 +6,7 @@ import pytest
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.schema.table.fields.function_field import function_field
+from example.main import admin_schema
 from example.sections.payments import PaymentsAdmin
 
 category_schema_data = {
@@ -23,7 +24,7 @@ category_schema_data = {
 @pytest.mark.asyncio
 async def test_generate_category_schema(language_context):
     category = PaymentsAdmin()
-    new_schema = category.generate_category_schema(UserABC(username="test"), language_context)
+    new_schema = category.generate_category_schema(UserABC(username="test"), language_context, admin_schema)
     assert new_schema.model_dump() == category_schema_data, new_schema.model_dump()
 
 

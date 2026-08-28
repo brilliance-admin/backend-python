@@ -6,6 +6,7 @@ from pydantic.dataclasses import dataclass
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError, AsyncUnsafeTitleLoad, FieldError
 from brilliance_admin.integrations.sqlalchemy.utils import get_pk
+from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.category import FieldSchemaData
 from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.schema_type import SchemaType
@@ -123,6 +124,19 @@ class SQLAlchemyRelatedField(RelatedField):
     #   select(target_model).where(target_model.id.in_(...))
     target_model: Any | None = None
 
+    def get_related_category(self, admin_schema: AdminSchema) -> tuple[str, str] | None:
+        from brilliance_admin.integrations.sqlalchemy.table.base import SQLAlchemyAdminBase
+
+        if self.target_model is None:
+            raise AttributeError(f'{type(self).__name__}.target_model is required')
+
+        for group in admin_schema.categories:
+            for category in getattr(group, 'subcategories', []):
+                if isinstance(category, SQLAlchemyAdminBase) and category.model is self.target_model:
+                    return group.slug, category.slug
+
+        return None
+
     def _cast_pk(self, value, pk_type):
         if isinstance(value, pk_type):
             return value
@@ -136,11 +150,28 @@ class SQLAlchemyRelatedField(RelatedField):
             self,
             user: UserABC,
             field_slug,
+            fields_schema,
+            admin_schema,
             language_context: LanguageContext,
             schema_type: SchemaType = SchemaType.TABLE,
+            **kwargs,
     ) -> FieldSchemaData:
-        schema = super().generate_field_schema(user, field_slug, language_context, schema_type)
+        schema = super().generate_field_schema(
+            user,
+            field_slug,
+            fields_schema,
+            admin_schema,
+            language_context,
+            schema_type,
+            **kwargs,
+        )
         schema.rel_name = self.rel_name
+
+        if schema.related_group is None and schema.related_category is None:
+            related_category = self.get_related_category(admin_schema)
+            if related_category is not None:
+                schema.related_group, schema.related_category = related_category
+
         return schema
 
     def _get_target_model(self, model, field_slug):
@@ -196,22 +227,6 @@ class SQLAlchemyRelatedField(RelatedField):
         pk = get_pk(target_model)
         python_pk_type = pk.property.columns[0].type.python_type
 
-        # Add already selected choices
-        if data.existed_choices:
-            existed_choices = [i['key'] for i in data.existed_choices if 'key' in i]
-
-            values = []
-            for value in existed_choices:
-                try:
-                    values.append(python_pk_type(value))
-                except (ValueError, TypeError) as e:
-                    msg = INVALID_EXISTED_CHOICES.format(
-                        value=value, pk=pk, python_pk_type=python_pk_type.__name__,
-                    )
-                    raise AdminAPIException(APIError(message=msg), status_code=500) from e
-
-            stmt = stmt.where(pk.in_(values))
-
         if self.filter_fn:
             import inspect as ins
             if ins.iscoroutinefunction(self.filter_fn):
@@ -220,6 +235,40 @@ class SQLAlchemyRelatedField(RelatedField):
                 stmt = self.filter_fn(stmt, data, user)
 
         return stmt, pk
+
+    def _get_existing_choices_statement(self, stmt, data: AutocompleteData, pk, python_pk_type):
+        if not data.existed_choices:
+            return None
+
+        existed_choices = [item['key'] for item in data.existed_choices if 'key' in item]
+        values = []
+        for value in existed_choices:
+            try:
+                values.append(python_pk_type(value))
+            except (ValueError, TypeError) as e:
+                msg = INVALID_EXISTED_CHOICES.format(
+                    value=value, pk=pk, python_pk_type=python_pk_type.__name__,
+                )
+                raise AdminAPIException(APIError(message=msg), status_code=500) from e
+
+        return stmt.where(pk.in_(values))
+
+    def _get_autocomplete_result_statement(self, stmt, data: AutocompleteData, pk):
+        python_pk_type = pk.property.columns[0].type.python_type
+        existing_stmt = self._get_existing_choices_statement(stmt, data, pk, python_pk_type)
+        search_stmt = self._apply_autocomplete_search(stmt, data, pk)
+
+        if existing_stmt is None or not data.search_string:
+            return search_stmt
+
+        # UNION must contain only PKs: selecting models from a compound query
+        # makes SQLAlchemy return row values instead of ORM instances.
+        from sqlalchemy import select
+
+        matching_pks = existing_stmt.with_only_columns(pk).union(
+            search_stmt.with_only_columns(pk),
+        ).subquery()
+        return stmt.where(pk.in_(select(matching_pks.c[pk.key])))
 
     def _apply_autocomplete_search(self, stmt, data: AutocompleteData, pk):
         if not data.search_string:
@@ -236,7 +285,7 @@ class SQLAlchemyRelatedField(RelatedField):
                 col = getattr(target_model, field_name, None)
                 if col is not None:
                     conditions.append(
-                        cast(col, String).ilike(data.search_string)
+                        cast(col, String).ilike(f'%{data.search_string}%')
                     )
             if conditions:
                 return stmt.where(or_(*conditions))
@@ -264,7 +313,7 @@ class SQLAlchemyRelatedField(RelatedField):
 
         db_async_session = extra['db_async_session']
         stmt, pk = await self._get_autocomplete_statement(data, user, extra=extra)
-        stmt = self._apply_autocomplete_search(stmt, data, pk)
+        stmt = self._get_autocomplete_result_statement(stmt, data, pk)
         stmt = stmt.limit(min(150, data.limit))
         results = []
 
@@ -322,7 +371,8 @@ class SQLAlchemyRelatedField(RelatedField):
         from sqlalchemy import func, select
 
         db_async_session = extra['db_async_session']
-        stmt, _ = await self._get_autocomplete_statement(data, user, extra=extra)
+        stmt, pk = await self._get_autocomplete_statement(data, user, extra=extra)
+        stmt = self._get_autocomplete_result_statement(stmt, data, pk)
         count_stmt = select(func.count()).select_from(stmt.subquery())
         async with db_async_session() as session:
             return await session.scalar(count_stmt)

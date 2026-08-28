@@ -56,6 +56,8 @@ class FieldSchemaData(DataclassBase):
     many: bool | None = None
     rel_name: str | None = None
     dual_list: bool | None = None
+    related_group: str | None = None
+    related_category: str | None = None
 
     # IntegerField
     inputmode: str | None = None
@@ -154,6 +156,7 @@ class BaseCategory(KwargsInitMixin, abc.ABC):
         self,
         user: UserABC,
         language_context: LanguageContext,
+        admin_schema,
         parent_category=None,
     ) -> CategorySchemaData:
         type_slug = getattr(type(self), '_type_slug', None)
@@ -204,9 +207,10 @@ class CategoryLink(BaseCategory):
         self,
         user: UserABC,
         language_context: LanguageContext,
+        admin_schema,
         parent_category=None,
     ) -> CategorySchemaData:
-        result = super().generate_category_schema(user, language_context, parent_category)
+        result = super().generate_category_schema(user, language_context, admin_schema, parent_category)
         result.link = self.link
         return result
 
@@ -227,9 +231,10 @@ class CategoryGroup(BaseCategory):
         self,
         user: UserABC,
         language_context: LanguageContext,
+        admin_schema,
         parent_category=None,
     ) -> CategorySchemaData:
-        result = super().generate_category_schema(user, language_context, parent_category)
+        result = super().generate_category_schema(user, language_context, admin_schema, parent_category)
 
         for category in self.subcategories:
 
@@ -247,6 +252,7 @@ class CategoryGroup(BaseCategory):
                     user,
                     language_context,
                     parent_category=self,
+                    admin_schema=admin_schema,
                 )
             except Exception as e:
                 msg = f'Category "{category.slug}" {type(category).__name__} generate_category_schema error: {e}'

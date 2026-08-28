@@ -2,9 +2,11 @@ from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.integrations.sqlalchemy.utils import extract_integrity_detail
+from brilliance_admin.integrations.sqlalchemy.related_field import get_record_title
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
+from brilliance_admin.schema.table.table_models import Record
 
 logger = get_logger()
 
@@ -48,6 +50,10 @@ class SQLAlchemyAdminCreate:
             async with self.db_async_session() as session:
                 record = await self.table_schema.create(user, data, session)
                 pk_value = getattr(record, self.pk_name, None)
+                choice = Record(
+                    key=pk_value,
+                    title=get_record_title(record, self.raise_async_unsafe, debug=debug),
+                )
 
         except AdminAPIException as e:
             raise e
@@ -96,4 +102,4 @@ class SQLAlchemyAdminCreate:
             type(self).__name__, self.table_schema.model.__name__, pk_value, user.username,
             extra={'data': data},
         )
-        return schema.CreateResult(pk=pk_value)
+        return schema.CreateResult(pk=pk_value, choice=choice)

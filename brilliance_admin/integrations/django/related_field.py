@@ -3,10 +3,12 @@ from typing import Any, Callable
 
 from asgiref.sync import sync_to_async
 from django.core.exceptions import SynchronousOnlyOperation, ValidationError as DjangoValidationError
+from django.db.models import Model
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 
 from brilliance_admin.exceptions import AdminAPIException, APIError, AsyncUnsafeTitleLoad, FieldError
+from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.table_models import AutocompleteData, Record
 from brilliance_admin.utils import DeserializeAction, get_logger
@@ -104,6 +106,49 @@ class DjangoRelatedField(RelatedField):
     get_queryset: Callable[[Any, dict], Any] | None = None
     select_related: list[str] | None = None
     prefetch_related: list[str] | None = None
+
+    def get_related_category(
+        self,
+        source_model: type[Model],
+        admin_schema: AdminSchema,
+    ) -> tuple[str, str] | None:
+        from brilliance_admin.integrations.django.table.base import DjangoAdminBase
+
+        target_model = source_model._meta.get_field(self.rel_name).related_model
+
+        for group in admin_schema.categories:
+            for category in getattr(group, 'subcategories', []):
+                if isinstance(category, DjangoAdminBase) and category.model is target_model:
+                    return group.slug, category.slug
+
+        return None
+
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        fields_schema,
+        admin_schema,
+        language_context,
+        schema_type,
+        **kwargs,
+    ):
+        schema = super().generate_field_schema(
+            user,
+            field_slug,
+            fields_schema,
+            admin_schema,
+            language_context,
+            schema_type,
+            **kwargs,
+        )
+
+        if schema.related_group is None and schema.related_category is None:
+            related_category = self.get_related_category(fields_schema.model, admin_schema)
+            if related_category is not None:
+                schema.related_group, schema.related_category = related_category
+
+        return schema
 
     def _cast_pk(self, value, model):
         target_model = model._meta.get_field(self.rel_name).related_model

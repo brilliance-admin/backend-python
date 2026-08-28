@@ -184,8 +184,13 @@ async def test_subcategory_update(language_context):
 def test_subcategory_schema_removes_reverse_fk(language_context):
     example_category, another_subcategory = get_example_another_subcategory()
     user = UserABC(username='test')
+    admin_schema = schema.AdminSchema(
+        categories=[schema.CategoryGroup(slug='examples', title='Examples', subcategories=[example_category])],
+        auth=None,
+        language_manager=language_context.language_manager,
+    )
 
-    example_schema = example_category.generate_category_schema(user, language_context)
+    example_schema = example_category.generate_category_schema(user, language_context, admin_schema)
     subcategories = example_schema.table_info.subcategories
     subcategory_schema = (
         subcategories['djangonotherexample']
@@ -203,6 +208,7 @@ def test_subcategory_schema_removes_reverse_fk(language_context):
     direct_subcategory_schema = another_subcategory.generate_category_schema(
         user,
         language_context,
+        admin_schema,
     )
     direct_subcategory_fields = direct_subcategory_schema.table_info.table_schema.fields
     direct_formset_fields = another_subcategory.table_schema._collect_formset_fields(
@@ -216,6 +222,6 @@ def test_subcategory_schema_removes_reverse_fk(language_context):
         slug='examples',
         title='Examples',
         subcategories=[example_category],
-    ).generate_category_schema(user, language_context)
+    ).generate_category_schema(user, language_context, admin_schema)
 
     assert 'djangoexample' in group_schema.categories

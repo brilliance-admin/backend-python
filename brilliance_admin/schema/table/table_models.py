@@ -68,6 +68,7 @@ class RetrieveResult(BaseModel):
 
 class CreateResult(BaseModel):
     pk: Any
+    choice: Record | None = None
     debug_info: DebugInfo | None = None
 
 

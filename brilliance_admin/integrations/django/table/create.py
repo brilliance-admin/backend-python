@@ -1,5 +1,7 @@
 from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError
+from brilliance_admin.integrations.django.related_field import get_record_title
+from brilliance_admin.schema.table.table_models import Record
 from brilliance_admin.translations import TranslateText as _
 
 
@@ -34,4 +36,8 @@ class DjangoAdminCreate:
         else:
             record = await self.table_schema.create(user, data)
         pk_value = getattr(record, self.pk_name, None)
-        return schema.CreateResult(pk=pk_value, debug_info=debug_info)
+        choice = Record(
+            key=pk_value,
+            title=await get_record_title(record, self.raise_async_unsafe, debug=debug),
+        )
+        return schema.CreateResult(pk=pk_value, choice=choice, debug_info=debug_info)

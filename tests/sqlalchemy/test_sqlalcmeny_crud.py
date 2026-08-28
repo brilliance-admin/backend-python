@@ -10,8 +10,9 @@ from brilliance_admin.schema.table.admin_action import ActionData
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction
 from example.sections.models import (
-    Currency, CurrencyFactory, Fee, FeeAccrualType, FeeFactory, FeeFixType, FeeOperationType, FeeSourceType,
-    FeeTypeFactory, Merchant, MerchantFactory, Terminal, TerminalFactory, TerminalStatuses)
+    City, CountryFactory, Currency, CurrencyFactory, Fee, FeeAccrualType, FeeFactory, FeeFixType,
+    FeeOperationType, FeeSourceType, FeeTypeFactory, Merchant, MerchantFactory, Terminal, TerminalFactory,
+    TerminalStatuses)
 from tests.sqlalchemy.test_sqlalcmeny_schema import FIELDS
 
 
@@ -55,6 +56,8 @@ async def test_create(postgres_sessionmaker, language_context):
         'status': {'value': 'error', 'title': 'Error'},
         'description': 'test',
         'title': 'test',
+        'secret_key': 'test-secret-key',
+        'is_h2h': True,
         'created_at': '2026-01-20T20:33:40.055184Z',
         'registered_delay': 60,
         'fees': [
@@ -128,6 +131,9 @@ async def test_create_bad_fk(postgres_sessionmaker, language_context):
         'status': {'value': 'error', 'title': 'Error'},
         'description': 'test',
         'title': 'test',
+        'secret_key': 'test-secret-key',
+        'is_h2h': True,
+        'created_at': '2026-01-20T20:33:40.055184Z',
         'registered_delay': 60,
     }
     with pytest.raises(AdminAPIException) as e:
@@ -167,6 +173,9 @@ async def test_create_bad_inline_fk_rollbacks_all(postgres_sessionmaker, languag
         'status': {'value': 'error', 'title': 'Error'},
         'description': 'test',
         'title': 'test',
+        'secret_key': 'test-secret-key',
+        'is_h2h': True,
+        'created_at': '2026-01-20T20:33:40.055184Z',
         'registered_delay': 60,
         'fees': [
             {
@@ -212,7 +221,7 @@ async def test_create_bad_inline_fk_rollbacks_all(postgres_sessionmaker, languag
 
 
 @pytest.mark.asyncio
-async def test_create_inline_empty_dict_validation_error(postgres_sessionmaker, language_context):
+async def test_create_inline_validation_error(postgres_sessionmaker, language_context):
     """
     Проверяет, что пустая новая inline-строка на CREATE падает на валидации
     до обращения к ограничениям базы данных.
@@ -231,8 +240,11 @@ async def test_create_inline_empty_dict_validation_error(postgres_sessionmaker, 
                 'status': {'value': 'error', 'title': 'Error'},
                 'description': 'test',
                 'title': 'test',
+                'secret_key': 'test-secret-key',
+                'is_h2h': True,
+                'created_at': '2026-01-20T20:33:40.055184Z',
                 'registered_delay': 60,
-                'fees': [{}],
+                'fees': [{'fix_amount': 0}],
             },
             user=user,
             language_context=language_context,
@@ -820,7 +832,7 @@ async def test_update_inline_deserialize_keeps_pk(postgres_sessionmaker):
 
 
 @pytest.mark.asyncio
-async def test_update_inline_empty_dict_validation_error(postgres_sessionmaker, language_context):
+async def test_update_inline_validation_error(postgres_sessionmaker, language_context):
     category = get_category(postgres_sessionmaker)
     user = auth.UserABC(username="test")
     terminal = await TerminalFactory(
@@ -831,7 +843,7 @@ async def test_update_inline_empty_dict_validation_error(postgres_sessionmaker, 
     with pytest.raises(AdminAPIException) as e:
         await category.update(
             pk=terminal.id,
-            data={'fees': [{}]},
+            data={'fees': [{'fix_amount': 0}]},
             user=user,
             language_context=language_context,
             debug=True,
@@ -983,3 +995,45 @@ async def test_autocomplete(postgres_sessionmaker, language_context):
         debug=True,
     )
     assert autocomplete_result == schema.AutocompleteResult(results=[], total_count=0)
+
+
+@pytest.mark.asyncio
+async def test_autocomplete_existing_choice_does_not_exclude_other_choices(postgres_sessionmaker, language_context):
+    category = sqlalchemy.SQLAlchemyAdmin(model=City, db_async_session=postgres_sessionmaker)
+    user = auth.UserABC(username='test')
+    existing = await CountryFactory(name='Existing country', code='EX')
+    other = await CountryFactory(name='Other country', code='OT')
+
+    result = await category.autocomplete(
+        data=schema.AutocompleteData(
+            field_slug='country_id',
+            existed_choices=[{'key': existing.id, 'title': existing.name}],
+        ),
+        user=user,
+        language_context=language_context,
+        debug=True,
+    )
+
+    assert {choice.key for choice in result.results} == {existing.id, other.id}
+
+
+@pytest.mark.asyncio
+async def test_autocomplete_combines_existing_choice_with_search_results(postgres_sessionmaker, language_context):
+    category = sqlalchemy.SQLAlchemyAdmin(model=City, db_async_session=postgres_sessionmaker)
+    user = auth.UserABC(username='test')
+    existing = await CountryFactory(name='Existing country', code='EX')
+    matched = await CountryFactory(name='Matched country', code='MT')
+    await CountryFactory(name='Other country', code='OT')
+
+    result = await category.autocomplete(
+        data=schema.AutocompleteData(
+            field_slug='country_id',
+            search_string='Matched',
+            existed_choices=[{'key': existing.id, 'title': existing.name}],
+        ),
+        user=user,
+        language_context=language_context,
+        debug=True,
+    )
+
+    assert {choice.key for choice in result.results} == {existing.id, matched.id}

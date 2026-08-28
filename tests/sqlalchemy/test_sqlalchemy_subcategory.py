@@ -3,6 +3,7 @@ from sqlalchemy import select
 
 from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import AdminAPIException
+from example.main import admin_schema
 from example.sections.merchant import MerchantAdmin
 from example.sections.models import CurrencyFactory, Fee, FeeFactory, FeeTypeFactory, MerchantFactory, TerminalFactory
 from example.sections.terminal import FeeAdmin, TerminalAdmin
@@ -254,7 +255,7 @@ def test_subcategory_schema_removes_reverse_fk(postgres_sessionmaker, language_c
         'UserSessionAdmin must resolve user_id as the FK to UserAdmin parent'
     )
 
-    user_schema = user_category.generate_category_schema(user, language_context)
+    user_schema = user_category.generate_category_schema(user, language_context, admin_schema)
     subcategory_schema = user_schema.table_info.subcategories['usersession']
     subcategory_fields = subcategory_schema['table_info']['table_schema']['fields']
 
@@ -266,6 +267,7 @@ def test_subcategory_schema_removes_reverse_fk(postgres_sessionmaker, language_c
     direct_subcategory_schema = user_category.get_subcategory('usersession').generate_category_schema(
         user,
         language_context,
+        admin_schema,
     )
     direct_subcategory_fields = direct_subcategory_schema.table_info.table_schema.fields
 
@@ -278,6 +280,6 @@ def test_subcategory_schema_removes_reverse_fk(postgres_sessionmaker, language_c
         slug='users',
         title='Users',
         subcategories=[user_category],
-    ).generate_category_schema(user, language_context)
+    ).generate_category_schema(user, language_context, admin_schema)
 
     assert 'user' in group_schema.categories

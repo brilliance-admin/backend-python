@@ -13,7 +13,7 @@ from brilliance_admin.utils import get_logger
 logger = get_logger()
 
 
-def function_field(**kwargs):
+def function_field(*, type=StringField, **kwargs):
     '''
     The same as decaring:
     field = FunctionField(fn=attribute)
@@ -23,7 +23,7 @@ def function_field(**kwargs):
     def wrapper(func):
         func.__function_field__ = True
 
-        field_type = kwargs.pop('type', StringField)
+        field_type = type
         if isinstance(field_type, TableField):
             if kwargs:
                 msg = (
@@ -71,10 +71,21 @@ class FunctionField(TableField):
         self,
         user,
         field_slug,
+        fields_schema,
+        admin_schema,
         language_context: LanguageContext,
         schema_type: SchemaType = SchemaType.TABLE,
+        **kwargs,
     ):
-        return self.field.generate_field_schema(user, field_slug, language_context, schema_type)
+        return self.field.generate_field_schema(
+            user,
+            field_slug,
+            fields_schema,
+            admin_schema,
+            language_context,
+            schema_type,
+            **kwargs,
+        )
 
     async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
         try:

@@ -301,6 +301,14 @@ FORM_SCHEMA_DATA = {
     'type': 'table',
 }
 
+
+def get_admin_schema(category, language_context):
+    return schema.AdminSchema(
+        categories=[schema.CategoryGroup(slug='examples', title='Examples', subcategories=[category])],
+        auth=None,
+        language_manager=language_context.language_manager,
+    )
+
 client = TestClient(admin_app)
 
 
@@ -361,7 +369,11 @@ async def test_generate_category_schema_django(language_context):
             ),
         )
     )
-    new_schema = category.generate_category_schema(UserABC(username="test"), language_context)
+    new_schema = category.generate_category_schema(
+        UserABC(username="test"),
+        language_context,
+        get_admin_schema(category, language_context),
+    )
     context = {'language_context': language_context}
     schema_data = new_schema.model_dump(mode='json', context=context)
     timezone_field = schema_data['table_info']['table_schema']['fields'].pop('timezone')
@@ -386,7 +398,11 @@ async def test_django_search_help_uses_field_titles_by_line(language_context):
         search_fields=['title', 'owner__username', 'payload__phone'],
     )
 
-    category_schema = category.generate_category_schema(UserABC(username="test"), language_context)
+    category_schema = category.generate_category_schema(
+        UserABC(username="test"),
+        language_context,
+        get_admin_schema(category, language_context),
+    )
 
     assert category_schema.table_info.search_help == (
         '<b>Доступные поля для поиска:</b>\n'
@@ -409,7 +425,11 @@ async def test_django_search_help_related_title_does_not_render_none(search_help
         search_fields=['provider__name'],
     )
 
-    category_schema = category.generate_category_schema(UserABC(username="test"), language_context)
+    category_schema = category.generate_category_schema(
+        UserABC(username="test"),
+        language_context,
+        get_admin_schema(category, language_context),
+    )
 
     assert 'None' not in category_schema.table_info.search_help
     assert category_schema.table_info.search_help == (

@@ -24,11 +24,11 @@ class DjangoFieldsSchema(schema.FieldsSchema):
     model = None
     _has_explicit_fields = False
 
-    def __init__(self, *args, model=None, **kwargs):
+    def __init__(self, *args, fields=None, model=None, **kwargs):
         if model is not None:
             self.model = model
-        self._has_explicit_fields = kwargs.get('fields') is not None
-        super().__init__(*args, **kwargs)
+        self._has_explicit_fields = fields is not None
+        super().__init__(*args, fields=fields, **kwargs)
 
         for field in self.get_fields().values():
             if isinstance(field, DjangoInlineField):

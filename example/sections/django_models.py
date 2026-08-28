@@ -31,7 +31,7 @@ class DjangoUserFactory(DjangoFactoryBase):
     class Meta:
         model = DjangoUser
 
-    username = factory.Faker("word")
+    username = factory.LazyAttributeSequence(lambda _, number: f"test-user-{number}")
 
 
 class DjangoExample(models.Model):

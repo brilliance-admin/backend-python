@@ -74,6 +74,7 @@ jobs:
             sudo chown -R deploy:deploy /home/deploy/apps/backend-python
             cd /home/deploy/apps/backend-python
             docker compose -f .configs/docker/docker-compose.prod.yml up -d --build
+            docker builder prune -af
             sudo ln -sf /home/deploy/apps/backend-python/.configs/nginx/example.conf /etc/nginx/sites-enabled/example
             sudo rm -f /etc/nginx/sites-enabled/default
             sudo nginx -t

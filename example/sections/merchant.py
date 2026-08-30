@@ -11,6 +11,7 @@ class MerchantFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
     fields = [
         'id',
         'user_id',
+        'is_active',
         'title',
         'status',
         'provider_settings',
@@ -61,6 +62,7 @@ class MerchantAdmin(sqlalchemy.SQLAlchemyAdmin):
             'user_id',
             'created_at',
             'terminals',
+            'is_active',
         ],
         created_at=schema.DateTimeField(range=True, label='Created at long-long label'),
     )

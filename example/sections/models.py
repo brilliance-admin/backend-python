@@ -378,6 +378,7 @@ class Merchant(BaseIDModel):
     user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[int] = mapped_column(Integer, nullable=False, default=MerchantStatus.ACTIVE.value)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=expression.true())
 
     provider_settings: Mapped[dict[str, Any]] = mapped_column(
         MutableDict.as_mutable(JSONB().with_variant(JSON(), 'sqlite')),

@@ -6,8 +6,8 @@
 [![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin/)
 [![CI](https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg)](https://github.com/brilliance-admin/backend-python/actions)
 
-Simple and lightweight data management framework powered by `FastAPI` and `Vue3` `Vuetify` all-in-one. \
-Integrated with `SQLAlchemy`. Inspired by Django Admin and DRF.\
+Simple and lightweight, powered by Python and Vue3 Vuetify all-in-one. \
+Integrated with `SQLAlchemy` and `Django ORM`.\
 _Some call it heavenly in its brilliance._
 
 ### [Live Demo](https://brilliance-admin.com/) | [Demo Sources](https://github.com/brilliance-admin/backend-python/tree/main/example) | [Schowcase + Documentation](https://docs.brilliance-admin.com/)

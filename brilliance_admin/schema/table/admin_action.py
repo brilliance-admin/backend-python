@@ -34,7 +34,7 @@ class ActionMessage(DataclassBase):
 
 @dataclass
 class ActionFileResult(DataclassBase):
-    content: bytes
+    storage_name: str
     filename: str
     content_type: str
 
@@ -43,7 +43,7 @@ class ActionFileResult(DataclassBase):
 class ActionResult(DataclassBase):
     message: ActionMessage | SupportsStr | None = None
     persistent_message: SupportsStr | None = None
-    download_file: ActionFileResult | None = None
+    download_file: ActionFileResult | None = Field(default=None, exclude=True)
 
     def __init__(
         self,

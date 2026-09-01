@@ -1,36 +1,51 @@
 from asgiref.sync import async_to_sync
 from celery import shared_task
 from django.core.mail import send_mail
-from time import perf_counter
 
 from brilliance_admin.integrations.django.table.export import django_export as run_django_export
-from brilliance_admin.integrations.django.table.export_file_handler import StorageExportFileHandler
+from brilliance_admin.utils import get_logger
 
 
-EXPORT_EMAIL_TEMPLATE = """{url}
+logger = get_logger()
 
-Export time: {export_time_seconds:.2f} s"""
+
+EXPORT_EMAIL_TEMPLATE = '''{url}
+
+Export time: {export_time_seconds:.2f} s'''
+
+EXPORT_ERROR_EMAIL_TEMPLATE = 'Export failed. Try again later.'
 
 
 @shared_task
 def django_export(email, *args, **kwargs):
-    started_at = perf_counter()
-    file_handler = StorageExportFileHandler()
     try:
-        filename = async_to_sync(run_django_export)(*args, **kwargs, file_handler=file_handler)
-        url = file_handler.save(filename)
-    finally:
-        file_handler.close()
+        export_result = async_to_sync(run_django_export)(*args, **kwargs)
+        message = EXPORT_EMAIL_TEMPLATE.format(
+            url=export_result.url,
+            export_time_seconds=export_result.export_time_seconds,
+        )
 
-    export_time_seconds = perf_counter() - started_at
-    message = EXPORT_EMAIL_TEMPLATE.format(
-        url=url,
-        export_time_seconds=export_time_seconds,
-    )
-
-    send_mail(
-        subject='Export',
-        message=message,
-        from_email=None,
-        recipient_list=[email],
-    )
+        send_mail(
+            subject=f'Export: {kwargs["group_slug"]}/{kwargs["category_slug"]}',
+            message=message,
+            from_email=None,
+            recipient_list=[email],
+        )
+    except Exception:
+        logger.exception(
+            'Django export failed: group=%s category=%s',
+            kwargs['group_slug'],
+            kwargs['category_slug'],
+            extra={
+                'extra_kwargs': {
+                    'group_slug': kwargs['group_slug'],
+                    'category_slug': kwargs['category_slug'],
+                },
+            },
+        )
+        send_mail(
+            subject=f'Export failed: {kwargs["group_slug"]}/{kwargs["category_slug"]}',
+            message=EXPORT_ERROR_EMAIL_TEMPLATE,
+            from_email=None,
+            recipient_list=[email],
+        )

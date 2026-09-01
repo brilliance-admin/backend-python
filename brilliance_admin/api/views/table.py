@@ -2,7 +2,8 @@ from html import escape
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, StreamingResponse
+from django.core.files.storage import default_storage
 
 from brilliance_admin.api.utils import get_category, get_user
 from brilliance_admin.exceptions import AdminAPIException, APIError
@@ -17,6 +18,16 @@ from brilliance_admin.utils import get_logger
 router = APIRouter(prefix="/table", tags=["Category - Table"])
 
 logger = get_logger()
+
+
+def stream_storage_file(storage_name):
+    file = default_storage.open(storage_name, mode='rb')
+    try:
+        while chunk := file.read(64 * 1024):
+            yield chunk
+    finally:
+        file.close()
+        default_storage.delete(storage_name)
 
 
 # pylint: disable=too-many-arguments
@@ -102,16 +113,6 @@ async def table_retrieve(
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
-    if result.download_file:
-        return Response(
-            content=result.download_file.content,
-            media_type=result.download_file.content_type,
-            headers={
-                'Content-Disposition': f'attachment; filename="{result.download_file.filename}"',
-                'Pragma': result.download_file.filename,
-            },
-        )
-
     return JSONResponse(content=result.model_dump(mode='json', context=context))
 
 
@@ -154,16 +155,6 @@ async def table_create(
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
-
-    if result.download_file:
-        return Response(
-            content=result.download_file.content,
-            media_type=result.download_file.content_type,
-            headers={
-                'Content-Disposition': f'attachment; filename="{result.download_file.filename}"',
-                'Pragma': result.download_file.filename,
-            },
-        )
 
     return JSONResponse(content=result.model_dump(mode='json', context=context))
 
@@ -257,5 +248,15 @@ async def table_action(
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
+
+    if result.download_file:
+        return StreamingResponse(
+            content=stream_storage_file(result.download_file.storage_name),
+            media_type=result.download_file.content_type,
+            headers={
+                'Content-Disposition': f'attachment; filename="{result.download_file.filename}"',
+                'Pragma': result.download_file.filename,
+            },
+        )
 
     return JSONResponse(content=result.model_dump(mode='json', context=context))

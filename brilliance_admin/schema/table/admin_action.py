@@ -20,6 +20,10 @@ class ActionData(BaseModel):
 
     send_to_all: bool = False
 
+    group_slug: str | None = Field(default=None, exclude=True)
+    category_slug: str | None = Field(default=None, exclude=True)
+    subcategory_slug: str | None = Field(default=None, exclude=True)
+
 
 @dataclass
 class ActionMessage(DataclassBase):
@@ -29,20 +33,30 @@ class ActionMessage(DataclassBase):
 
 
 @dataclass
+class ActionFileResult(DataclassBase):
+    content: bytes
+    filename: str
+    content_type: str
+
+
+@dataclass
 class ActionResult(DataclassBase):
     message: ActionMessage | SupportsStr | None = None
     persistent_message: SupportsStr | None = None
+    download_file: ActionFileResult | None = None
 
     def __init__(
         self,
         message: ActionMessage | SupportsStr | None = None,
         persistent_message: SupportsStr | None = None,
+        download_file: ActionFileResult | None = None,
     ):
         if isinstance(message, (str, SupportsStr)) and not isinstance(message, ActionMessage):
             self.message = ActionMessage(text=message)
         else:
             self.message = message
         self.persistent_message = persistent_message
+        self.download_file = download_file
 
 
 # pylint: disable=too-many-arguments

@@ -3,7 +3,7 @@ from typing import Any
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from brilliance_admin.api.utils import get_category
+from brilliance_admin.api.utils import get_category, get_user
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.dashboard.category_dashboard import CategoryDashboard, DashboardContainer, DashboardData
@@ -25,8 +25,9 @@ async def dashboard_data(
         parent_pk: Any | None = None,
 ) -> DashboardContainer:
     schema: AdminSchema = request.app.state.schema
-    schema_category, user, parent_category = await get_category(
-        request,
+    user = await get_user(request)
+    schema_category, parent_category = get_category(
+        schema,
         group,
         category,
         subcategory,

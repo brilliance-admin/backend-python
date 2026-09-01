@@ -34,6 +34,7 @@ class FieldSchemaData(DataclassBase):
     password: bool | None = None
 
     choices: List[dict] | None = None
+    default_all_selected: bool | None = None
 
     variant: str | None = None
     size: str | None = None

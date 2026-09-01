@@ -2,9 +2,9 @@ from html import escape
 from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
-from brilliance_admin.api.utils import get_category
+from brilliance_admin.api.utils import get_category, get_user
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.schema import AdminSchema
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
@@ -31,8 +31,9 @@ async def table_list(
 ) -> TableListResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user, parent_category = await get_category(
-        request,
+    user = await get_user(request)
+    schema_category, parent_category = get_category(
+        schema,
         group,
         category,
         subcategory,
@@ -74,8 +75,9 @@ async def table_retrieve(
 ) -> RetrieveResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user, parent_category = await get_category(
-        request,
+    user = await get_user(request)
+    schema_category, parent_category = get_category(
+        schema,
         group,
         category,
         subcategory,
@@ -100,6 +102,16 @@ async def table_retrieve(
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
+    if result.download_file:
+        return Response(
+            content=result.download_file.content,
+            media_type=result.download_file.content_type,
+            headers={
+                'Content-Disposition': f'attachment; filename="{result.download_file.filename}"',
+                'Pragma': result.download_file.filename,
+            },
+        )
+
     return JSONResponse(content=result.model_dump(mode='json', context=context))
 
 
@@ -116,8 +128,9 @@ async def table_create(
 ) -> CreateResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user, parent_category = await get_category(
-        request,
+    user = await get_user(request)
+    schema_category, parent_category = get_category(
+        schema,
         group,
         category,
         subcategory,
@@ -142,6 +155,16 @@ async def table_create(
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
+    if result.download_file:
+        return Response(
+            content=result.download_file.content,
+            media_type=result.download_file.content_type,
+            headers={
+                'Content-Disposition': f'attachment; filename="{result.download_file.filename}"',
+                'Pragma': result.download_file.filename,
+            },
+        )
+
     return JSONResponse(content=result.model_dump(mode='json', context=context))
 
 
@@ -159,8 +182,9 @@ async def table_update(
 ) -> UpdateResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user, parent_category = await get_category(
-        request,
+    user = await get_user(request)
+    schema_category, parent_category = get_category(
+        schema,
         group,
         category,
         subcategory,
@@ -204,13 +228,17 @@ async def table_action(
 ) -> ActionResult:
     schema: AdminSchema = request.app.state.schema
 
-    schema_category, user, parent_category = await get_category(
-        request,
+    user = await get_user(request)
+    schema_category, parent_category = get_category(
+        schema,
         group,
         category,
         subcategory,
         check_type=CategoryTable,
     )
+    action_data.group_slug = group
+    action_data.category_slug = category
+    action_data.subcategory_slug = subcategory
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)

@@ -51,3 +51,32 @@ async def test_decimal_rejects_value_below_minimum():
 
     with pytest.raises(FieldError):
         await field.deserialize_field('0.5', DeserializeAction.CREATE, extra={})
+
+
+@pytest.mark.asyncio
+async def test_multiple_choice_outputs_selected_choices():
+    field = schema.MultipleChoiceField(
+        choices=[
+            {'value': 'draft', 'title': 'Draft'},
+            {'value': 'published', 'title': 'Published'},
+        ],
+    )
+
+    assert await field.serialize(['draft', 'published'], extra={}) == [
+        {'value': 'draft', 'title': 'Draft'},
+        {'value': 'published', 'title': 'Published'},
+    ]
+
+
+@pytest.mark.asyncio
+async def test_multiple_choice_updates_and_defaults_to_all_selected():
+    field = schema.MultipleChoiceField(
+        choices=[
+            {'value': 'draft', 'title': 'Draft'},
+            {'value': 'published', 'title': 'Published'},
+        ],
+        default_all_selected=True,
+    )
+
+    assert await field.deserialize_field(['published'], DeserializeAction.UPDATE, extra={}) == ['published']
+    assert await field.deserialize_field(None, DeserializeAction.CREATE, extra={}) == ['draft', 'published']

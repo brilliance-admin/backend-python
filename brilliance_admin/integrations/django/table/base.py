@@ -144,11 +144,11 @@ class DjangoAdminBase(CategoryTable):
 
     def get_search_help_fields(self):
         return '<br>'.join(
-            f'- {self.get_search_field_title(field)}'
+            f'- {self.get_lookup_field_title(field)}'
             for field in self.search_fields
         )
 
-    def get_search_field_title(self, field_path):
+    def get_lookup_field_title(self, field_path):
         model = self.model
         titles = []
 

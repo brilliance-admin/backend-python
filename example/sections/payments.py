@@ -156,6 +156,18 @@ class PaymentFieldsSchema(schema.FieldsSchema):
 class CreatePaymentSchema(schema.FieldsSchema):
     amount = schema.IntegerField(label=_('amount'))
     is_throw_error = schema.BooleanField(label=_('is_throw_error'))
+    addtional_fields = schema.MultipleChoiceField(
+        label=_('addtional_fields'),
+        default_all_selected=True,
+        help_text=_('addtional_fields__help_text'),
+        choices=[
+            {'value': 'row_number', 'title': 'Row number'},
+            {'value': 'record_id', 'title': 'Record ID'},
+            {'value': 'exported_at', 'title': 'Exported at'},
+            {'value': 'export_user', 'title': 'Export user'},
+            {'value': 'source_model', 'title': 'Source model'},
+        ],
+    )
 
     async def validate_is_throw_error(self, value):
         if value:

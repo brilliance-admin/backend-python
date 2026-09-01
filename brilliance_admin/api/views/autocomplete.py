@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from brilliance_admin.api.utils import get_category
+from brilliance_admin.api.utils import get_category, get_user
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult
@@ -27,7 +27,8 @@ async def autocomplete(
     data.field_slug = field_slug
     data.inline_field_slug = inline_field_slug
     schema: AdminSchema = request.app.state.schema
-    schema_category, user, parent_category = await get_category(request, group, category, subcategory)
+    user = await get_user(request)
+    schema_category, parent_category = get_category(schema, group, category, subcategory)
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)

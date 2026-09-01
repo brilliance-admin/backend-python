@@ -2,6 +2,15 @@ delete: 'Удалить'
 delete_confirmation_text: "Вы уверены, что хотите удалить данные записи?\nДанное действие нельзя отменить."
 deleted_successfully: 'Записи успешно удалены.'
 
+export:
+  title: 'Выгрузить'
+  fields: 'Поля для выгрузки'
+  email: 'Email для получения результата'
+  is_async: 'Отправить выгрузку на email'
+  is_async__help_text: 'Выгрузка будет подготовлена и отправлена на указанный email.'
+  email_required_for_async: 'Укажите email, чтобы получить выгрузку.'
+  successfully_async_message: 'Выгрузка будет отправлена на %(email)s.'
+
 errors:
   pk_not_found: 'Поле "%(pk_name)s" не найдено среди переданных данных.'
   record_not_found: 'Запись по ключу %(pk_name)s=%(pk)s не найдена.'

@@ -694,6 +694,81 @@ class ChoiceField(TableField):
 
 
 @dataclass
+class MultipleChoiceField(ChoiceField):
+    _type = 'multiple_choice'
+
+    default_all_selected: bool = False
+
+    def generate_field_schema(
+        self,
+        user,
+        field_slug,
+        fields_schema,
+        admin_schema,
+        language_context: LanguageContext,
+        schema_type: SchemaType = SchemaType.TABLE,
+        **kwargs,
+    ) -> FieldSchemaData:
+        schema = super().generate_field_schema(
+            user,
+            field_slug,
+            fields_schema,
+            admin_schema,
+            language_context,
+            schema_type,
+            **kwargs,
+        )
+        schema.default_all_selected = self.default_all_selected
+        return schema
+
+    async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
+        if value is None:
+            return None
+        if not isinstance(value, list):
+            raise FieldError(f'{type(self).__name__} value must be list, got {type(value)}')
+
+        result = []
+        for item in value:
+            choice = self.find_choice(item)
+            if not choice:
+                raise FieldError(
+                    f'Invalid choice value "{item}", allowed: {[c["value"] for c in self.generate_choices() or []]}'
+                )
+            result.append({
+                'value': choice['value'],
+                'title': choice.get('title') or str(choice['value']).capitalize(),
+            })
+        return result
+
+    async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        if value is None and self.default is None and self.default_all_selected:
+            value = [choice['value'] for choice in self.generate_choices() or []]
+
+        value = await TableField.deserialize_field(self, value, action, extra, *args, **kwargs)
+        if value is None:
+            return None
+        if not isinstance(value, list):
+            raise FieldError(f'{type(self).__name__} value must be list, got {type(value)}')
+
+        result = []
+        for item in value:
+            if isinstance(item, dict):
+                if 'value' not in item:
+                    raise FieldError(f'{type(self).__name__} item must contain "value": {item}')
+                item = item['value']
+            if isinstance(item, bool) or not isinstance(item, (str, int, float)):
+                raise FieldError(f'{type(self).__name__} choice must be str, int or float, got {type(item)}')
+
+            choice = self.find_choice(item)
+            if not choice:
+                raise FieldError(
+                    f'Invalid choice value "{item}", allowed: {[c["value"] for c in self.generate_choices() or []]}'
+                )
+            result.append(choice['value'])
+        return result
+
+
+@dataclass
 class RelatedField(TableField):
     _type = 'related'
 

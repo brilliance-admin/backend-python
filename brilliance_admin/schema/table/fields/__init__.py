@@ -12,6 +12,7 @@ from .base import (
     InlineField,
     IntegerField,
     JSONField,
+    MultipleChoiceField,
     RelatedField,
     StringField,
 )

@@ -72,7 +72,7 @@ async def django_export(
         check_type=CategoryTable,
     )
 
-    queryset = category.get_queryset()
+    queryset = category.get_queryset(action='django_export')
     queryset = await category.apply_filters(
         queryset,
         ListData(search=search, filters=filters),

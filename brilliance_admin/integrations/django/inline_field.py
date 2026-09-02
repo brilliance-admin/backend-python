@@ -6,7 +6,7 @@ from pydantic.dataclasses import dataclass
 from brilliance_admin.schema.table.fields.base import InlineField
 
 INLINE_GET_QUERYSET_RESULT_ERROR = (
-    '{class_name}.get_queryset() must return Django QuerySet, got {result_type}'
+    '{class_name}.get_queryset must return Django QuerySet, got {result_type}'
 )
 
 

@@ -15,7 +15,7 @@ logger = get_logger()
 
 
 def warn_if_list_related_fields_not_selected(category):
-    queryset = category.get_queryset()
+    queryset = category.get_queryset(action='list')
     select_related = queryset.query.select_related
     if select_related is True:
         return
@@ -38,7 +38,7 @@ def warn_if_list_related_fields_not_selected(category):
 
         logger.warning(
             "DjangoAdmin list_display related field is not selected: category=%s model=%s field=%s. "
-            "Add select_related('%s') to get_queryset().",
+            "Add select_related('%s') to get_queryset method.",
             type(category).__name__,
             category.model.__name__,
             field_slug,
@@ -277,7 +277,7 @@ class DjangoAdminBase(CategoryTable):
 
         return extra
 
-    def get_queryset(self):
+    def get_queryset(self, *, action: str):
         return self.model.objects.all()
 
     def run_debug_startup_checks(self):

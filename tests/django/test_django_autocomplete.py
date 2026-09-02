@@ -120,7 +120,7 @@ async def test_django_related_autocomplete_title_error_shows_field(language_cont
             'Async unsafe title load: field="example" rel_name="example" '
             'parent_model="None" parent_pk=None '
             'model="DjangoExample" pk=1. '
-            'SynchronousOnlyOperation: Add required select_related() to get_queryset(), or define async admin_title().'
+            'SynchronousOnlyOperation: Add required select_related to get_queryset method, or define async admin_title().'
             '\n__str__ source:\n'
             '    def __str__(self):\n'
             "        return f'#{self.pk} {self.title} (owner: {self.owner.username})'\n"

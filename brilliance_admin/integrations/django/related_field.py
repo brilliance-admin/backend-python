@@ -40,7 +40,7 @@ ASYNC_LAZY_RELATED_LOAD_ERROR = (
     "in async serialization; use async ORM in admin_title() when extra data is needed."
 )
 TITLE_ASYNC_UNSAFE_HINT = (
-    'SynchronousOnlyOperation: Add required select_related() to get_queryset(), or define async admin_title().'
+    'SynchronousOnlyOperation: Add required select_related to get_queryset method, or define async admin_title().'
 )
 
 

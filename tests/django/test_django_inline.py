@@ -29,8 +29,8 @@ class DjangoExampleInlineAdmin(DjangoAdmin):
         ),
     )
 
-    def get_queryset(self):
-        return super().get_queryset().select_related('owner')
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).select_related('owner')
 
 
 class InlineBugParent(models.Model):

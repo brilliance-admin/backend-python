@@ -34,7 +34,7 @@ class DjangoPostgresExportAction:
     export_fields: list | None = None
 
     def get_export_queryset(self):
-        return self.get_queryset()
+        return self.get_queryset(action='django_export')
 
     def get_actions(self):
         actions = super().get_actions()

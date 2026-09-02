@@ -38,8 +38,8 @@ class DjangoAnotherExampleAdmin(DjangoAdmin):
         ),
     )
 
-    def get_queryset(self):
-        return super().get_queryset().select_related('example', 'example__owner')
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).select_related('example', 'example__owner')
 
 
 def get_example_another_subcategory():

@@ -163,7 +163,7 @@ class DjangoAdminListMixin:
         parent_category=None,
         parent_pk=None,
     ):
-        queryset = self.get_queryset()
+        queryset = self.get_queryset(action='list')
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
         queryset = await self.apply_filters(queryset, list_data)
         queryset = self.apply_search(queryset, list_data)

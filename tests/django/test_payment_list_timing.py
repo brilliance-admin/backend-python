@@ -39,7 +39,7 @@ class PaymentBenchmarkAdmin(DjangoAdmin):
         'test_mode',
     ]
 
-    def get_queryset(self):
+    def get_queryset(self, *args, **kwargs):
         return self.model.objects.filter(endpoint__is_active=True).select_related(
             'currency',
             'endpoint',

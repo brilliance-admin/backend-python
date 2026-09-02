@@ -19,8 +19,8 @@ from example.sections.django_models import DjangoExample, DjangoExampleFactory, 
 class DjangoExampleCategory(DjangoAdmin):
     model = DjangoExample
 
-    def get_queryset(self):
-        return super().get_queryset().select_related('owner')
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).select_related('owner')
 
 
 class DjangoExampleCompactCategory(DjangoAdmin):
@@ -31,8 +31,8 @@ class DjangoExampleCompactCategory(DjangoAdmin):
         list_display=['id', 'owner', 'title'],
     )
 
-    def get_queryset(self):
-        return super().get_queryset().select_related('owner')
+    def get_queryset(self, *args, **kwargs):
+        return super().get_queryset(*args, **kwargs).select_related('owner')
 
 
 class CallableDefaultTarget(models.Model):
@@ -447,7 +447,7 @@ async def test_list_uses_list_display_fields_only(language_context):
         ),
     )
 
-    queryset = category.optimize_list_queryset(category.get_queryset())
+    queryset = category.optimize_list_queryset(category.get_queryset(action='list'))
     record = await queryset.aget(pk=first.pk)
     deferred_fields = record.get_deferred_fields()
 

@@ -63,7 +63,7 @@ async def lifespan(app):
 
     await models.FeeTypeFactory.create_batch_async(5)
     await models.CurrencyFactory.create_batch_async(5)
-    await models.TerminalFactory.create_batch_async(15)
+    await models.TerminalFactory.create_batch_async(35)
     for _ in range(27):
         country_id = models.random.randint(1, len(models.COUNTRY_CITY_DATA))
         await models.UserFactory.create_async(

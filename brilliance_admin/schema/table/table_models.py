@@ -1,6 +1,7 @@
+from dataclasses import field
 from typing import Any, Dict, List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from pydantic.dataclasses import dataclass
 
 from brilliance_admin.utils import DataclassBase
@@ -22,8 +23,16 @@ class DebugInfo(DataclassBase):
 @dataclass
 class TableListResult(DataclassBase):
     data: List[dict]
-    total_count: int
+    total_count: str | None
+    pages_count: int | None = field(default=None, compare=False)
     debug_info: DebugInfo | None = None
+
+    @field_validator('total_count', mode='before')
+    @classmethod
+    def serialize_total_count(cls, value):
+        if value is None or isinstance(value, str):
+            return value
+        return str(value)
 
 
 class AutocompleteData(BaseModel):

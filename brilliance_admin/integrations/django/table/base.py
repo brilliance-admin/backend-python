@@ -3,6 +3,8 @@ from django.utils.encoding import force_str
 
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
+from brilliance_admin.integrations.django.table.count_providers import DjangoCountProvider
+from brilliance_admin.schema.table.count_providers import CountProvider
 from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.schema.table.schema_type import SchemaType
@@ -50,6 +52,7 @@ class DjangoAdminBase(CategoryTable):
     ordering_fields = []
     search_fields = []
     table_schema: DjangoFieldsSchema = None
+    count_provider: CountProvider | None = None
 
     # If True - Exception would be thorown in case of SynchronousOnlyOperation
     raise_async_unsafe = False
@@ -63,6 +66,7 @@ class DjangoAdminBase(CategoryTable):
         default_ordering=None,
         search_fields=None,
         raise_async_unsafe=None,
+        count_provider=None,
         **kwargs,
     ):
         if model is not None:
@@ -70,6 +74,12 @@ class DjangoAdminBase(CategoryTable):
 
         if raise_async_unsafe is not None:
             self.raise_async_unsafe = raise_async_unsafe
+
+        if count_provider is not None:
+            self.count_provider = count_provider
+
+        if self.count_provider is None:
+            self.count_provider = DjangoCountProvider()
 
         if search_fields:
             self.search_fields = search_fields

@@ -1,7 +1,9 @@
 from typing import Any
 
 from brilliance_admin.integrations.sqlalchemy.fields_schema import SQLAlchemyFieldsSchema
+from brilliance_admin.integrations.sqlalchemy.table.count_providers import SQLAlchemyCountProvider
 from brilliance_admin.schema.table.category_table import CategoryTable
+from brilliance_admin.schema.table.count_providers import CountProvider
 from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_models import AutocompleteData
 from brilliance_admin.translations import TranslateText as _
@@ -23,6 +25,7 @@ class SQLAlchemyAdminBase(CategoryTable):
     table_schema: SQLAlchemyFieldsSchema
 
     db_async_session: Any = None
+    count_provider: CountProvider | None = None
 
     def __init__(
             self,
@@ -34,6 +37,7 @@ class SQLAlchemyAdminBase(CategoryTable):
             default_ordering=None,
             search_fields=None,
             raise_async_unsafe=None,
+            count_provider=None,
             **kwargs,
     ):
         if model:
@@ -41,6 +45,9 @@ class SQLAlchemyAdminBase(CategoryTable):
 
         if raise_async_unsafe is not None:
             self.raise_async_unsafe = raise_async_unsafe
+
+        if count_provider is not None:
+            self.count_provider = count_provider
 
         if search_fields:
             self.search_fields = search_fields
@@ -80,6 +87,9 @@ class SQLAlchemyAdminBase(CategoryTable):
         if not self.db_async_session:
             msg = f'{type(self).__name__}.db_async_session is required for SQLAlchemy'
             raise AttributeError(msg)
+
+        if self.count_provider is None:
+            self.count_provider = SQLAlchemyCountProvider(self.db_async_session)
 
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import inspect

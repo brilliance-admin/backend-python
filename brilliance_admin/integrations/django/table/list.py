@@ -1,7 +1,7 @@
 import re
 import time
 
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync, sync_to_async
 from django.db import connections
 from django.test.utils import CaptureQueriesContext
 
@@ -63,13 +63,13 @@ class DjangoAdminListMixin:
             ],
         )
 
-    @staticmethod
-    def _load_page_with_query_count(queryset, offset, limit):
+    def _load_page_with_query_count(self, queryset, list_data, offset, limit):
         connection = connections[queryset.db]
         with CaptureQueriesContext(connection) as ctx:
-            total_count = queryset.count()
+            count_result = async_to_sync(self.count_provider.get_count)(queryset, list_data)
             records = list(queryset[offset:offset + limit])
-        return total_count, records, DjangoAdminListMixin.get_debug_info_from_context(ctx)
+
+        return count_result, records, self.get_debug_info_from_context(ctx)
 
     @staticmethod
     def like_to_regex(value: str) -> str:
@@ -177,12 +177,12 @@ class DjangoAdminListMixin:
 
         debug_info = None
         if debug:
-            total_count, records, debug_info = await sync_to_async(
+            count_result, records, debug_info = await sync_to_async(
                 self._load_page_with_query_count,
                 thread_sensitive=True,
-            )(queryset, offset, limit)
+            )(queryset, list_data, offset, limit)
         else:
-            total_count = await queryset.acount()
+            count_result = await self.count_provider.get_count(queryset, list_data)
             records = [record async for record in queryset[offset:offset + limit]]
 
         serialize_started_at = time.perf_counter()
@@ -203,4 +203,9 @@ class DjangoAdminListMixin:
         if debug_info is not None:
             debug_info.serialize_ms = round((time.perf_counter() - serialize_started_at) * 1000, 2)
 
-        return schema.TableListResult(data=data, total_count=total_count, debug_info=debug_info)
+        return schema.TableListResult(
+            data=data,
+            total_count=count_result.total_count,
+            pages_count=count_result.pages_count,
+            debug_info=debug_info,
+        )

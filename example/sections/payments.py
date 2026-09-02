@@ -206,14 +206,17 @@ class LogsAdmin(schema.CategoryTable):
 
         data = []
         logs = LOGS['data']
-        total_count = LOGS['total_count']
         offset = max(list_data.page - 1, 0) * list_data.limit
 
         for line_data in logs[offset : offset + list_data.limit]:
             line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
             data.append(line)
 
-        return schema.TableListResult(data=data, total_count=total_count)
+        return schema.TableListResult(
+            data=data,
+            total_count=LOGS['total_count'],
+            pages_count=LOGS.get('pages_count'),
+        )
 
 
 class PaymentsAdmin(schema.CategoryTable):
@@ -375,7 +378,11 @@ class PaymentsAdmin(schema.CategoryTable):
             line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
             data.append(line)
 
-        return schema.TableListResult(data=data, total_count=total_count)
+        return schema.TableListResult(
+            data=data,
+            total_count='1000+',
+            pages_count=None,
+        )
 
     async def retrieve(
         self,

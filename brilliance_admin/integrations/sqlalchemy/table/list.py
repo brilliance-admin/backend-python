@@ -113,7 +113,7 @@ class SQLAlchemyAdminListMixin:
         parent_pk=None,
     ) -> schema.TableListResult:
         # pylint: disable=import-outside-toplevel
-        from sqlalchemy import exc, func, select
+        from sqlalchemy import exc
 
         try:
             stmt = self.get_queryset()
@@ -121,7 +121,7 @@ class SQLAlchemyAdminListMixin:
             stmt = await self.apply_filters(stmt, list_data)
             stmt = self.apply_search(stmt, list_data)
 
-            count_stmt = select(func.count()).select_from(stmt.subquery())
+            count_query = stmt
             stmt = self.apply_pagination(stmt, list_data)
             stmt = self.apply_ordering(stmt, list_data)
 
@@ -150,8 +150,8 @@ class SQLAlchemyAdminListMixin:
             raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=400) from e
 
         try:
+            count_result = await self.count_provider.get_count(count_query, list_data)
             async with self.db_async_session() as session:
-                total_count = await session.scalar(count_stmt)
                 records = (await session.execute(stmt)).scalars().all()
 
         except ConnectionRefusedError as e:
@@ -231,4 +231,8 @@ class SQLAlchemyAdminListMixin:
             }
             raise AdminAPIException(APIError(message=msg, code='unexpected_error'), status_code=500) from e
 
-        return schema.TableListResult(data=data, total_count=int(total_count or 0))
+        return schema.TableListResult(
+            data=data,
+            total_count=count_result.total_count,
+            pages_count=count_result.pages_count,
+        )

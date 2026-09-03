@@ -8,7 +8,7 @@ from brilliance_admin.exceptions import FieldError
 from brilliance_admin.integrations.django import DjangoFieldsSchema
 from brilliance_admin.integrations.django.inline_field import DjangoInlineField
 from brilliance_admin.integrations.django.table import DjangoAdmin
-from brilliance_admin.utils import DeserializeAction
+from brilliance_admin.utils import DeserializeAction, humanize_field_name
 from example.main import admin_app
 from example.sections.django_models import DjangoAnotherExample, DjangoExample
 
@@ -326,6 +326,24 @@ class SearchHelpEndpoint(models.Model):
     class Meta:
         app_label = 'sections'
         db_table = 'test_search_help_endpoint'
+
+
+def test_get_lookup_field_title_for_foreign_key_attname():
+    category = DjangoAdmin(model=SearchHelpEndpoint)
+
+    assert category.get_lookup_field_title('provider') == 'Provider'
+    assert category.get_lookup_field_title('provider_id') == 'Provider ID'
+
+
+def test_get_lookup_field_title_for_reverse_foreign_key():
+    category = DjangoAdmin(model=SearchHelpProvider)
+    reverse_field = next(
+        field
+        for field in SearchHelpProvider._meta.get_fields()
+        if field.auto_created and field.one_to_many
+    )
+
+    assert category.get_lookup_field_title(reverse_field.name) == humanize_field_name(reverse_field.name)
 
 
 @pytest.fixture

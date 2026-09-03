@@ -29,8 +29,8 @@ class SupportsStr(Protocol):
 
 
 def validate_email(value: str) -> str:
-    _, email = parseaddr(value)
-    if email != value or '@' not in email or email.rsplit('@', 1)[1] == '':
+    _, email = parseaddr(value) if isinstance(value, str) else (None, None)
+    if not isinstance(value, str) or email != value or '@' not in email or email.rsplit('@', 1)[1] == '':
         from brilliance_admin.exceptions import FieldError
         from brilliance_admin.translations import TranslateText as _
 

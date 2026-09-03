@@ -16,7 +16,12 @@ class ExportFieldsSchema(FieldsSchema):
         help_text=_('export.is_async__help_text'),
         default=False,
     )
-    email = schema.StringField(label=_('export.email'), validator=validate_email)
+    email = schema.StringField(
+        label=_('export.email'),
+        validator=lambda value, data: (
+            value if value is None else validate_email(value) if data['is_async'] else value
+        ),
+    )
     export_fields = schema.MultipleChoiceField(
         label=_('export.fields'),
         default_all_selected=True,

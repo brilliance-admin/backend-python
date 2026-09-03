@@ -66,7 +66,7 @@ class DjangoDeleteAction:
 
         logger.info(
             '%s model %s #%s deleted by %s',
-            type(self).__name__, self.model.__name__, action_data.pks, kwargs['user'].username,
+            type(self).__name__, self.model.__name__, action_data.pks, action_data.user.username,
             extra={'pks': action_data.pks},
         )
         return ActionResult(_('deleted_successfully'))

@@ -21,7 +21,10 @@ class EmailActionCategory(CategoryTable):
     @admin_action(
         allow_empty_selection=True,
         form_schema=schema.FieldsSchema(
-            email=schema.StringField(validator=validate_email),
+            is_async=schema.BooleanField(default=False),
+            email=schema.StringField(
+                validator=lambda value, data: validate_email(value) if data['is_async'] else value,
+            ),
         ),
     )
     async def validate_email_action(self, action_data, **kwargs):
@@ -127,8 +130,20 @@ def test_email_field_validator_is_translated():
             action='validate_email_action',
         ),
         headers={'Accept-Language': 'ru'},
-        json=ActionData(form_data={'email': 'not-an-email'}).model_dump(mode='json'),
+        json=ActionData(form_data={'is_async': True, 'email': 'not-an-email'}).model_dump(mode='json'),
     )
 
     assert response.status_code == 400
     assert response.json()['field_errors']['email']['message'] == 'Введите корректный email'
+
+    response = client.post(
+        app.url_path_for(
+            'table_action',
+            group='test',
+            category='email',
+            action='validate_email_action',
+        ),
+        json=ActionData(form_data={'is_async': False}).model_dump(mode='json'),
+    )
+
+    assert response.status_code == 200

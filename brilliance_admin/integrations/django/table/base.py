@@ -170,7 +170,12 @@ class DjangoAdminBase(CategoryTable):
                 break
 
             related_model = getattr(model_field, 'related_model', None)
-            title = force_str(getattr(model_field, 'verbose_name', None) or '')
+            attname = getattr(model_field, 'attname', None)
+            if attname is not None and part == attname and part != model_field.name:
+                title = humanize_field_name(part)
+            else:
+                title = force_str(getattr(model_field, 'verbose_name', None) or '')
+
             if not title or title == 'None':
                 title = humanize_field_name(related_model.__name__ if related_model else part)
             elif title == part.replace('_', ' '):

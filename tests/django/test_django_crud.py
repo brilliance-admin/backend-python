@@ -366,6 +366,7 @@ async def test_delete(language_context):
     result = await category.delete(
         action_data=ActionData(
             pks=[record.pk],
+            user=UserABC(username='test'),
             send_to_all=False,
             form_data={},
             filters={},

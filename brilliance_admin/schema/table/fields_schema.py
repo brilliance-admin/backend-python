@@ -439,7 +439,7 @@ class FieldsSchema:
             try:
                 deserialized_value = await field.deserialize_field(value, action, extra)
                 if field.validator is not None:
-                    deserialized_value = field.validator(deserialized_value)
+                    deserialized_value = field.validator(deserialized_value, result)
                     if inspect.isawaitable(deserialized_value):
                         deserialized_value = await deserialized_value
 

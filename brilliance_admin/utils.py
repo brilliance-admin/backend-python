@@ -1,5 +1,6 @@
 import logging
 import re
+from email.utils import parseaddr
 from pathlib import Path
 from typing import Any, Dict, Protocol
 
@@ -25,6 +26,17 @@ class SupportsStr(Protocol):
     def __get_pydantic_json_schema__(cls, schema, handler):
         # Expose protocol-backed values as strings in OpenAPI.
         return handler(core_schema.str_schema())
+
+
+def validate_email(value: str) -> str:
+    _, email = parseaddr(value)
+    if email != value or '@' not in email or email.rsplit('@', 1)[1] == '':
+        from brilliance_admin.exceptions import FieldError
+        from brilliance_admin.translations import TranslateText as _
+
+        raise FieldError(_('validation.invalid_email'), 'invalid_email')
+
+    return value
 
 
 def get_logger():

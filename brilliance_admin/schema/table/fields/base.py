@@ -6,7 +6,7 @@ import inspect
 import re
 from decimal import Decimal, InvalidOperation
 from enum import Enum
-from typing import Any, ClassVar
+from typing import Any, Callable, ClassVar
 
 from pydantic.dataclasses import dataclass
 
@@ -69,6 +69,7 @@ class TableField(abc.ABC, FieldSchemaData):
 
     label: SupportsStr | None = None
     help_text: SupportsStr | None = None
+    validator: Callable | None = None
 
     def generate_field_schema(
         self,

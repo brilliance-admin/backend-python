@@ -438,6 +438,10 @@ class FieldsSchema:
             value = data.get(field_slug)
             try:
                 deserialized_value = await field.deserialize_field(value, action, extra)
+                if field.validator is not None:
+                    deserialized_value = field.validator(deserialized_value)
+                    if inspect.isawaitable(deserialized_value):
+                        deserialized_value = await deserialized_value
 
                 validate_method = getattr(self, f'validate_{field_slug}', None)
                 if validate_method is not None and callable(validate_method):

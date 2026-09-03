@@ -4,7 +4,7 @@ from brilliance_admin.schema.table.admin_action import (
     ActionData, ActionFileResult, ActionResult, admin_action)
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.utils import humanize_field_name
+from brilliance_admin.utils import humanize_field_name, validate_email
 
 from .executer import django_export
 
@@ -15,7 +15,7 @@ class ExportFieldsSchema(FieldsSchema):
         help_text=_('export.is_async__help_text'),
         default=False,
     )
-    email = schema.StringField(label=_('export.email'))
+    email = schema.StringField(label=_('export.email'), validator=validate_email)
     export_fields = schema.MultipleChoiceField(
         label=_('export.fields'),
         default_all_selected=True,

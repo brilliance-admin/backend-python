@@ -5,6 +5,10 @@ from django.test.utils import CaptureQueriesContext
 from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.translations import TranslateText as _
+from brilliance_admin.utils import get_logger
+
+
+logger = get_logger()
 
 
 class DjangoAdminRetrieveMixin:
@@ -69,5 +73,11 @@ class DjangoAdminRetrieveMixin:
                 "debug": debug,
                 "raise_async_unsafe": self.raise_async_unsafe,
             },
+        )
+
+        logger.debug(
+            '%s model %s #%s retrieved by %s',
+            type(self).__name__, self.table_schema.model.__name__, pk, user.username,
+            extra={'data': data},
         )
         return schema.RetrieveResult(data=data, debug_info=debug_info)

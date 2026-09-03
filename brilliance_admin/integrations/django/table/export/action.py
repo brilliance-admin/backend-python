@@ -1,12 +1,13 @@
 from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError, ValidationError
-from brilliance_admin.schema.table.admin_action import (
-    ActionData, ActionFileResult, ActionResult, admin_action)
+from brilliance_admin.schema.table.admin_action import ActionData, ActionFileResult, ActionResult, admin_action
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.utils import humanize_field_name, validate_email
+from brilliance_admin.utils import get_logger, humanize_field_name, validate_email
 
 from .executer import django_export
+
+logger = get_logger()
 
 
 class ExportFieldsSchema(FieldsSchema):
@@ -88,6 +89,7 @@ class DjangoPostgresExportAction:
             from brilliance_admin.integrations.django.celery import django_export as django_export_task
 
             django_export_task.delay(email=action_data.form_data['email'], **export_kwargs)
+            logger.info('Django Export: celery task was sended for email=%s', action_data.form_data['email'])
             return ActionResult(_('export.successfully_async_message') % {'email': action_data.form_data['email']})
 
         export_result = await django_export(**export_kwargs)

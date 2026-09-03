@@ -1,5 +1,6 @@
 from asgiref.sync import async_to_sync
 from celery import shared_task
+from django.conf import settings
 from django.core.mail import send_mail
 
 from brilliance_admin.integrations.django.table.export import django_export as run_django_export
@@ -28,8 +29,14 @@ def django_export(email, *args, **kwargs):
         send_mail(
             subject=f'Export: {kwargs["group_slug"]}/{kwargs["category_slug"]}',
             message=message,
-            from_email=None,
+            from_email=getattr(settings, 'NOREPLY_EMAIL', settings.DEFAULT_FROM_EMAIL),
             recipient_list=[email],
+        )
+        logger.info(
+            'Django Export: email=%s was sended; url=%s export_time_seconds=%s',
+            email,
+            export_result.url,
+            export_result.export_time_seconds,
         )
     except Exception:
         logger.exception(
@@ -46,6 +53,6 @@ def django_export(email, *args, **kwargs):
         send_mail(
             subject=f'Export failed: {kwargs["group_slug"]}/{kwargs["category_slug"]}',
             message=EXPORT_ERROR_EMAIL_TEMPLATE,
-            from_email=None,
+            from_email=getattr(settings, 'NOREPLY_EMAIL', settings.DEFAULT_FROM_EMAIL),
             recipient_list=[email],
         )

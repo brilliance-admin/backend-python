@@ -4,7 +4,10 @@ from django.db.models.deletion import ProtectedError
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult, admin_action
 from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.utils import SupportsStr, format_limited_items
+from brilliance_admin.utils import SupportsStr, format_limited_items, get_logger
+
+
+logger = get_logger()
 
 
 class DjangoDeleteAction:
@@ -60,4 +63,10 @@ class DjangoDeleteAction:
                 APIError(message=error_message, code='protected_error'),
                 status_code=400,
             ) from e
+
+        logger.info(
+            '%s model %s #%s deleted by %s',
+            type(self).__name__, self.model.__name__, action_data.pks, kwargs['user'].username,
+            extra={'pks': action_data.pks},
+        )
         return ActionResult(_('deleted_successfully'))

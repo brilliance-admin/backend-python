@@ -1,6 +1,10 @@
 from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.translations import TranslateText as _
+from brilliance_admin.utils import get_logger
+
+
+logger = get_logger()
 
 
 class DjangoAdminUpdate:
@@ -42,4 +46,10 @@ class DjangoAdminUpdate:
             record, debug_info = await self.table_schema.update(record, user, data, debug=True)
         else:
             await self.table_schema.update(record, user, data)
+
+        logger.info(
+            '%s model %s #%s updated by %s',
+            type(self).__name__, self.table_schema.model.__name__, pk, user.username,
+            extra={'data': data},
+        )
         return schema.UpdateResult(pk=pk, debug_info=debug_info)

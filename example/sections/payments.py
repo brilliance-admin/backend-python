@@ -13,7 +13,7 @@ from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
 from example.config import settings
-from example.sections.filter_subtable_fake import get_filter_subtable
+from example.sections.filter_subtable_fake import FakeFilterSubtable
 from example.sections.logs import LOGS
 from example.sections.models import TerminalStatuses
 
@@ -24,7 +24,7 @@ class PaymentFiltersSchema(schema.FieldsSchema):
     created_at = schema.DateTimeField(
         label=_('created_at'),
         range=True,
-        get_filter_subtable=get_filter_subtable,
+        filter_subtable=FakeFilterSubtable(),
     )
     status = schema.ChoiceField(label='Status', required=True, choices=TerminalStatuses)
     endpoint = schema.ChoiceField(

@@ -7,7 +7,7 @@ from fastapi import HTTPException, Request
 from pydantic import Field
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationError
+from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError, ValidationError
 from brilliance_admin.schema.category import BaseCategory, TableInfoSchemaData, TableOptions
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields.base import InlineField
@@ -352,7 +352,22 @@ class CategoryTable(BaseCategory):
             msg = f'Filter field "{field_slug}" is not found'
             raise AdminAPIException(APIError(message=msg), status_code=500)
 
-        return FilterSubtableResult(chart=await field.get_subtable_data(subtable_data))
+        try:
+            chart = await field.get_subtable_data(subtable_data, view=self)
+        except FieldError as e:
+            raise AdminAPIException(
+                APIError(message=e.message, code=e.code),
+                status_code=400,
+            ) from e
+        except Exception as e:
+            logger.exception('Filter subtable %s exception: %s', field_slug, e)
+            message = f'Filter graph exception: {str(e)}' if debug else f'Internal exception: {type(e).__name__}'
+            raise AdminAPIException(
+                APIError(message=message, code='filter_subtable_error'),
+                status_code=500,
+            ) from e
+
+        return FilterSubtableResult(chart=chart)
 
     # pylint: disable=too-many-arguments
     @abc.abstractmethod

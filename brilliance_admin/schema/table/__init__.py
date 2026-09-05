@@ -3,6 +3,7 @@
 from .admin_action import ActionFileResult, ActionResult, admin_action
 from .category_table import CategoryTable
 from .count_providers import CountProvider, CountResult
+from .filter_subtable import FilterSubtable
 from .fields import *
 from .fields_schema import FieldsSchema, FormField, FormSet
 from .table_models import (

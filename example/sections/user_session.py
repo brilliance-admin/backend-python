@@ -39,7 +39,13 @@ class UserSessionAdmin(sqlalchemy.SQLAlchemyAdmin):
         exclude_fields=[],
         extra_kwargs={
             'user_id': {'filter_fn': users_filter},
-            'started_at': {'range': True},
-            'ended_at': {'range': True},
+            'started_at': {
+                'range': True,
+                'filter_subtable': sqlalchemy.PostgreSQLFilterSubtable(),
+            },
+            'ended_at': {
+                'range': True,
+                'filter_subtable': sqlalchemy.PostgreSQLFilterSubtable(),
+            },
         },
     )

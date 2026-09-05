@@ -1,10 +1,11 @@
 import random
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any
 
 import factory
+from faker import Faker
 from sqlalchemy import (
     JSON, BigInteger, Boolean, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, Text, func, select)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
@@ -15,6 +16,8 @@ from sqlalchemy.sql import expression
 from brilliance_admin.translations import TranslateText as _
 from example.database import async_sessionmaker_
 from example.utils import SQLAlchemyFactoryBase
+
+faker = Faker()
 
 BIG_JSON = {
     "additional_data": {
@@ -183,14 +186,33 @@ class User(BaseIDModel):
         return f'User #{self.id} "{self.username}"'
 
 
+USER_CREATED_AT_HOURS = tuple(
+    hour
+    for hour, count in enumerate((1, 3, 1, 2, 4, 2, 6, 9, 7, 12, 8, 14, 11, 16, 10, 13, 9, 15, 7, 11, 5, 8, 3, 4))
+    for _ in range(count)
+)
+
+
+def get_user_created_at(n: int) -> datetime:
+    day, index = divmod(n, len(USER_CREATED_AT_HOURS))
+    hour = USER_CREATED_AT_HOURS[index]
+    minute = (n * 17 + hour * 7) % 60
+    return datetime.now(UTC) - timedelta(days=day, hours=hour, minutes=minute)
+
+
+def get_user_username(n: int) -> str:
+    return f'{faker.user_name()}-{n}'
+
+
 class UserFactory(SQLAlchemyFactoryBase):
     class Meta:
         model = User
         sqlalchemy_session_factory = async_sessionmaker_
         sqlalchemy_session_persistence = "commit"
 
-    username = factory.Sequence(lambda n: f"user_{n}")
-    email = factory.Faker("email")
+    username = factory.Sequence(get_user_username)
+    email = factory.LazyAttribute(lambda obj: f'{obj.username}@example.com')
+    created_at = factory.Sequence(get_user_created_at)
 
 
 class CountryFactory(SQLAlchemyFactoryBase):
@@ -280,11 +302,9 @@ class UserSessionFactory(SQLAlchemyFactoryBase):
 
     is_active = factory.Faker("boolean", chance_of_getting_true=30)
 
-    started_at = factory.Faker("date_time_between", start_date="-7d", end_date="now")
+    started_at = factory.Sequence(get_user_created_at)
     ended_at = factory.LazyAttribute(
-        lambda o: factory.Faker("date_time_between", start_date=o.started_at, end_date="now").evaluate(
-            None, None, {"locale": None}
-        ) if not o.is_active else None
+        lambda o: o.started_at + timedelta(minutes=20 + o.started_at.minute) if not o.is_active else None
     )
 
 

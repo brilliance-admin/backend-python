@@ -82,7 +82,10 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
     )
     table_filters = sqlalchemy.SQLAlchemyFieldsSchema(
         model=User,
-        created_at=schema.DateTimeField(range=True),
+        created_at=schema.DateTimeField(
+            range=True,
+            filter_subtable=sqlalchemy.PostgreSQLFilterSubtable(),
+        ),
         last_login=schema.DateTimeField(range=True),
         exclude_fields=['password'],
         extra_kwargs={

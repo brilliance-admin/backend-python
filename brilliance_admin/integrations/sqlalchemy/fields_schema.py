@@ -237,7 +237,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
         for field_slug in filters.keys():
             field = self.get_field(field_slug)
 
-            if not field:
+            if field is None:
                 available_filters = list(self.get_fields().keys())
                 msg = FIELD_FILTERS_NOT_FOUND.format(
                     class_name=type(self).__name__,
@@ -308,7 +308,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
         '''
         for field_slug in data.keys():
             field = self.get_field(field_slug)
-            if not field:
+            if field is None:
                 available = list(self.get_fields().keys())
                 msg = _('field_not_found_in_schema') % {'field_slug': field_slug, 'available': available}
                 raise AdminAPIException(

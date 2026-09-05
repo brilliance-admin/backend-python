@@ -2,6 +2,7 @@ from typing import Any, Dict, List
 
 from pydantic import BaseModel, Field, field_serializer
 
+from brilliance_admin.schema.chart import ChartData
 from brilliance_admin.schema.category import BaseCategory, DashboardInfoSchemaData
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.schema.table.schema_type import SchemaType
@@ -12,16 +13,6 @@ from brilliance_admin.utils import SupportsStr
 class DashboardData(BaseModel):
     search: str | None = None
     filters: Dict[str, Any] = Field(default_factory=dict)
-
-
-class ChartData(BaseModel):
-    data: dict
-    options: dict
-    width: int | None = None
-    height: int = 50
-    type: str = 'line'
-
-    component_type: str = 'chart'
 
 
 class Subcard(BaseModel):

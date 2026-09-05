@@ -12,6 +12,8 @@ from brilliance_admin.schema.table.admin_action import ActionData, ActionResult,
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
+from example.config import settings
+from example.sections.filter_subtable_fake import get_filter_subtable
 from example.sections.logs import LOGS
 from example.sections.models import TerminalStatuses
 
@@ -19,7 +21,11 @@ logger = get_logger()
 
 
 class PaymentFiltersSchema(schema.FieldsSchema):
-    created_at = schema.DateTimeField(label=_('created_at'), range=True)
+    created_at = schema.DateTimeField(
+        label=_('created_at'),
+        range=True,
+        get_filter_subtable=get_filter_subtable,
+    )
     status = schema.ChoiceField(label='Status', required=True, choices=TerminalStatuses)
     endpoint = schema.ChoiceField(
         label=_('endpoint'),
@@ -202,7 +208,7 @@ class LogsAdmin(schema.CategoryTable):
         parent_category=None,
         parent_pk=None,
     ) -> schema.TableListResult:
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(settings.fake_delay_seconds)
 
         data = []
         logs = LOGS['data']
@@ -251,7 +257,7 @@ class PaymentsAdmin(schema.CategoryTable):
         allow_empty_selection=True,
     )
     async def create_payment(self, action_data: ActionData, **kwargs):
-        await asyncio.sleep(1)
+        await asyncio.sleep(settings.fake_delay_seconds)
         fake = Faker()
         msg = _('payment_create_result') % {
             'gateway_id': str(uuid.uuid4()),
@@ -268,11 +274,11 @@ class PaymentsAdmin(schema.CategoryTable):
         variant='outlined',
     )
     async def delete(self, action_data: ActionData, **kwargs):
-        await asyncio.sleep(1)
+        await asyncio.sleep(settings.fake_delay_seconds)
 
     @admin_action(title=_('action_with_exception'), allow_empty_selection=True, icon='mdi-alert-circle-outline')
     async def action_with_exception(self, action_data: ActionData, **kwargs):
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(settings.fake_delay_seconds)
         # Try for traceback
         try:
             raise RuntimeError('test')
@@ -293,7 +299,7 @@ class PaymentsAdmin(schema.CategoryTable):
         ),
     )
     async def change_amount(self, action_data: ActionData, **kwargs):
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(settings.fake_delay_seconds)
         return ActionResult(f'Amount changed to {action_data.form_data["amount"]}')
 
     @admin_action(
@@ -305,7 +311,7 @@ class PaymentsAdmin(schema.CategoryTable):
         ),
     )
     async def update_status(self, action_data: ActionData, **kwargs):
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(settings.fake_delay_seconds)
         return ActionResult(f'Status updated to {action_data.form_data["status"]}')
 
     def _get_data(self, pk):
@@ -364,7 +370,7 @@ class PaymentsAdmin(schema.CategoryTable):
         parent_category=None,
         parent_pk=None,
     ) -> schema.TableListResult:
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(settings.fake_delay_seconds)
 
         data = []
         total_count = 5039
@@ -408,7 +414,7 @@ class PaymentsAdmin(schema.CategoryTable):
         parent_pk=None,
     ) -> schema.UpdateResult:
         logger.info('Updated pk=%s data=%s', pk, data)
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(settings.fake_delay_seconds)
         return schema.UpdateResult(pk=0)
 
     async def create(

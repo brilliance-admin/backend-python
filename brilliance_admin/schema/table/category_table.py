@@ -13,7 +13,8 @@ from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields.base import InlineField
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.schema.table.schema_type import SchemaType
-from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult, ListData, TableListResult
+from brilliance_admin.schema.table.table_models import (
+    AutocompleteData, AutocompleteResult, FilterSubtableData, FilterSubtableResult, ListData, TableListResult)
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import DeserializeAction, SupportsStr, get_logger
 
@@ -330,6 +331,28 @@ class CategoryTable(BaseCategory):
             )
 
         return AutocompleteResult(results=results, total_count=total_count)
+
+    async def _get_subtable_data(
+            self,
+            request: Request,
+            field_slug: str,
+            subtable_data: FilterSubtableData,
+            language_context: LanguageContext,
+            user: UserABC,
+            debug: bool,
+            parent_category: BaseCategory | None = None,
+            parent_pk: Any | None = None,
+    ) -> FilterSubtableResult:
+        if self.table_filters is None:
+            msg = f'Filter subtable is unavailable: {type(self).__name__} has no table_filters'
+            raise AdminAPIException(APIError(message=msg), status_code=500)
+
+        field = self.table_filters.get_field(field_slug)
+        if field is None:
+            msg = f'Filter field "{field_slug}" is not found'
+            raise AdminAPIException(APIError(message=msg), status_code=500)
+
+        return FilterSubtableResult(chart=await field.get_subtable_data(subtable_data))
 
     # pylint: disable=too-many-arguments
     @abc.abstractmethod

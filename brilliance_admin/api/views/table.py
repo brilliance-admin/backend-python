@@ -1,9 +1,9 @@
 from html import escape
 from typing import Any
 
+from django.core.files.storage import default_storage
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
-from django.core.files.storage import default_storage
 
 from brilliance_admin.api.utils import get_category, get_user
 from brilliance_admin.exceptions import AdminAPIException, APIError
@@ -11,7 +11,7 @@ from brilliance_admin.schema import AdminSchema
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.schema.table.table_models import (
-    CreateResult, ListData, RetrieveResult, TableListResult, UpdateResult)
+    CreateResult, FilterSubtableData, FilterSubtableResult, ListData, RetrieveResult, TableListResult, UpdateResult)
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
 
@@ -258,5 +258,52 @@ async def table_action(
                 'Pragma': result.download_file.filename,
             },
         )
+
+    return JSONResponse(content=result.model_dump(mode='json', context=context))
+
+
+@router.post(
+    path='/{group}/{category}/filter-subtable/{field_slug}/',
+    responses={400: {"model": APIError}},
+)
+async def filter_subtable(
+        request: Request,
+        group: str,
+        category: str,
+        field_slug: str,
+        subtable_data: FilterSubtableData,
+        subcategory: str | None = None,
+        parent_pk: Any | None = None,
+) -> FilterSubtableResult:
+    schema: AdminSchema = request.app.state.schema
+
+    user = await get_user(request)
+    schema_category, parent_category = get_category(
+        schema,
+        group,
+        category,
+        subcategory,
+        check_type=CategoryTable,
+    )
+    subtable_data.field_slug = field_slug
+
+    language_slug = request.headers.get('Accept-Language')
+    language_context: LanguageContext = schema.get_language_context(language_slug)
+    context = {'language_context': language_context}
+
+    try:
+        # pylint: disable=protected-access
+        result: FilterSubtableResult = await schema_category._get_subtable_data(
+            request,
+            field_slug,
+            subtable_data,
+            language_context,
+            user,
+            schema.debug,
+            parent_category,
+            parent_pk,
+        )
+    except AdminAPIException as e:
+        return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
     return JSONResponse(content=result.model_dump(mode='json', context=context))

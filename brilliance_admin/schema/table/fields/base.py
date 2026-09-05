@@ -99,6 +99,9 @@ class TableField(abc.ABC, FieldSchemaData):
     async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
         return value
 
+    async def get_subtable_data(self, subtable_data):
+        raise NotImplementedError(f'Field {type(self).__name__} is not support subtable_data')
+
     async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
         if value is None and self.default is not None:
             value = self.default
@@ -392,6 +395,8 @@ class DateTimeField(TableField):
     include_date: bool | None = True
     include_time: bool | None = True
 
+    get_filter_subtable: Callable | None = None
+
     def generate_field_schema(
         self,
         user,
@@ -407,6 +412,11 @@ class DateTimeField(TableField):
         schema.range = self.range
         schema.include_date = self.include_date
         schema.include_time = self.include_time
+
+        if self.get_filter_subtable is not None:
+            if not self.range:
+                raise AttributeError(f'Field {type(self).__name__} with get_filter_subtable must have range enabled')
+            schema.has_filter_subtable = True
 
         return schema
 
@@ -440,6 +450,15 @@ class DateTimeField(TableField):
             }
 
         raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'datetime'})
+
+    async def get_subtable_data(self, subtable_data):
+        if self.get_filter_subtable is None or not self.range:
+            raise RuntimeError(f'Field {type(self).__name__} must have range and get_filter_subtable method')
+
+        result = self.get_filter_subtable(subtable_data)
+        if inspect.isawaitable(result):
+            return await result
+        return result
 
 
 @dataclass

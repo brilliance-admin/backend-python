@@ -1,9 +1,11 @@
 from dataclasses import field
+from enum import Enum
 from typing import Any, Dict, List
 
 from pydantic import BaseModel, Field, field_validator
 from pydantic.dataclasses import dataclass
 
+from brilliance_admin.schema.chart import ChartData
 from brilliance_admin.utils import DataclassBase
 
 
@@ -57,6 +59,23 @@ class Record(BaseModel):
 class AutocompleteResult(BaseModel):
     results: List[Record] = Field(default_factory=list)
     total_count: int
+
+
+class FilterSubtableUnitSize(str, Enum):
+    TEN_MINUTES = '10min'
+    HOUR = '1hour'
+    DAY = '1day'
+
+
+class FilterSubtableData(BaseModel):
+    field_slug: str = ''
+    unit_size: FilterSubtableUnitSize
+    filters: Dict[str, Any] = Field(default_factory=dict)
+    search: str | None = None
+
+
+class FilterSubtableResult(BaseModel):
+    chart: ChartData
 
 
 class ListData(BaseModel):

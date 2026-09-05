@@ -69,6 +69,7 @@ class FieldSchemaData(DataclassBase):
     range: bool | None = None
     include_date: bool | None = None
     include_time: bool | None = None
+    has_filter_subtable: bool | None = None
 
     inline_field_schema: FieldsSchemaData | None = None
 

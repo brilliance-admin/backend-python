@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     port: str = Field(alias='POSTGRES_PORT', default='5432')
     echo: bool = Field(alias='POSTGRES_ECHO', default=False)
     create_all: bool = Field(alias='POSTGRES_CREATE_ALL', default=False)
+    fake_delay_seconds: float = 0 if IS_TEST else 0.2
 
     model_config = SettingsConfigDict(
         case_sensitive=False,

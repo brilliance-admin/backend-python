@@ -413,6 +413,35 @@ async def test_list_search_reverse_related_id(language_context):
 
 
 @pytest.mark.asyncio
+async def test_list_search_reverse_related_duplicates(language_context):
+    category = DjangoAdmin(
+        search_fields=['another_examples__title'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    example = await DjangoExampleFactory()
+    await DjangoAnotherExampleFactory(example=example, title='django')
+    await DjangoAnotherExampleFactory(example=example, title='django')
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='django'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+
+    assert list_result == schema.TableListResult(
+        data=[{'id': example.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
 async def test_list_search_json_field(language_context):
     category = DjangoAdmin(
         search_fields=['payload__phone'],

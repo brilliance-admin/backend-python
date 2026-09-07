@@ -1,5 +1,6 @@
 from .base import DjangoAdminBase
 from .count_providers import DjangoCountProvider, PostgresCounter
+from .filter_subtable import DjangoPostgreSQLFilterSubtable
 from .create import DjangoAdminCreate
 from .delete import DjangoDeleteAction
 from .export import DjangoPostgresExportAction

@@ -125,7 +125,7 @@ class DjangoAdminListMixin:
                 alias=f'_search_text_{index}',
             )
             query |= Q(**{lookup: value})
-        return queryset.filter(query)
+        return queryset.filter(query).distinct()
 
     def get_search_lookup(self, queryset, field_slug, regex, char_field_cls, cast_cls, alias):
         model_field, json_tail = self.resolve_lookup_path(field_slug)

@@ -1,7 +1,5 @@
 import datetime
 
-from sqlalchemy import and_, func, literal, literal_column, select
-
 from brilliance_admin.exceptions import FieldError
 from brilliance_admin.schema.chart import ChartData
 from brilliance_admin.schema.table.filter_subtable import FilterSubtable
@@ -28,6 +26,8 @@ class PostgreSQLFilterSubtable(FilterSubtable):
             field_slug: str,
             view,
     ):
+        from sqlalchemy import and_, func, literal, select
+
         source = queryset.subquery()
         date_column = source.c.get(field_slug)
         pk_column = source.c.get(view.pk_name)
@@ -68,6 +68,8 @@ class PostgreSQLFilterSubtable(FilterSubtable):
             *,
             view,
     ) -> ChartData:
+        from sqlalchemy import literal_column
+
         try:
             date_range = subtable_data.filters[subtable_data.field_slug]
             date_from = datetime.datetime.fromisoformat(date_range['from'])

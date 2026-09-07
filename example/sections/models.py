@@ -1,13 +1,13 @@
 import random
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime, time, timedelta
 from enum import Enum
 from typing import Any
 
 import factory
 from faker import Faker
 from sqlalchemy import (
-    JSON, BigInteger, Boolean, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, Text, func, select)
+    JSON, BigInteger, Boolean, DateTime, ForeignKey, Integer, Numeric, SmallInteger, String, Text, Time, func, select)
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.ext.mutable import MutableDict, MutableList
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -655,6 +655,7 @@ class Terminal(BaseIDModel):
 
     fees: Mapped[list["Fee"]] = relationship(back_populates="terminal")
     routing: Mapped[list["TerminalRouting"]] = relationship(back_populates="terminal")
+    worktimes: Mapped[list["Worktime"]] = relationship(back_populates="terminal")
 
     is_h2h: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=expression.true())
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default=expression.true())
@@ -703,6 +704,49 @@ class TerminalRouting(BaseIDModel):
 
     def __str__(self):
         return self.name
+
+
+class WorktimeDayOfWeek(Enum):
+    MONDAY = 'monday'
+    TUESDAY = 'tuesday'
+    WEDNESDAY = 'wednesday'
+    THURSDAY = 'thursday'
+    FRIDAY = 'friday'
+    SATURDAY = 'saturday'
+    SUNDAY = 'sunday'
+
+    @property
+    def label(self):
+        return self.value.title()
+
+
+class Worktime(BaseIDModel):
+    __tablename__ = 'worktime'
+
+    terminal_id: Mapped[int] = mapped_column(ForeignKey('terminal.id'), nullable=False)
+    terminal: Mapped['Terminal'] = relationship(back_populates='worktimes')
+
+    day_of_week: Mapped[str] = mapped_column(
+        String(16),
+        nullable=False,
+        default=WorktimeDayOfWeek.MONDAY.value,
+        info={'choices': WorktimeDayOfWeek},
+    )
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    started_at: Mapped[time] = mapped_column(Time, nullable=False, default=time(9))
+    ended_at: Mapped[time] = mapped_column(Time, nullable=False, default=time(18))
+
+
+class WorktimeFactory(SQLAlchemyFactoryBase):
+    class Meta:
+        model = Worktime
+        sqlalchemy_session_factory = async_sessionmaker_
+        sqlalchemy_session_persistence = 'commit'
+
+    day_of_week = WorktimeDayOfWeek.MONDAY.value
+    is_active = True
+    started_at = time(9)
+    ended_at = time(18)
 
 
 class TerminalFactory(SQLAlchemyFactoryBase):
@@ -754,5 +798,6 @@ class TerminalFactory(SQLAlchemyFactoryBase):
             terminal=instance,
             fee_type=fee_type,
         )
+        await WorktimeFactory.create_async(terminal=instance)
 
         return instance

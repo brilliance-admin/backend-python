@@ -994,7 +994,7 @@ async def test_autocomplete(postgres_sessionmaker, language_context):
         language_context=language_context,
         debug=True,
     )
-    assert autocomplete_result == schema.AutocompleteResult(results=[], total_count=0)
+    assert autocomplete_result == schema.AutocompleteResult(records=[], current_count=0, total_count='0')
 
 
 @pytest.mark.asyncio
@@ -1014,7 +1014,7 @@ async def test_autocomplete_existing_choice_does_not_exclude_other_choices(postg
         debug=True,
     )
 
-    assert {choice.key for choice in result.results} == {existing.id, other.id}
+    assert {choice.key for choice in result.records} == {existing.id, other.id}
 
 
 @pytest.mark.asyncio
@@ -1036,4 +1036,4 @@ async def test_autocomplete_combines_existing_choice_with_search_results(postgre
         debug=True,
     )
 
-    assert {choice.key for choice in result.results} == {existing.id, matched.id}
+    assert {choice.key for choice in result.records} == {existing.id, matched.id}

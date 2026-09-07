@@ -3,9 +3,6 @@ from dataclasses import dataclass
 from math import ceil
 from typing import Any
 
-from brilliance_admin.schema.table.table_models import ListData
-
-
 @dataclass
 class CountResult:
     total_count: str | None
@@ -19,5 +16,5 @@ class CountResult:
 
 class CountProvider(ABC):
     @abstractmethod
-    async def get_count(self, query: Any, list_data: ListData) -> CountResult:
+    async def get_count(self, query: Any, *, category: Any, has_filters: bool, limit: int) -> CountResult:
         pass

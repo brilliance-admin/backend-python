@@ -1,4 +1,5 @@
 import inspect
+from dataclasses import field
 from typing import Any, Callable
 
 from asgiref.sync import sync_to_async
@@ -9,8 +10,9 @@ from pydantic.dataclasses import dataclass
 
 from brilliance_admin.exceptions import AdminAPIException, APIError, AsyncUnsafeTitleLoad, FieldError
 from brilliance_admin.schema.admin_schema import AdminSchema
+from brilliance_admin.schema.table.count_providers import CountProvider
 from brilliance_admin.schema.table.fields.base import RelatedField
-from brilliance_admin.schema.table.table_models import AutocompleteData, Record
+from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult, Record
 from brilliance_admin.utils import DeserializeAction, get_logger
 
 logger = get_logger()
@@ -42,6 +44,12 @@ ASYNC_LAZY_RELATED_LOAD_ERROR = (
 TITLE_ASYNC_UNSAFE_HINT = (
     'SynchronousOnlyOperation: Add required select_related to get_queryset method, or define async admin_title().'
 )
+
+
+def get_default_count_provider() -> CountProvider:
+    from brilliance_admin.integrations.django.table.count_providers import DjangoCountProvider
+
+    return DjangoCountProvider(max_count=1000)
 
 
 def get_str_source(record) -> str:
@@ -106,6 +114,7 @@ class DjangoRelatedField(RelatedField):
     get_queryset: Callable[[Any, dict], Any] | None = None
     select_related: list[str] | None = None
     prefetch_related: list[str] | None = None
+    count_provider: Any = field(default_factory=get_default_count_provider)
 
     def get_related_category(
         self,
@@ -297,7 +306,7 @@ class DjangoRelatedField(RelatedField):
         parent_category=None,
         parent_pk=None,
         debug: bool = False,
-    ) -> list[Record]:
+    ) -> AutocompleteResult:
         queryset, pk_name = await self._get_autocomplete_queryset(data, user, extra)
         existing_queryset = self._get_existing_choices_queryset(queryset, data, pk_name)
         search_queryset = self._apply_autocomplete_search(queryset, data, pk_name)
@@ -333,18 +342,18 @@ class DjangoRelatedField(RelatedField):
                     status_code=500,
                 ) from e
             result.append(Record(key=getattr(record, pk_name), title=title))
-        return result
 
-    async def autocomplete_total_count(
-        self,
-        data: AutocompleteData,
-        user,
-        extra: dict | None = None,
-        parent_category=None,
-        parent_pk=None,
-    ) -> int:
-        queryset, _ = await self._get_autocomplete_queryset(data, user, extra)
-        return await queryset.acount()
+        count_result = await self.count_provider.get_count(
+            queryset,
+            category=extra['category'],
+            has_filters=bool(data.search_string),
+            limit=data.limit,
+        )
+        return AutocompleteResult(
+            records=result,
+            current_count=len(result),
+            total_count=count_result.total_count,
+        )
 
     def _raise_title_load_error(self, error: AsyncUnsafeTitleLoad, parent_record):
         error.rel_name = self.rel_name

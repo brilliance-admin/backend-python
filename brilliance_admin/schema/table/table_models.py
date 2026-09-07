@@ -38,10 +38,18 @@ class TableListResult(DataclassBase):
 
 
 class AutocompleteData(BaseModel):
-    field_slug: str = ''
-    search_string: str = ''
+    # The view receives field_slug as a query parameter and assigns it after body validation.
+    field_slug: str | None = None
+
+    # If search presents must filter output records
+    # If empty - all records limited with "limit" count must returned
+    search_string: str | None = None
+
     form_data: dict = Field(default_factory=dict)
+
+    # Adding exiting options to the output for the titles
     existed_choices: List[Any] = Field(default_factory=list)
+
     limit: int = Field(default=25, le=250)
 
     # Type of autocomplete:
@@ -57,8 +65,9 @@ class Record(BaseModel):
 
 
 class AutocompleteResult(BaseModel):
-    results: List[Record] = Field(default_factory=list)
-    total_count: int
+    records: List[Record] = Field(default_factory=list)
+    current_count: int = 0
+    total_count: str | None = None
 
 
 class FilterSubtableUnitSize(str, Enum):

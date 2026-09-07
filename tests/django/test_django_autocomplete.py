@@ -40,13 +40,14 @@ async def test_django_related_autocomplete(language_context):
     )
 
     assert result.model_dump() == {
-        'results': [
+        'records': [
             {
                 'key': owner_1.pk,
                 'title': str(owner_1),
             },
         ],
-        'total_count': 2,
+        'current_count': 1,
+        'total_count': '1',
     }
 
 
@@ -79,11 +80,12 @@ async def test_django_related_autocomplete_keeps_existing_choices_and_other_resu
     )
 
     assert result.model_dump() == {
-        'results': [
+        'records': [
             {'key': owner_1.pk, 'title': str(owner_1)},
             {'key': owner_2.pk, 'title': str(owner_2)},
         ],
-        'total_count': 2,
+        'current_count': 2,
+        'total_count': '2',
     }
 
 
@@ -157,13 +159,14 @@ async def test_django_related_autocomplete_uses_select_related(language_context)
     )
 
     assert result.model_dump() == {
-        'results': [
+        'records': [
             {
                 'key': example.pk,
                 'title': str(example),
             },
         ],
-        'total_count': 1,
+        'current_count': 1,
+        'total_count': '1',
     }
 
 
@@ -195,11 +198,12 @@ async def test_django_related_autocomplete_uses_get_queryset(language_context):
     )
 
     assert result.model_dump() == {
-        'results': [
+        'records': [
             {
                 'key': example.pk,
                 'title': str(example),
             },
         ],
-        'total_count': 1,
+        'current_count': 1,
+        'total_count': '1',
     }

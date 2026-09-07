@@ -15,6 +15,7 @@ from brilliance_admin.exceptions import FieldError, ValidationError
 from brilliance_admin.schema.category import FieldSchemaData
 from brilliance_admin.schema.table.filter_subtable import FilterSubtable
 from brilliance_admin.schema.table.schema_type import SchemaType
+from brilliance_admin.schema.table.table_models import AutocompleteResult
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction, SupportsStr, humanize_field_name
@@ -176,9 +177,7 @@ class IntegerField(TableField):
             raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'init'})
 
         if value is None:
-            if self.min_value is not None:
-                raise FieldError(_('validation.min_value_error') % {'min': self.min_value})
-            return
+            return None
 
         if self.min_value is not None and value < self.min_value:
             raise FieldError(_('validation.min_value_error') % {'min': self.min_value})
@@ -825,7 +824,7 @@ class RelatedField(TableField):
         parent_category=None,
         parent_pk=None,
         debug: bool = False,
-    ):
+    ) -> AutocompleteResult:
         raise NotImplementedError('autocomplete is not implemented')
 
     async def deserialize_field(self, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:

@@ -33,12 +33,13 @@ async def test_autocomplete_filter_fn(mocker):
     )
     assert response.status_code == 200, response.content.decode()
     response_data = {
-        'results': [
+        'records': [
             {
                 'key': user_1.id,
                 'title': 'User #1 "active"',
             },
         ],
-        'total_count': 1,
+        'current_count': 1,
+        'total_count': '1',
     }
     assert response.json() == response_data

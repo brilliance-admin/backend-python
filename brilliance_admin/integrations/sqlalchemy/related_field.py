@@ -10,7 +10,7 @@ from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.category import FieldSchemaData
 from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.schema_type import SchemaType
-from brilliance_admin.schema.table.table_models import AutocompleteData, Record
+from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult, Record
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
@@ -26,6 +26,9 @@ AUTOCOMPLETE_REQUIRES_MODEL = (
 AUTOCOMPLETE_REQUIRES_SESSION = (
     'SQLAlchemyRelatedField.autocomplete {class_name}'
     ' requires extra["db_async_session"] (AsyncSession)'
+)
+AUTOCOMPLETE_REQUIRES_CATEGORY = (
+    'SQLAlchemyRelatedField.autocomplete {class_name} requires extra["category"]'
 )
 INVALID_EXISTED_CHOICES = (
     'Invalid existed_choices value "{value}"'
@@ -306,19 +309,23 @@ class SQLAlchemyRelatedField(RelatedField):
         parent_category=None,
         parent_pk=None,
         debug: bool = False,
-    ) -> List[Record]:
+    ) -> AutocompleteResult:
         if extra is None or extra.get('db_async_session') is None:
             msg = AUTOCOMPLETE_REQUIRES_SESSION.format(class_name=type(self).__name__)
             raise AttributeError(msg)
-
         db_async_session = extra['db_async_session']
+        category = extra.get('category')
+        if category is None:
+            msg = AUTOCOMPLETE_REQUIRES_CATEGORY.format(class_name=type(self).__name__)
+            raise AttributeError(msg)
+        count_provider = category.count_provider
         stmt, pk = await self._get_autocomplete_statement(data, user, extra=extra)
         stmt = self._get_autocomplete_result_statement(stmt, data, pk)
-        stmt = stmt.limit(min(150, data.limit))
+        records_stmt = stmt.limit(min(150, data.limit))
         results = []
 
         async with db_async_session() as session:
-            records = (await session.execute(stmt)).scalars().all()
+            records = (await session.execute(records_stmt)).scalars().all()
             for record in records:
                 try:
                     title = get_record_title(
@@ -353,29 +360,17 @@ class SQLAlchemyRelatedField(RelatedField):
                 )
                 results.append(_record)
 
-        return results
-
-    async def autocomplete_total_count(
-        self,
-        data: AutocompleteData,
-        user,
-        extra: dict | None = None,
-        parent_category=None,
-        parent_pk=None,
-    ) -> int:
-        if extra is None or extra.get('db_async_session') is None:
-            msg = AUTOCOMPLETE_REQUIRES_SESSION.format(class_name=type(self).__name__)
-            raise AttributeError(msg)
-
-        # pylint: disable=import-outside-toplevel
-        from sqlalchemy import func, select
-
-        db_async_session = extra['db_async_session']
-        stmt, pk = await self._get_autocomplete_statement(data, user, extra=extra)
-        stmt = self._get_autocomplete_result_statement(stmt, data, pk)
-        count_stmt = select(func.count()).select_from(stmt.subquery())
-        async with db_async_session() as session:
-            return await session.scalar(count_stmt)
+        count_result = await count_provider.get_count(
+            stmt,
+            category=category,
+            has_filters=bool(data.search_string),
+            limit=data.limit,
+        )
+        return AutocompleteResult(
+            records=results,
+            current_count=len(results),
+            total_count=count_result.total_count,
+        )
 
     async def _load_related_fallback(self, value, extra: dict):
         db_async_session = extra.get('db_async_session')

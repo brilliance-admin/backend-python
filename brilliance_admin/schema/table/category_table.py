@@ -309,7 +309,7 @@ class CategoryTable(BaseCategory):
             msg = f'Autocomplete: field "{data.field_slug}" is not found inside {type(form_schema).__name__}'
             raise AdminAPIException(APIError(message=msg), status_code=500)
 
-        results = await field.autocomplete(
+        return await field.autocomplete(
             data,
             user,
             extra=self.get_extra_autocomplete(data),
@@ -317,20 +317,6 @@ class CategoryTable(BaseCategory):
             parent_pk=parent_pk if parent_pk is not None else data.parent_pk,
             debug=debug,
         )
-
-        total_count_fn = getattr(field, 'autocomplete_total_count', None)
-        if total_count_fn is None:
-            total_count = len(results)
-        else:
-            total_count = await total_count_fn(
-                data,
-                user,
-                extra=self.get_extra_autocomplete(data),
-                parent_category=parent_category,
-                parent_pk=parent_pk if parent_pk is not None else data.parent_pk,
-            )
-
-        return AutocompleteResult(results=results, total_count=total_count)
 
     async def _get_subtable_data(
             self,

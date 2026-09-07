@@ -89,7 +89,7 @@ class SQLAlchemyAdminBase(CategoryTable):
             raise AttributeError(msg)
 
         if self.count_provider is None:
-            self.count_provider = SQLAlchemyCountProvider(self.db_async_session)
+            self.count_provider = SQLAlchemyCountProvider()
 
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import inspect
@@ -109,6 +109,7 @@ class SQLAlchemyAdminBase(CategoryTable):
     def get_extra_autocomplete(self, data: AutocompleteData) -> dict:
         extra = super().get_extra_autocomplete(data)
         extra['db_async_session'] = self.db_async_session
+        extra['category'] = self
         extra['model'] = self.model
         extra['raise_async_unsafe'] = self.raise_async_unsafe
 

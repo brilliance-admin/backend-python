@@ -115,6 +115,9 @@ class SQLAlchemyAdminListMixin:
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import exc
 
+        limit = min(150, max(1, list_data.limit or 25))
+        has_filters = bool(list_data.filters or list_data.search)
+
         try:
             stmt = self.get_queryset()
             stmt = self.apply_parent_filter(stmt, parent_category, parent_pk)
@@ -150,7 +153,12 @@ class SQLAlchemyAdminListMixin:
             raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=400) from e
 
         try:
-            count_result = await self.count_provider.get_count(count_query, list_data)
+            count_result = await self.count_provider.get_count(
+                count_query,
+                category=self,
+                has_filters=has_filters,
+                limit=limit,
+            )
             async with self.db_async_session() as session:
                 records = (await session.execute(stmt)).scalars().all()
 

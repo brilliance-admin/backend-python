@@ -272,6 +272,7 @@ class DjangoAdminBase(CategoryTable):
 
     def get_extra_autocomplete(self, data: AutocompleteData) -> dict:
         extra = super().get_extra_autocomplete(data)
+        extra['category'] = self
         extra['model'] = self.model
         extra['raise_async_unsafe'] = self.raise_async_unsafe
 

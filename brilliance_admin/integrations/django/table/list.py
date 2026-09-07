@@ -63,10 +63,15 @@ class DjangoAdminListMixin:
             ],
         )
 
-    def _load_page_with_query_count(self, queryset, list_data, offset, limit):
+    def _load_page_with_query_count(self, queryset, has_filters, offset, limit):
         connection = connections[queryset.db]
         with CaptureQueriesContext(connection) as ctx:
-            count_result = async_to_sync(self.count_provider.get_count)(queryset, list_data)
+            count_result = async_to_sync(self.count_provider.get_count)(
+                queryset,
+                category=self,
+                has_filters=has_filters,
+                limit=limit,
+            )
             records = list(queryset[offset:offset + limit])
 
         return count_result, records, self.get_debug_info_from_context(ctx)
@@ -172,6 +177,7 @@ class DjangoAdminListMixin:
 
         page = max(1, list_data.page or 1)
         limit = min(150, max(1, list_data.limit or 25))
+        has_filters = bool(list_data.filters or list_data.search)
         offset = (page - 1) * limit
         list_field_slugs = self.get_list_field_slugs()
 
@@ -180,9 +186,14 @@ class DjangoAdminListMixin:
             count_result, records, debug_info = await sync_to_async(
                 self._load_page_with_query_count,
                 thread_sensitive=True,
-            )(queryset, list_data, offset, limit)
+            )(queryset, has_filters, offset, limit)
         else:
-            count_result = await self.count_provider.get_count(queryset, list_data)
+            count_result = await self.count_provider.get_count(
+                queryset,
+                category=self,
+                has_filters=has_filters,
+                limit=limit,
+            )
             records = [record async for record in queryset[offset:offset + limit]]
 
         serialize_started_at = time.perf_counter()

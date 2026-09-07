@@ -32,11 +32,10 @@ class EmailActionCategory(CategoryTable):
 
 
 @pytest.mark.asyncio
-async def test_optional_integer_rejects_none_when_minimum_configured():
+async def test_optional_integer_accepts_none_when_minimum_configured():
     field = schema.IntegerField(required=False, min_value=1)
 
-    with pytest.raises(FieldError):
-        await field.deserialize_field(None, DeserializeAction.CREATE, extra={})
+    assert await field.deserialize_field(None, DeserializeAction.CREATE, extra={}) is None
 
 
 @pytest.mark.asyncio

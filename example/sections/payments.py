@@ -56,6 +56,7 @@ class DisputesFieldsSchema(schema.FieldsSchema):
     reason = schema.StringField(label=_('Name'))
     manager = schema.RelatedField(label=_('Manager'))
     errors = schema.JSONField(help_text='This is errors', read_only=True)
+    payload = schema.JSONField(read_only=True)
     created_at = schema.DateTimeField(label=_('created_at'), read_only=True)
 
     formset = schema.FormSet(
@@ -71,10 +72,27 @@ class DisputesFieldsSchema(schema.FieldsSchema):
                 fields=[
                     schema.FormField('manager', col_span=6),
                     'errors',
+                    'payload',
                     'created_at',
                 ],
             ),
         ]
+    )
+
+
+class StatusHistoryFieldsSchema(schema.FieldsSchema):
+    updated_at = schema.DateTimeField(label='Updated Time', read_only=True)
+    status = schema.ChoiceField(label='Status', choices=TerminalStatuses, read_only=True)
+
+    formset = schema.FormSet(
+        fields=[
+            schema.FormSet(
+                fields=[
+                    schema.FormField('updated_at', col_span=6),
+                    schema.FormField('status', col_span=6),
+                ],
+            ),
+        ],
     )
 
 
@@ -156,6 +174,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
                     'whitelist_ips',
                 ],
             ),
+            'status_history',
             'disputes',
         ]
     )
@@ -176,6 +195,11 @@ class PaymentFieldsSchema(schema.FieldsSchema):
         label=_('disputes'),
         help_text=_('disputes_help_text'),
         table_schema=DisputesFieldsSchema(),
+    )
+    status_history = schema.InlineField(
+        label='Statuses History',
+        many=True,
+        table_schema=StatusHistoryFieldsSchema(),
     )
 
 
@@ -369,13 +393,25 @@ class PaymentsAdmin(schema.CategoryTable):
                             'description': "Error from the provider. Please contact support.",
                         },
                     ],
+                    'payload': {},
                     'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
                 },
                 {
                     'id': 2,
                     'reason': 'Reason title 2',
                     'manager': {'key': 1, 'title': 'Manager second'},
+                    'payload': {},
                     'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
+                },
+            ],
+            'status_history': [
+                {
+                    'updated_at': datetime.datetime(2026, 9, 7, 15, 8),
+                    'status': TerminalStatuses.PROCESS.value,
+                },
+                {
+                    'updated_at': datetime.datetime(2026, 9, 8, 8, 22),
+                    'status': TerminalStatuses.SUCCESS.value,
                 },
             ],
         }

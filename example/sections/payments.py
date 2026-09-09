@@ -51,6 +51,33 @@ class PaymentFiltersSchema(schema.FieldsSchema):
     ]
 
 
+class DisputesFieldsSchema(schema.FieldsSchema):
+    id = schema.IntegerField(label='ID', read_only=True)
+    reason = schema.StringField(label=_('Name'))
+    manager = schema.RelatedField(label=_('Manager'))
+    errors = schema.JSONField(help_text='This is errors', read_only=True)
+    created_at = schema.DateTimeField(label=_('created_at'), read_only=True)
+
+    formset = schema.FormSet(
+        fields=[
+            schema.FormSet(
+                fields=[
+                    'id',
+                    'reason',
+                ],
+            ),
+            schema.FormSet(
+                title='Main',
+                fields=[
+                    schema.FormField('manager', col_span=6),
+                    'errors',
+                    'created_at',
+                ],
+            ),
+        ]
+    )
+
+
 class PaymentFieldsSchema(schema.FieldsSchema):
     list_display = [
         'id',
@@ -119,7 +146,6 @@ class PaymentFieldsSchema(schema.FieldsSchema):
                     'created_at',
                     'update_at',
                 ],
-                col_span=6,
             ),
             schema.FormSet(
                 title='Main 2',
@@ -149,13 +175,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     disputes = schema.InlineField(
         label=_('disputes'),
         help_text=_('disputes_help_text'),
-        table_schema=schema.FieldsSchema(
-            id=schema.IntegerField(label='ID', read_only=True),
-            reason=schema.StringField(label=_('Name')),
-            manager=schema.RelatedField(label=_('Manager')),
-            errors=schema.JSONField(help_text='This is errors', read_only=True),
-            created_at=schema.DateTimeField(label=_('created_at'), read_only=True),
-        ),
+        table_schema=DisputesFieldsSchema(),
     )
 
 

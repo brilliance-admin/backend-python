@@ -119,6 +119,40 @@ class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
         'secret_key': {'help_text': 'help_text help_text'},
         'test_mode': {'read_only': True},
     }
+    formset = schema.FormSet(
+        fields=[
+            schema.FormSet(
+                fields=[
+                    'id',
+                    'manager_id',
+                    'title',
+                    'description',
+                    'secret_key',
+                    'status',
+                    'merchant_id',
+                    'currency_id',
+                    'is_h2h',
+                    'is_active',
+                    'public_id',
+                    'imitation_api',
+                    'test_mode',
+                    'registered_delay',
+                    'errors',
+                    'created_at',
+                ],
+            ),
+            schema.FormSet(
+                title='Urls',
+                fields=[
+                    'return_url',
+                    'callback_url',
+                ],
+            ),
+            'worktimes',
+            'routing',
+            'fees',
+        ],
+    )
 
 class TerminalAdmin(sqlalchemy.SQLAlchemyAdmin):
     model = Terminal

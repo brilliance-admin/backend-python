@@ -64,6 +64,7 @@ class FormField(DataclassBase):
 class FormSet(DataclassBase):
     title: SupportsStr | None = None
     description: SupportsStr | None = None
+    header_bg_color: str | None = Field(default=None, exclude_if=lambda value: value is None)
     fields: list = Field(default_factory=list)
     col_span: int | None = None
 
@@ -208,6 +209,10 @@ class FieldsSchema:
 
             for attr_name, value in kwargs_info.items():
                 setattr(field, attr_name, value)
+
+        if self.formset and self.exclude_fields:
+            self.formset = deepcopy(self.formset)
+            self.formset.exclude_fields(set(self.exclude_fields))
 
         self.validate_fields(*args, **kwargs)
 
@@ -386,8 +391,8 @@ class FieldsSchema:
             )
             fields_schema_data.fields[field_slug] = field_schema.to_dict(keep_none=False, context=context)
 
-        if removed_fields and fields_schema_data.formset:
-            fields_schema_data.formset.exclude_fields(removed_fields)
+        if exclude_fields and fields_schema_data.formset:
+            fields_schema_data.formset.exclude_fields(set(exclude_fields))
 
         return fields_schema_data
 

@@ -20,6 +20,43 @@ from example.sections.models import TerminalStatuses
 logger = get_logger()
 
 
+PAYMENT_ERRORS = [
+    {
+        'code': 'INVALID_CUSTOMER_DATA',
+        'description': {
+            'details': [
+                {
+                    'code': 'INVALID_DOCUMENT_NUMBER',
+                    'detail': 'Customer document number has an invalid format.',
+                },
+            ],
+        },
+    },
+    {
+        'code': 'PAYMENT_VALIDATION_FAILED',
+        'description': 'Payment amount exceeds the configured limit.',
+    },
+    {
+        'code': 'PAYMENT_REJECTED',
+        'description': 'The payment was rejected by the processing service.',
+    },
+]
+
+PROVIDER_ERRORS = [
+    {
+        'code': 'PROVIDER_UNAVAILABLE',
+        'description': 'Provider did not respond before the request timeout.',
+    },
+]
+
+ROUTING_ERRORS = [
+    {
+        'code': 'ROUTING_NOT_FOUND',
+        'description': 'No active routing rule matched this payment.',
+    },
+]
+
+
 class PaymentFiltersSchema(schema.FieldsSchema):
     created_at = schema.DateTimeField(
         label=_('created_at'),
@@ -129,8 +166,15 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     whitelist_ips = schema.ArrayField(label=_('whitelist_ips'), help_text=_('whitelist_ips__help_text'))
     # image = schema.ImageField(label=_('image'))
     gateway_settings = schema.JSONField(help_text='help text', read_only=True)
+    errors = schema.JSONField(label='Errors', read_only=True)
+    provider_errors = schema.JSONField(label='Provider errors', read_only=True)
+    routing_errors = schema.JSONField(label='Routing errors', read_only=True)
     created_at = schema.DateTimeField(label=_('created_at'), read_only=True)
     update_at = schema.DateTimeField(label=_('update_at'), read_only=True)
+
+    extra_kwargs = {
+        "errors": {"max_height": 500},
+    }
 
     formset = schema.FormSet(
         fields=[
@@ -172,6 +216,15 @@ class PaymentFieldsSchema(schema.FieldsSchema):
                     schema.FormField('other_field', col_span=6),
                     'gateway_settings',
                     'whitelist_ips',
+                ],
+            ),
+            schema.FormSet(
+                title='Errors',
+                header_bg_color='red-lighten-3',
+                fields=[
+                    'errors',
+                    'provider_errors',
+                    'routing_errors',
                 ],
             ),
             'status_history',
@@ -379,6 +432,9 @@ class PaymentsAdmin(schema.CategoryTable):
             'other_field': fake.word(),
             'image': f'https://picsum.photos/id/{5039-pk+1}/200/300',
             'gateway_settings': ['first', 'second'],
+            'errors': PAYMENT_ERRORS,
+            'provider_errors': PROVIDER_ERRORS,
+            'routing_errors': ROUTING_ERRORS,
             'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
             'disputes': [
                 {

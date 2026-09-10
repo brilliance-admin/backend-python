@@ -1,7 +1,10 @@
 from datetime import datetime, timezone
 from uuid import UUID
+from zoneinfo import ZoneInfo
 
 import pytest
+from django.test import override_settings
+from django.utils import timezone as django_timezone
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
@@ -108,6 +111,37 @@ async def test_list_filter_reverse_relation_with_explicit_fields(language_contex
     )
 
     assert list_result == schema.TableListResult(data=[{'id': example.id}], total_count=1)
+
+
+@pytest.mark.asyncio
+async def test_list_filter_related_lookup_terminal_foreign_key(language_context):
+    category = DjangoAdmin(
+        model=DjangoAnotherExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoAnotherExample,
+            fields=['id'],
+        ),
+        table_filters=DjangoFieldsSchema(
+            model=DjangoAnotherExample,
+            fields=['example__owner'],
+        ),
+    )
+    owner = await DjangoUser.objects.acreate(username='related_filter_owner')
+    example = await DjangoExampleFactory(owner=owner)
+    matching_record = await DjangoAnotherExampleFactory(example=example)
+    await DjangoAnotherExampleFactory()
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(filters={'example__owner': owner.pk}),
+        user=UserABC(username='test'),
+        language_context=language_context,
+        debug=False,
+    )
+
+    assert list_result == schema.TableListResult(
+        data=[{'id': matching_record.id}],
+        total_count=1,
+    )
 
 
 @pytest.mark.asyncio

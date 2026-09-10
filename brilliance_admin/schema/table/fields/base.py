@@ -322,14 +322,14 @@ class BooleanField(TableField):
     _type = 'boolean'
 
 
-def _parse_iso(value: str) -> datetime.datetime:
+def _parse_iso(value: str, time_zone: datetime.tzinfo = datetime.timezone.utc) -> datetime.datetime:
     if value.endswith('Z'):
         value = value.replace('Z', '+00:00')
 
     dt = datetime.datetime.fromisoformat(value)
 
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=datetime.timezone.utc)
+        dt = dt.replace(tzinfo=time_zone)
 
     return dt
 
@@ -423,6 +423,7 @@ class DateTimeField(TableField):
 
     async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
         value = await super().deserialize_field(value, action, extra, *args, **kwargs)
+        time_zone = extra.get('time_zone', datetime.timezone.utc)
 
         if not value:
             return
@@ -437,7 +438,7 @@ class DateTimeField(TableField):
             if self.include_date and not self.include_time:
                 return datetime.date.fromisoformat(value)
 
-            return _parse_iso(value)
+            return _parse_iso(value, time_zone)
 
         if isinstance(value, dict):
             if not value.get('from') or not value.get('to'):
@@ -446,8 +447,8 @@ class DateTimeField(TableField):
                 )
 
             return {
-                'from': _parse_iso(value['from']),
-                'to': _parse_iso(value['to']),
+                'from': _parse_iso(value['from'], time_zone),
+                'to': _parse_iso(value['to'], time_zone),
             }
 
         raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'datetime'})

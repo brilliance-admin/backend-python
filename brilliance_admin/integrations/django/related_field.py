@@ -114,6 +114,7 @@ class DjangoRelatedField(RelatedField):
     get_queryset: Callable[[Any, dict], Any] | None = None
     select_related: list[str] | None = None
     prefetch_related: list[str] | None = None
+    target_model: type[Model] | None = None
     count_provider: Any = field(default_factory=get_default_count_provider)
 
     def get_related_category(
@@ -123,7 +124,7 @@ class DjangoRelatedField(RelatedField):
     ) -> tuple[str, str] | None:
         from brilliance_admin.integrations.django.table.base import DjangoAdminBase
 
-        target_model = source_model._meta.get_field(self.rel_name).related_model
+        target_model = self.target_model or source_model._meta.get_field(self.rel_name).related_model
 
         for group in admin_schema.categories:
             for category in getattr(group, 'subcategories', []):
@@ -160,7 +161,7 @@ class DjangoRelatedField(RelatedField):
         return schema
 
     def _cast_pk(self, value, model):
-        target_model = model._meta.get_field(self.rel_name).related_model
+        target_model = self.target_model or model._meta.get_field(self.rel_name).related_model
         try:
             return target_model._meta.pk.to_python(value)
         except (TypeError, ValueError, DjangoValidationError) as e:
@@ -202,6 +203,9 @@ class DjangoRelatedField(RelatedField):
         return queryset
 
     def _get_target_model(self, model, field_slug):
+        if self.target_model is not None:
+            return self.target_model
+
         model_field = model._meta.get_field(field_slug)
         return getattr(model_field, 'related_model', None)
 

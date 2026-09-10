@@ -16,6 +16,7 @@ from example.config import settings
 from example.sections.filter_subtable_fake import FakeFilterSubtable
 from example.sections.logs import LOGS
 from example.sections.models import TerminalStatuses
+from example.sections.payments_data import FEE_TRANSFERS
 
 logger = get_logger()
 
@@ -55,7 +56,6 @@ ROUTING_ERRORS = [
         'description': 'No active routing rule matched this payment.',
     },
 ]
-
 
 class PaymentFiltersSchema(schema.FieldsSchema):
     created_at = schema.DateTimeField(
@@ -129,6 +129,42 @@ class StatusHistoryFieldsSchema(schema.FieldsSchema):
                     schema.FormField('status', col_span=6),
                 ],
             ),
+        ],
+    )
+
+
+class FeeTransferFieldsSchema(schema.FieldsSchema):
+    result_amount = schema.IntegerField(label='Result amount', read_only=True)
+    old_result_amount = schema.IntegerField(label='Old result amount', read_only=True)
+    source = schema.RelatedField(label='Source of fee', read_only=True)
+    created_at = schema.DateTimeField(label='Created date', read_only=True)
+    fee_history = schema.RelatedField(label='Fee history', read_only=True)
+    history_name = schema.StringField(label='History Name', read_only=True)
+    history_accrual_type = schema.IntegerField(label='History Accrual Type', read_only=True)
+    history_percent_part = schema.BooleanField(label='History Percent Part', read_only=True)
+    history_percent = schema.DecimalField(label='History Percent', read_only=True)
+    history_fix_part = schema.BooleanField(label='History Fix Part', read_only=True)
+    history_created_at = schema.DateTimeField(label='History Created At', read_only=True)
+    history_source = schema.StringField(label='History Source', read_only=True)
+    history_payment_systems = schema.StringField(label='History Payment Systems', read_only=True)
+    history_operation_type = schema.StringField(label='History Operation Type', read_only=True)
+
+    formset = schema.FormSet(
+        fields=[
+            schema.FormField('result_amount', col_span=4),
+            schema.FormField('old_result_amount', col_span=4),
+            schema.FormField('source', col_span=4),
+            schema.FormField('created_at', col_span=4),
+            schema.FormField('fee_history', col_span=4),
+            schema.FormField('history_name', col_span=4),
+            schema.FormField('history_accrual_type', col_span=4),
+            schema.FormField('history_percent_part', col_span=4),
+            schema.FormField('history_percent', col_span=4),
+            schema.FormField('history_fix_part', col_span=4),
+            schema.FormField('history_created_at', col_span=4),
+            schema.FormField('history_source', col_span=4),
+            schema.FormField('history_payment_systems', col_span=4),
+            schema.FormField('history_operation_type', col_span=4),
         ],
     )
 
@@ -228,6 +264,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
                 ],
             ),
             'status_history',
+            'fee_transfers',
             'disputes',
         ]
     )
@@ -253,6 +290,11 @@ class PaymentFieldsSchema(schema.FieldsSchema):
         label='Statuses History',
         many=True,
         table_schema=StatusHistoryFieldsSchema(),
+    )
+    fee_transfers = schema.InlineField(
+        label='Fee Transfers',
+        many=True,
+        table_schema=FeeTransferFieldsSchema(),
     )
 
 
@@ -436,6 +478,7 @@ class PaymentsAdmin(schema.CategoryTable):
             'errors': PAYMENT_ERRORS,
             'provider_errors': PROVIDER_ERRORS,
             'routing_errors': ROUTING_ERRORS,
+            'fee_transfers': FEE_TRANSFERS,
             'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
             'disputes': [
                 {

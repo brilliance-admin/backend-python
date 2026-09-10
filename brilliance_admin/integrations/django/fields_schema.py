@@ -2,9 +2,11 @@ import json
 import re
 
 from asgiref.sync import sync_to_async
+from django.core.exceptions import FieldDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import DataError, IntegrityError, connections, transaction
 from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
 
 from brilliance_admin import schema
 from brilliance_admin.exceptions import APIError, AdminAPIException, ValidationError
@@ -80,6 +82,11 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 if field_slug in result:
                     continue
 
+                lookup_field = self.generate_lookup_field(field_slug)
+                if lookup_field is not None:
+                    result[field_slug] = lookup_field
+                    continue
+
                 reverse_field = self.generate_reverse_related_field(field_slug)
                 if reverse_field is not None:
                     result[field_slug] = reverse_field
@@ -131,7 +138,10 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             deserialized_filters = await self.deserialize_fields(
                 filters,
                 DeserializeAction.FILTERS,
-                extra={'model': self.model},
+                extra={
+                    'model': self.model,
+                    'time_zone': timezone.get_current_timezone(),
+                },
             )
         except ValidationError as e:
             raise AdminAPIException(
@@ -245,16 +255,21 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 continue
 
             field_slug = model_field.name
-            label = self.get_model_field_label(model_field)
-
-            yield field_slug, DjangoRelatedField(
-                label=label,
-                read_only=False,
-                required=self.is_required_field(model_field),
+            yield field_slug, self.generate_related_field(
+                model_field,
                 rel_name=field_slug.removesuffix('_id'),
-                many=False,
-                dual_list=False,
             )
+
+    def generate_related_field(self, model_field, rel_name):
+        return DjangoRelatedField(
+            label=self.get_model_field_label(model_field),
+            read_only=False,
+            required=self.is_required_field(model_field),
+            rel_name=rel_name,
+            target_model=model_field.related_model,
+            many=False,
+            dual_list=False,
+        )
 
     def generate_many_to_many_field(self, model_field):
         return DjangoRelatedField(
@@ -281,6 +296,39 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             )
 
         return None
+
+    def generate_lookup_field(self, field_slug):
+        from django.db import models
+
+        if '__' not in field_slug:
+            return None
+
+        model = self.model
+        lookup_parts = field_slug.split('__')
+        for index, lookup_part in enumerate(lookup_parts):
+            try:
+                model_field = model._meta.get_field(lookup_part)
+            except FieldDoesNotExist as e:
+                raise AttributeError(
+                    f'Django lookup "{field_slug}" is invalid: '
+                    f'model {model.__name__} has no field "{lookup_part}"'
+                ) from e
+
+            if index == len(lookup_parts) - 1:
+                if isinstance(model_field, (models.ForeignKey, models.OneToOneField)):
+                    return self.generate_related_field(model_field, rel_name=field_slug)
+
+                return self.generate_model_field(model_field)
+
+            if not isinstance(model_field, (models.ForeignKey, models.OneToOneField)):
+                raise AttributeError(
+                    f'Django lookup "{field_slug}" is invalid: '
+                    f'{model.__name__}.{lookup_part} is not a relation'
+                )
+
+            model = model_field.related_model
+
+        raise RuntimeError(f'Unexpected empty Django lookup path: {field_slug}')
 
     @staticmethod
     def get_allowed_extensions(model_field):

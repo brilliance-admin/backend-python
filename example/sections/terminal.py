@@ -28,6 +28,7 @@ class FeeFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
 class FeeAdmin(sqlalchemy.SQLAlchemyAdmin):
     model = Fee
     title = _('fees')
+    icon = 'mdi-cash-multiple'
 
     ordering_fields = [
         'id',

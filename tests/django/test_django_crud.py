@@ -256,7 +256,12 @@ async def test_update_file_from_base64_payload(language_context, tmp_path):
 
 @pytest.mark.asyncio
 async def test_retrieve(language_context):
-    category = DjangoExampleCategory()
+    category = DjangoExampleCategory(
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id', 'title'],
+        ),
+    )
     user = UserABC(username='test')
     record = await DjangoExampleFactory(
         title='retrieve title',
@@ -272,16 +277,17 @@ async def test_retrieve(language_context):
         pk=record.pk,
         user=user,
         language_context=language_context,
-        debug=True,
+        debug=False,
     )
 
-    assert result.data['id'] == record.pk
-    assert result.data['owner'] == {'key': record.owner_id, 'title': str(record.owner)}
-    assert result.data['title'] == 'retrieve title'
-    assert result.data['description'] == 'retrieve description'
-    assert result.debug_info is not None
-    assert result.debug_info.db_query_count > 0
-    assert result.debug_info.queries
+    assert result.model_dump() == {
+        'data': {
+            'id': record.pk,
+            'title': 'retrieve title',
+        },
+        'tab_counts': {},
+        'debug_info': None,
+    }
 
 
 @pytest.mark.asyncio

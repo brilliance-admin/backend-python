@@ -77,6 +77,24 @@ async def test_subcategory_list(language_context):
 
     assert [row['id'] for row in list_result.data] == [another_2.id, another_1.id]
 
+    retrieve_result = await example_category.retrieve(
+        pk=example_1.id,
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+
+    assert retrieve_result.model_dump() == {
+        'data': {
+            'id': example_1.id,
+            'title': example_1.title,
+        },
+        'tab_counts': {
+            'djangoanotherexample': '2',
+        },
+        'debug_info': None,
+    }
+
 
 @pytest.mark.asyncio
 async def test_subcategory_retrieve(language_context):

@@ -40,7 +40,7 @@ class SQLAlchemyAdminUpdate:
         col = inspect(self.table_schema.model).mapper.columns[self.pk_name]
         python_type = col.type.python_type
 
-        stmt = self.get_queryset()
+        stmt = self.get_queryset(action='update')
         stmt = self.apply_parent_filter(stmt, parent_category, parent_pk)
         stmt = stmt.where(getattr(self.model, self.pk_name) == python_type(pk))
 

@@ -34,7 +34,7 @@ class SQLAlchemyAdminRetrieveMixin:
         python_type = col.type.python_type
 
         assert self.pk_name
-        stmt = self.get_queryset()
+        stmt = self.get_queryset(action='retrieve')
         stmt = self.apply_parent_filter(stmt, parent_category, parent_pk)
         stmt = stmt.where(getattr(self.model, self.pk_name) == python_type(pk))
 
@@ -98,4 +98,5 @@ class SQLAlchemyAdminRetrieveMixin:
             type(self).__name__, self.table_schema.model.__name__, pk, user.username,
             extra={'data': data},
         )
-        return schema.RetrieveResult(data=data)
+        tab_counts = await self.get_tabs_count(pk)
+        return schema.RetrieveResult(data=data, tab_counts=tab_counts)

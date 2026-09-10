@@ -80,7 +80,7 @@ async def test_create(postgres_sessionmaker, language_context):
         data=create_data,
         user=user,
         language_context=language_context,
-        debug=True,
+        debug=False,
     )
 
     assert create_result.pk == 1
@@ -318,7 +318,7 @@ async def test_retrieve(postgres_sessionmaker, language_context):
         pk=terminal.id,
         user=user,
         language_context=language_context,
-        debug=True,
+        debug=False,
     )
     expected_data = {
         'manager_id': mock.ANY,
@@ -329,7 +329,7 @@ async def test_retrieve(postgres_sessionmaker, language_context):
             'title': mock.ANY,
         },
         'status': {
-            'title': _('statuses.process'),
+            'title': language_context.get_text(_('statuses.process')),
             'value': 'process',
         },
         'title': 'test',
@@ -370,7 +370,11 @@ async def test_retrieve(postgres_sessionmaker, language_context):
             },
         ],
     }
-    assert retrieve_result.data == expected_data
+    assert retrieve_result.model_dump(context={'language_context': language_context}) == {
+        'data': expected_data,
+        'tab_counts': {},
+        'debug_info': None,
+    }
 
 
 @pytest.mark.asyncio

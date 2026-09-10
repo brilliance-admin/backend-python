@@ -119,7 +119,7 @@ class SQLAlchemyAdminListMixin:
         has_filters = bool(list_data.filters or list_data.search)
 
         try:
-            stmt = self.get_queryset()
+            stmt = self.get_queryset(action='list')
             stmt = self.apply_parent_filter(stmt, parent_category, parent_pk)
             stmt = await self.apply_filters(stmt, list_data)
             stmt = self.apply_search(stmt, list_data)

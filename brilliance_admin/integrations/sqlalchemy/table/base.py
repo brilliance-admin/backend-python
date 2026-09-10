@@ -160,7 +160,7 @@ class SQLAlchemyAdminBase(CategoryTable):
                         f'{type(self).__name__}: ordering field "{field}" not found in model {self.model.__name__}'
                     )
 
-    def get_queryset(self):
+    def get_queryset(self, *, action: str):
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import select
         from sqlalchemy.orm import selectinload

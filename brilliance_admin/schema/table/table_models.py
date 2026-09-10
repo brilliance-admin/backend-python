@@ -100,6 +100,7 @@ class ListData(BaseModel):
 
 class RetrieveResult(BaseModel):
     data: dict
+    tab_counts: Dict[str, str | None] = Field(default_factory=dict)
     debug_info: DebugInfo | None = None
 
 

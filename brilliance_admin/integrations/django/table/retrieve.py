@@ -80,4 +80,5 @@ class DjangoAdminRetrieveMixin:
             type(self).__name__, self.table_schema.model.__name__, pk, user.username,
             extra={'data': data},
         )
-        return schema.RetrieveResult(data=data, debug_info=debug_info)
+        tab_counts = await self.get_tabs_count(pk)
+        return schema.RetrieveResult(data=data, tab_counts=tab_counts, debug_info=debug_info)

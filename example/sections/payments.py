@@ -281,6 +281,7 @@ class CreatePaymentSchema(schema.FieldsSchema):
 class LogsAdmin(schema.CategoryTable):
     has_update = False
     has_create = False
+    icon = 'mdi-text-box-outline'
     slug = 'logs'
     options = schema.TableOptions(
         fit_screen=True,

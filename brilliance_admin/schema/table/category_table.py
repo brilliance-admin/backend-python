@@ -107,6 +107,30 @@ class CategoryTable(BaseCategory):
                 return category
         return None
 
+    async def get_tabs_count(self, pk: Any) -> Dict[str, str | None]:
+        result = {}
+
+        for category in self.subcategories:
+            count_provider = getattr(category, 'count_provider', None)
+            if count_provider is None:
+                continue
+
+            query = category.get_queryset(action='list')
+            query = category.apply_parent_filter(
+                query,
+                parent_category=self,
+                parent_pk=pk,
+            )
+            count_result = await count_provider.get_count(
+                query,
+                category=category,
+                has_filters=False,
+                limit=1,
+            )
+            result[category.slug] = count_result.total_count
+
+        return result
+
     def _get_form_schema(self, user, language_context: LanguageContext, parent_category=None, admin_schema=None):
         return self.table_schema.generate_form_schema(
             user,

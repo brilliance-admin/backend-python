@@ -1,11 +1,13 @@
 import pytest
 from sqlalchemy import select
 
-from brilliance_admin import auth, schema
+from brilliance_admin import auth, schema, sqlalchemy
 from brilliance_admin.exceptions import AdminAPIException
 from example.main import admin_schema
 from example.sections.merchant import MerchantAdmin
-from example.sections.models import CurrencyFactory, Fee, FeeFactory, FeeTypeFactory, MerchantFactory, TerminalFactory
+from example.sections.models import (
+    CurrencyFactory, Fee, FeeFactory, FeeTypeFactory, Merchant, MerchantFactory, TerminalFactory,
+)
 from example.sections.terminal import FeeAdmin, TerminalAdmin
 from example.sections.user_session import UserSessionAdmin
 from example.sections.users import UserAdmin
@@ -14,6 +16,10 @@ from example.sections.users import UserAdmin
 def get_merchant_terminals_subcategory(postgres_sessionmaker):
     merchant_category = MerchantAdmin(
         db_async_session=postgres_sessionmaker,
+        table_schema=sqlalchemy.SQLAlchemyFieldsSchema(
+            model=Merchant,
+            fields=['id', 'title'],
+        ),
         subcategories=[
             TerminalAdmin(db_async_session=postgres_sessionmaker),
         ],
@@ -66,6 +72,24 @@ async def test_subcategory_list(
 
     assert [row['id'] for row in list_result.data] == [terminal_2.id, terminal_1.id]
     assert [row['merchant_id']['key'] for row in list_result.data] == [merchant_1.id, merchant_1.id]
+
+    retrieve_result = await merchant_category.retrieve(
+        pk=merchant_1.id,
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+
+    assert retrieve_result.model_dump(context={'language_context': language_context}) == {
+        'data': {
+            'id': merchant_1.id,
+            'title': merchant_1.title,
+        },
+        'tab_counts': {
+            'terminal': '2',
+        },
+        'debug_info': None,
+    }
 
 
 @pytest.mark.asyncio

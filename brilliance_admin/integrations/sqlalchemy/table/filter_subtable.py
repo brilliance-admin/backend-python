@@ -12,7 +12,7 @@ class PostgreSQLFilterSubtable(FilterSubtable):
 
     async def get_queryset(self, subtable_data: FilterSubtableData, *, view):
         list_data = ListData(filters=subtable_data.filters, search=subtable_data.search)
-        queryset = view.get_queryset()
+        queryset = view.get_queryset(action='list')
         queryset = await view.apply_filters(queryset, list_data)
         return view.apply_search(queryset, list_data).order_by(None)
 

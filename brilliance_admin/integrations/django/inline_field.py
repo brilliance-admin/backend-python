@@ -1,20 +1,64 @@
 import inspect
 from typing import Any, Callable
 
+from asgiref.sync import sync_to_async
+from django.core.exceptions import SynchronousOnlyOperation
 from pydantic.dataclasses import dataclass
 
+from brilliance_admin.exceptions import APIError, AdminAPIException
 from brilliance_admin.schema.table.fields.base import InlineField
+from brilliance_admin.utils import get_logger
 
 INLINE_GET_QUERYSET_RESULT_ERROR = (
     '{class_name}.get_queryset must return Django QuerySet, got {result_type}'
 )
+INLINE_GET_DATA_ASYNC_UNSAFE = (
+    'SynchronousOnlyOperation: Async unsafe get_data: field="{field}" '
+    'model="{model}" pk={pk}. Define get_data as async def, or keep its ORM access sync-safe.'
+)
+
+logger = get_logger()
 
 
 @dataclass
 class DjangoInlineField(InlineField):
     get_queryset: Callable[[Any, dict], Any] | None = None
+    get_data: Callable[[Any, dict], Any] | None = None
     select_related: list[str] | None = None
     prefetch_related: list[str] | None = None
+
+    async def _get_data(self, record, extra, field_slug):
+        if self.get_data is None:
+            return None
+
+        if inspect.iscoroutinefunction(self.get_data):
+            return await self.get_data(record, extra)
+
+        try:
+            return self.get_data(record, extra)
+        except SynchronousOnlyOperation as error:
+            message = INLINE_GET_DATA_ASYNC_UNSAFE.format(
+                field=field_slug,
+                model=type(record).__name__,
+                pk=getattr(record, 'pk', None),
+            )
+            if extra.get('raise_async_unsafe'):
+                logger.exception(
+                    'Async unsafe get_data: field=%s model=%s pk=%s',
+                    field_slug,
+                    type(record).__name__,
+                    getattr(record, 'pk', None),
+                )
+                raise AdminAPIException(
+                    APIError(message=message, code='async_unsafe_get_data'),
+                    status_code=500,
+                ) from error
+            if extra.get('debug'):
+                logger.warning(message)
+            return await sync_to_async(
+                self.get_data,
+                thread_sensitive=True,
+            )(record, extra)
 
     async def _get_queryset(self, value, extra):
         # pylint: disable=import-outside-toplevel
@@ -159,14 +203,17 @@ class DjangoInlineField(InlineField):
 
         return record
 
-    async def serialize(self, value, extra: dict, *args, **kwargs):
-        if value is None:
-            return
-
+    async def serialize(self, value, extra: dict, field_slug: str | None = None, *args, **kwargs):
         record = extra.get('record')
         if record is None:
             msg = f'{type(self).__name__} requires extra["record"] for serialization'
             raise AttributeError(msg)
+
+        if self.get_data is not None:
+            value = await self._get_data(record, extra, field_slug)
+
+        if value is None:
+            return
 
         if hasattr(value, 'all'):
             queryset = await self._get_queryset(value, extra)

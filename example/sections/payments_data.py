@@ -54,3 +54,34 @@ FEE_TRANSFERS = [
         'history_operation_type': 'rule_c',
     },
 ]
+
+
+CALLBACK_REQUESTS = [
+    {
+        'url': 'https://notify.pay.host/callback/deposit/terminal/da43a6bb-866c-489c-a97b-a079c5af7f59',
+        'created_at': datetime.datetime(2026, 9, 11, 0, 47),
+        'callback_type': 'Notify',
+        'status': 'Send successfully',
+        'next_try_at': None,
+        'http_status': 200,
+        'data': {
+            'tx': 'e7e49f49-b915-414d-ab6d-0e8a8a4477e6',
+            'amount': 10000,
+            'errors': [],
+            'status': 'success',
+        },
+    },
+]
+
+
+PROVIDER_CALLBACKS = [
+    {
+        'created_at': datetime.datetime(2026, 9, 11, 0, 47),
+        'request_body': {
+            'realAmount': '100.00',
+            'orderType': 'PAYMENT',
+            'amount': '100.0',
+            'orderStatus': 'SUCCESS',
+        },
+    },
+]

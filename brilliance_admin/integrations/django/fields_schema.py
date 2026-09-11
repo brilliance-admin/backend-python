@@ -38,6 +38,12 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
     def generate_fields(self, kwargs) -> dict:
         generated_fields = super().generate_fields(kwargs)
+        excluded_fields = set(self.exclude_fields or [])
+        generated_fields = {
+            field_slug: field
+            for field_slug, field in generated_fields.items()
+            if field_slug not in excluded_fields
+        }
 
         if self.model is None:
             return generated_fields
@@ -46,12 +52,15 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         pk_field = self.model._meta.pk
         pk_slug = pk_field.name
 
-        if pk_slug in generated_fields:
-            result[pk_slug] = generated_fields[pk_slug]
-        else:
-            result[pk_slug] = self.generate_model_field(pk_field)
+        if pk_slug not in excluded_fields:
+            if pk_slug in generated_fields:
+                result[pk_slug] = generated_fields[pk_slug]
+            else:
+                result[pk_slug] = self.generate_model_field(pk_field)
 
         for field_slug, field in self.generate_related_fields():
+            if field_slug in excluded_fields:
+                continue
             if field_slug in generated_fields:
                 result[field_slug] = generated_fields[field_slug]
                 continue
@@ -60,11 +69,15 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 result[field_slug] = field
 
         for field_slug, field in generated_fields.items():
+            if field_slug in excluded_fields:
+                continue
             if field_slug not in result:
                 result[field_slug] = field
 
         for model_field in self.model._meta.fields:
             field_slug = model_field.name
+            if field_slug in excluded_fields:
+                continue
             if field_slug in result:
                 continue
 
@@ -72,6 +85,8 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
         for model_field in self.model._meta.many_to_many:
             field_slug = model_field.name
+            if field_slug in excluded_fields:
+                continue
             if field_slug in result:
                 continue
 
@@ -79,6 +94,8 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
         if self.fields is not None:
             for field_slug in self.fields:
+                if field_slug in excluded_fields:
+                    continue
                 if field_slug in result:
                     continue
 
@@ -243,6 +260,9 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             if field._type == 'related' and not field.many:
                 record_data[slug] = getattr(record, f'{slug}_id', None)
                 continue
+            if isinstance(field, DjangoInlineField) and field.get_data is not None:
+                record_data[slug] = None
+                continue
             record_data[slug] = getattr(record, slug, None)
 
         return await super().serialize(record_data, extra, field_slugs=slugs, *args, **kwargs)
@@ -320,7 +340,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
                 return self.generate_model_field(model_field)
 
-            if not isinstance(model_field, (models.ForeignKey, models.OneToOneField)):
+            if not model_field.is_relation or model_field.related_model is None:
                 raise AttributeError(
                     f'Django lookup "{field_slug}" is invalid: '
                     f'{model.__name__}.{lookup_part} is not a relation'

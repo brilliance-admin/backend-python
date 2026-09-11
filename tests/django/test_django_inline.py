@@ -17,6 +17,16 @@ async def get_another_examples_queryset(value, extra):
     return value.all().select_related('example', 'example__owner')
 
 
+get_data_calls = 0
+
+
+def get_another_examples_data(record, extra):
+    global get_data_calls
+    get_data_calls += 1
+    record.another_examples.count()
+    return record.another_examples.all()
+
+
 class DjangoExampleInlineAdmin(DjangoAdmin):
     model = DjangoExample
     table_schema = DjangoFieldsSchema(
@@ -31,6 +41,19 @@ class DjangoExampleInlineAdmin(DjangoAdmin):
 
     def get_queryset(self, *args, **kwargs):
         return super().get_queryset(*args, **kwargs).select_related('owner')
+
+
+class DjangoExampleGetDataAdmin(DjangoAdmin):
+    model = DjangoExample
+    table_schema = DjangoFieldsSchema(
+        model=DjangoExample,
+        fields=['id', 'title', 'virtual_another_examples'],
+        virtual_another_examples=DjangoInlineField(
+            many=True,
+            table_schema=DjangoAnotherExampleInlineSchema(),
+            get_data=get_another_examples_data,
+        ),
+    )
 
 
 class InlineBugParent(models.Model):
@@ -139,6 +162,29 @@ async def test_inline_retrieve(language_context):
             'title': 'child 2',
         },
     ]
+
+
+@pytest.mark.asyncio
+async def test_inline_get_data_sync_uses_async_unsafe_fallback(language_context, capsys):
+    global get_data_calls
+    get_data_calls = 0
+    category = DjangoExampleGetDataAdmin()
+    user = UserABC(username='test')
+    example = await DjangoExampleFactory()
+    child = await DjangoAnotherExampleFactory(example=example, title='child')
+
+    result = await category.retrieve(
+        pk=example.pk,
+        user=user,
+        language_context=language_context,
+        debug=True,
+    )
+
+    assert result.data['virtual_another_examples'] == [
+        {'id': child.pk, 'title': 'child'},
+    ]
+    assert get_data_calls == 2
+    assert 'Async unsafe get_data: field="virtual_another_examples"' in capsys.readouterr().out
 
 
 @pytest.mark.asyncio

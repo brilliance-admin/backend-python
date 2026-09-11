@@ -64,6 +64,7 @@ class FormField(DataclassBase):
 class FormSet(DataclassBase):
     title: SupportsStr | None = None
     description: SupportsStr | None = None
+    icon: str | None = Field(default=None, exclude_if=lambda value: value is None)
     header_bg_color: str | None = Field(default=None, exclude_if=lambda value: value is None)
     fields: list = Field(default_factory=list)
     col_span: int | None = None
@@ -171,6 +172,13 @@ class FieldsSchema:
                 msg = f'{type(self).__name__}.formset must be a FormSet instance; found: {type(formset).__name__}'
                 raise AttributeError(msg)
             self.formset = formset
+
+        if self.exclude_fields and self.fields:
+            self.fields = [
+                field_slug
+                for field_slug in self.fields
+                if field_slug not in self.exclude_fields
+            ]
 
         generated_fields = self.generate_fields(kwargs)
 

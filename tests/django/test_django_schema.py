@@ -10,7 +10,7 @@ from brilliance_admin.integrations.django.inline_field import DjangoInlineField
 from brilliance_admin.integrations.django.table import DjangoAdmin
 from brilliance_admin.utils import DeserializeAction, humanize_field_name
 from example.main import admin_app
-from example.sections.django_models import DjangoAnotherExample, DjangoExample
+from example.sections.django_models import DjangoAnotherExample, DjangoExample, DjangoUser
 
 FORM_SCHEMA_DATA = {
     'categories': {},
@@ -504,3 +504,30 @@ def test_django_formset_excludes_excluded_field():
     fields_schema = BugSchema(exclude_fields=['title'])
 
     assert fields_schema.formset.fields == ['id']
+
+
+def test_exclude_fields_keeps_auto_generated_django_field_types(language_context):
+    fields_schema = DjangoFieldsSchema(
+        model=DjangoUser,
+        fields=['id', 'examples'],
+        examples=DjangoInlineField(
+            many=True,
+            read_only=True,
+            table_view=True,
+            table_schema=DjangoFieldsSchema(
+                model=DjangoExample,
+                exclude_fields=['owner'],
+            ),
+        ),
+    )
+
+    generated_schema = fields_schema.generate_form_schema(
+        UserABC(username='test'),
+        language_context,
+    )
+
+    inline_schema = generated_schema.fields['examples']['inline_field_schema']
+
+    assert inline_schema['fields']['status']['type'] == 'choice'
+    assert inline_schema['fields']['created_at']['type'] == 'datetime'
+    assert 'owner' not in inline_schema['list_display']

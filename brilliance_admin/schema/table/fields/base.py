@@ -857,6 +857,7 @@ class InlineField(TableField):
     _type = 'inline'
 
     many: bool = False
+    table_view: bool = False
     table_schema: Any = None
 
     def generate_field_schema(
@@ -871,6 +872,10 @@ class InlineField(TableField):
     ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, fields_schema, admin_schema, language_context, schema_type, **kwargs)
         schema.many = self.many
+        if self.table_view and not self.read_only:
+            raise FieldError(f'InlineField "{field_slug}" with table_view must be read_only')
+        if self.table_view:
+            schema.table_view = True
 
         # pylint: disable=import-outside-toplevel
         from brilliance_admin.schema.table.fields_schema import FieldsSchema

@@ -72,6 +72,7 @@ class FieldSchemaData(DataclassBase):
     has_filter_subtable: bool | None = None
 
     inline_field_schema: FieldsSchemaData | None = None
+    table_view: bool | None = None
 
 
 @dataclass

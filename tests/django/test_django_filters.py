@@ -113,6 +113,15 @@ async def test_list_filter_reverse_relation_with_explicit_fields(language_contex
     assert list_result == schema.TableListResult(data=[{'id': example.id}], total_count=1)
 
 
+def test_reverse_relation_lookup_is_supported():
+    fields_schema = DjangoFieldsSchema(
+        model=DjangoExample,
+        fields=['another_examples__title'],
+    )
+
+    assert isinstance(fields_schema.get_field('another_examples__title'), schema.StringField)
+
+
 @pytest.mark.asyncio
 async def test_list_filter_related_lookup_terminal_foreign_key(language_context):
     category = DjangoAdmin(

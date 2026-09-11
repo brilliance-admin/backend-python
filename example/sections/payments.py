@@ -16,7 +16,7 @@ from example.config import settings
 from example.sections.filter_subtable_fake import FakeFilterSubtable
 from example.sections.logs import LOGS
 from example.sections.models import TerminalStatuses
-from example.sections.payments_data import FEE_TRANSFERS
+from example.sections.payments_data import CALLBACK_REQUESTS, FEE_TRANSFERS, PROVIDER_CALLBACKS
 
 logger = get_logger()
 
@@ -169,6 +169,40 @@ class FeeTransferFieldsSchema(schema.FieldsSchema):
     )
 
 
+class CallbackRequestFieldsSchema(schema.FieldsSchema):
+    url = schema.StringField(label='URL', read_only=True)
+    created_at = schema.DateTimeField(label='Created date', read_only=True)
+    callback_type = schema.StringField(label='Callback type', read_only=True)
+    status = schema.StringField(label='Status', read_only=True)
+    next_try_at = schema.DateTimeField(label='Next try date', read_only=True)
+    http_status = schema.IntegerField(label='Http status', read_only=True)
+    data = schema.JSONField(label='Data', read_only=True)
+
+    formset = schema.FormSet(
+        fields=[
+            'url',
+            schema.FormField('created_at', col_span=2),
+            schema.FormField('callback_type', col_span=2),
+            schema.FormField('status', col_span=2),
+            schema.FormField('next_try_at', col_span=2),
+            schema.FormField('http_status', col_span=2),
+            'data',
+        ],
+    )
+
+
+class ProviderCallbackFieldsSchema(schema.FieldsSchema):
+    created_at = schema.DateTimeField(label='Created date', read_only=True)
+    request_body = schema.JSONField(label='Request Body', read_only=True)
+
+    formset = schema.FormSet(
+        fields=[
+            schema.FormField('created_at', col_span=2),
+            schema.FormField('request_body', col_span=10),
+        ],
+    )
+
+
 class PaymentFieldsSchema(schema.FieldsSchema):
     list_display = [
         'id',
@@ -256,6 +290,8 @@ class PaymentFieldsSchema(schema.FieldsSchema):
             ),
             schema.FormSet(
                 title='Errors',
+                description='Errors container',
+                icon='mdi-alert-circle-outline',
                 header_bg_color='red-lighten-3',
                 fields=[
                     'errors',
@@ -265,6 +301,8 @@ class PaymentFieldsSchema(schema.FieldsSchema):
             ),
             'status_history',
             'fee_transfers',
+            'callback_requests',
+            'provider_callbacks',
             'disputes',
         ]
     )
@@ -294,7 +332,21 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     fee_transfers = schema.InlineField(
         label='Fee Transfers',
         many=True,
+        read_only=True,
+        table_view=True,
         table_schema=FeeTransferFieldsSchema(),
+    )
+    callback_requests = schema.InlineField(
+        label='Callback Requests',
+        many=True,
+        read_only=True,
+        table_schema=CallbackRequestFieldsSchema(),
+    )
+    provider_callbacks = schema.InlineField(
+        label='Provider Callbacks',
+        many=True,
+        read_only=True,
+        table_schema=ProviderCallbackFieldsSchema(),
     )
 
 
@@ -479,6 +531,8 @@ class PaymentsAdmin(schema.CategoryTable):
             'provider_errors': PROVIDER_ERRORS,
             'routing_errors': ROUTING_ERRORS,
             'fee_transfers': FEE_TRANSFERS,
+            'callback_requests': CALLBACK_REQUESTS,
+            'provider_callbacks': PROVIDER_CALLBACKS,
             'created_at': datetime.datetime(2025, 6, 16, 9, 45, 29) - datetime.timedelta(hours=pk, minutes=pk),
             'disputes': [
                 {

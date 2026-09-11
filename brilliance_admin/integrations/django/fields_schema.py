@@ -35,6 +35,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         for field in self.get_fields().values():
             if isinstance(field, DjangoInlineField):
                 field.remove_reverse_fk_field(self.model)
+                field.table_schema.validate_list_display()
 
     def generate_fields(self, kwargs) -> dict:
         generated_fields = super().generate_fields(kwargs)
@@ -128,6 +129,13 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                         field_slug=field_slug,
                     )
                 )
+
+    def get_list_display(self) -> list[str]:
+        return [
+            field_slug
+            for field_slug in super().get_list_display()
+            if not isinstance(self.get_field(field_slug), InlineField)
+        ]
 
     @staticmethod
     def like_to_regex(value: str) -> str:

@@ -1,3 +1,5 @@
+import datetime
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -105,6 +107,53 @@ async def test_multiple_choice_updates_and_defaults_to_all_selected():
 
     assert await field.deserialize_field(['published'], DeserializeAction.UPDATE, extra={}) == ['published']
     assert await field.deserialize_field(None, DeserializeAction.CREATE, extra={}) == ['draft', 'published']
+
+
+@pytest.mark.asyncio
+async def test_duration_serializes_and_deserializes_milliseconds():
+    field = schema.DurationField()
+    value = datetime.timedelta(days=1, hours=8, minutes=40, seconds=43, milliseconds=132)
+
+    serialized = await field.serialize(value, extra={})
+
+    assert serialized == '1d 8h 40m 43s 132ms'
+    assert await field.deserialize_field(serialized, DeserializeAction.UPDATE, extra={}) == value
+
+
+@pytest.mark.asyncio
+async def test_function_field_serializes_duration_result():
+    async def after_creation():
+        return datetime.timedelta(seconds=1)
+
+    field = schema.FunctionField(
+        fn=after_creation,
+        field=schema.DurationField(),
+    )
+
+    assert await field.serialize(None, extra={}) == '1s'
+
+
+@pytest.mark.asyncio
+async def test_schema_serializes_function_duration_for_api():
+    class DurationSchema(schema.FieldsSchema):
+        fields = ['after_creation']
+
+        @schema.function_field(type=schema.DurationField())
+        async def after_creation(self):
+            return datetime.timedelta(
+                days=1,
+                hours=8,
+                minutes=40,
+                seconds=43,
+                milliseconds=132,
+            )
+
+    result = await DurationSchema().serialize(
+        {'after_creation': None},
+        extra={},
+    )
+
+    assert result == {'after_creation': '1d 8h 40m 43s 132ms'}
 
 
 def test_email_field_validator_is_translated():

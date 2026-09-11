@@ -22,7 +22,7 @@ class DjangoAdminListMixin:
     filter_only: bool = False
 
     def get_list_field_slugs(self) -> list[str]:
-        return list(self.table_schema.list_display or self.table_schema.get_fields().keys())
+        return list(self.table_schema.get_list_display())
 
     def optimize_list_queryset(self, queryset):
         if not self.filter_only:

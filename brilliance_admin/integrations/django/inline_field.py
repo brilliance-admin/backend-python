@@ -96,8 +96,11 @@ class DjangoInlineField(InlineField):
             raise AttributeError(msg)
 
         excluded_fields = []
-        for field_slug in list(self.table_schema.get_fields().keys()):
-            model_field = self.table_schema.model._meta.get_field(field_slug)
+        for model_field in self.table_schema.model._meta.fields:
+            field_slug = model_field.name
+            if field_slug not in self.table_schema.get_fields():
+                continue
+
             related_model = getattr(model_field, 'related_model', None)
             if related_model is owner_model:
                 excluded_fields.append(field_slug)

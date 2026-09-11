@@ -334,8 +334,14 @@ def _parse_iso(value: str, time_zone: datetime.tzinfo = datetime.timezone.utc) -
     return dt
 
 
-_DURATION_RE = re.compile(
+_LEGACY_DURATION_RE = re.compile(
     r'^(?:(?P<days>-?\d+)\s+)?(?P<hours>\d+):(?P<minutes>\d{2})(?::(?P<seconds>\d{2})(?:\.(?P<microseconds>\d{1,6}))?)?$'
+)
+
+_DURATION_RE = re.compile(
+    r'^(?P<sign>-)?(?:(?P<days>\d+)d\s*)?(?:(?P<hours>\d+)h\s*)?'
+    r'(?:(?P<minutes>\d+)m(?!s)\s*)?(?:(?P<seconds>\d+)s\s*)?'
+    r'(?:(?P<milliseconds>\d+)ms)?$'
 )
 
 
@@ -352,31 +358,46 @@ def _format_timedelta(value: datetime.timedelta) -> str:
     hours, rem = divmod(rem, 60 * 60)
     minutes, seconds = divmod(rem, 60)
 
-    base = f'{hours}:{minutes:02}:{seconds:02}'
+    parts = []
     if days:
-        base = f'{days} {base}'
+        parts.append(f'{days}d')
+    if hours:
+        parts.append(f'{hours}h')
+    if minutes:
+        parts.append(f'{minutes}m')
+    if seconds or (not parts and not microseconds):
+        parts.append(f'{seconds}s')
     if microseconds:
-        base = f'{base}.{microseconds:06d}'.rstrip('0')
+        parts.append(f'{microseconds // 1_000}ms')
 
-    return f'{sign}{base}'
+    return f'{sign}{" ".join(parts)}'
 
 
 def _parse_duration(value: str) -> datetime.timedelta:
     match = _DURATION_RE.fullmatch(value.strip())
     if not match:
+        match = _LEGACY_DURATION_RE.fullmatch(value.strip())
+
+    if not match:
         raise ValueError(f'Invalid duration format: {value}')
 
     days = int(match.group('days') or 0)
-    hours = int(match.group('hours'))
-    minutes = int(match.group('minutes'))
+    hours = int(match.group('hours') or 0)
+    minutes = int(match.group('minutes') or 0)
     seconds = int(match.group('seconds') or 0)
-    microseconds_raw = match.group('microseconds')
+    microseconds_raw = match.groupdict().get('microseconds')
     microseconds = int(microseconds_raw.ljust(6, '0')) if microseconds_raw else 0
+    milliseconds_raw = match.groupdict().get('milliseconds')
+    if milliseconds_raw:
+        microseconds += int(milliseconds_raw) * 1_000
 
-    if minutes >= 60 or seconds >= 60:
+    if not any((days, hours, minutes, seconds, microseconds)) and value.strip() not in {'0s', '0ms', '0:00:00'}:
         raise ValueError(f'Invalid duration format: {value}')
 
-    sign = -1 if days < 0 else 1
+    if hours >= 24 or minutes >= 60 or seconds >= 60 or microseconds >= 1_000_000:
+        raise ValueError(f'Invalid duration format: {value}')
+
+    sign = -1 if match.groupdict().get('sign') or days < 0 else 1
     result = datetime.timedelta(
         days=abs(days),
         hours=hours,

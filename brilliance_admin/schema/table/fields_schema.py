@@ -257,11 +257,12 @@ class FieldsSchema:
 
                 field.read_only = True
 
-        # Fill list_display
-        if self.list_display is None:
-            self.list_display = self.fields
+        self.validate_list_display()
 
-        for field_slug in self.list_display:
+        self.validate_formset()
+
+    def validate_list_display(self):
+        for field_slug in self.get_list_display():
             if field_slug not in self.fields:
                 msg = LIST_DISPLAY_NOT_FUND.format(
                     field_slug=field_slug,
@@ -270,7 +271,10 @@ class FieldsSchema:
                 )
                 raise AttributeError(msg)
 
-        self.validate_formset()
+    def get_list_display(self) -> list[str]:
+        if self.list_display is None:
+            return self.fields
+        return self.list_display
 
     def validate_formset(self):
         if not self.formset:
@@ -376,7 +380,7 @@ class FieldsSchema:
         removed_fields = set()
         schema_list_display = [
             field_slug
-            for field_slug in self.list_display
+            for field_slug in self.get_list_display()
             if field_slug not in exclude_fields
         ]
         fields_schema_data = FieldsSchemaData(

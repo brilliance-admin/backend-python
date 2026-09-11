@@ -531,3 +531,127 @@ def test_exclude_fields_keeps_auto_generated_django_field_types(language_context
     assert inline_schema['fields']['status']['type'] == 'choice'
     assert inline_schema['fields']['created_at']['type'] == 'datetime'
     assert 'owner' not in inline_schema['list_display']
+
+
+def test_inline_reverse_fk_removal_keeps_auto_list_display_in_sync(language_context):
+    class Parent(models.Model):
+        class Meta:
+            app_label = 'sections'
+
+    class Row(models.Model):
+        payment = models.ForeignKey(Parent, models.CASCADE)
+        updated_time = models.DateTimeField()
+        updated_status = models.CharField(max_length=20)
+
+        class Meta:
+            app_label = 'sections'
+
+    class InlineWithoutListDisplayCleanup(DjangoInlineField):
+        def remove_reverse_fk_field(self, owner_model):
+            excluded_fields = [
+                field_slug
+                for field_slug in self.table_schema.get_fields()
+                if self.table_schema.model._meta.get_field(field_slug).related_model is owner_model
+            ]
+
+            for field_slug in excluded_fields:
+                self.table_schema.get_fields().pop(field_slug)
+
+            self.table_schema.fields = [
+                field_slug
+                for field_slug in self.table_schema.fields
+                if field_slug not in excluded_fields
+            ]
+
+    row_schema = DjangoFieldsSchema(
+        model=Row,
+        fields=['payment', 'updated_time', 'updated_status'],
+    )
+
+    DjangoFieldsSchema(
+        model=Parent,
+        fields=['rows'],
+        rows=InlineWithoutListDisplayCleanup(
+            many=True,
+            read_only=True,
+            table_view=True,
+            table_schema=row_schema,
+        ),
+    )
+
+    generated_schema = row_schema.generate_form_schema(
+        UserABC(username='test'),
+        language_context,
+    )
+
+    assert list(row_schema.get_fields()) == ['updated_time', 'updated_status']
+    assert row_schema.fields == ['updated_time', 'updated_status']
+    assert row_schema.list_display is None
+    assert generated_schema.list_display == ['updated_time', 'updated_status']
+
+
+def test_inline_reverse_fk_removal_does_not_revalidate_readonly_fields():
+    class ReadonlyParent(models.Model):
+        class Meta:
+            app_label = 'sections'
+
+    class ReadonlyRow(models.Model):
+        balance = models.ForeignKey(ReadonlyParent, models.CASCADE)
+        amount = models.IntegerField()
+
+        class Meta:
+            app_label = 'sections'
+
+    class RowSchema(DjangoFieldsSchema):
+        model = ReadonlyRow
+        fields = ['balance', 'amount']
+        readonly_fields = ['balance']
+
+    child_schema = RowSchema()
+
+    DjangoFieldsSchema(
+        model=ReadonlyParent,
+        fields=['rows'],
+        rows=DjangoInlineField(
+            many=True,
+            read_only=True,
+            table_schema=child_schema,
+        ),
+    )
+
+
+def test_inline_reverse_fk_removal_skips_function_fields():
+    class FunctionParent(models.Model):
+        class Meta:
+            app_label = 'sections'
+
+    class FunctionRow(models.Model):
+        parent = models.ForeignKey(FunctionParent, models.CASCADE)
+        created_at = models.DateTimeField()
+
+        class Meta:
+            app_label = 'sections'
+
+    class RowSchema(DjangoFieldsSchema):
+        model = FunctionRow
+        fields = ['parent', 'created_at', 'after_creation']
+
+        @schema.function_field(type=schema.DurationField())
+        async def after_creation(self, record, **_kwargs):
+            return record.created_at - record.created_at
+
+    child_schema = RowSchema()
+
+    DjangoFieldsSchema(
+        model=FunctionParent,
+        fields=['rows'],
+        rows=DjangoInlineField(
+            many=True,
+            read_only=True,
+            table_schema=child_schema,
+        ),
+    )
+
+    assert list(child_schema.get_fields()) == ['created_at', 'after_creation']
+    assert child_schema.fields == ['created_at', 'after_creation']
+    assert child_schema.get_list_display() == ['created_at', 'after_creation']

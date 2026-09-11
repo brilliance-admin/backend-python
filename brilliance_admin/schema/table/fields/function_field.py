@@ -89,7 +89,8 @@ class FunctionField(TableField):
 
     async def serialize(self, value, extra: dict, *args, **kwargs) -> Any:
         try:
-            return await self.fn(**extra)
+            result = await self.fn(**extra)
+            return await self.field.serialize(result, extra, *args, **kwargs)
         except Exception as e:
             logger.exception(
                 'Function field %s label=%s error from function="%s": %s',

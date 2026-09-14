@@ -97,9 +97,4 @@ class SQLAlchemyAdminCreate:
                 APIError(message=msg, code='db_error_create'), status_code=500,
             ) from e
 
-        logger.info(
-            '%s model %s #%s created by %s',
-            type(self).__name__, self.table_schema.model.__name__, pk_value, user.username,
-            extra={'data': data},
-        )
         return schema.CreateResult(pk=pk_value, choice=choice)

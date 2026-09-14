@@ -1,27 +1,69 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from typing import Any
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.schema.table.admin_action import ActionData
-from brilliance_admin.schema.table.table_action import TableAction
-
-
-@dataclass
-class HistoryChangeData:
-    action: TableAction
-    user: UserABC
-    group_slug: str
-    category_slug: str
-    subcategory_slug: str | None = None
-
-    pk: Any | None = None
-    data: dict | None = None
-    action_slug: str | None = None
-    action_data: ActionData | None = None
+from brilliance_admin.utils import get_logger
 
 
 class HistoryChangeProvider(ABC):
+    def __init__(self, category, *, group_slug: str, category_slug: str, subcategory: str | None):
+        self.category = category
+        self.group_slug = group_slug
+        self.category_slug = category_slug
+        self.subcategory = subcategory
+
     @abstractmethod
-    async def save_action(self, data: HistoryChangeData) -> None:
+    async def save_retrieve(self, *, user: UserABC, pk: Any, data: dict, **kwargs) -> None:
         raise NotImplementedError()
+
+    @abstractmethod
+    async def save_create(self, *, user: UserABC, pk: Any, data: dict, **kwargs) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def save_update(self, *, user: UserABC, pk: Any, data: dict, **kwargs) -> None:
+        raise NotImplementedError()
+
+    @abstractmethod
+    async def save_admin_action(
+            self,
+            *,
+            user: UserABC,
+            action_slug: str,
+            action_data: ActionData,
+            **kwargs,
+    ) -> None:
+        raise NotImplementedError()
+
+
+class HistoryChangeDefaultLogs(HistoryChangeProvider):
+    logger = get_logger()
+
+    async def save_retrieve(self, *, user, pk, data, **kwargs) -> None:
+        self.logger.debug(
+            '%s #%s retrieved by %s',
+            type(self.category).__name__, pk, user.username,
+            extra={'data': data},
+        )
+
+    async def save_create(self, *, user, pk, data, **kwargs) -> None:
+        self.logger.info(
+            '%s #%s created by %s',
+            type(self.category).__name__, pk, user.username,
+            extra={'data': data},
+        )
+
+    async def save_update(self, *, user, pk, data, **kwargs) -> None:
+        self.logger.info(
+            '%s #%s updated by %s',
+            type(self.category).__name__, pk, user.username,
+            extra={'data': data},
+        )
+
+    async def save_admin_action(self, *, user, action_slug, action_data, **kwargs) -> None:
+        self.logger.info(
+            '%s action %s run by %s',
+            type(self.category).__name__, action_slug, user.username,
+            extra={'action_data': action_data.model_dump()},
+        )

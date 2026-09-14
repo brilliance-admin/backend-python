@@ -94,10 +94,5 @@ class SQLAlchemyAdminRetrieveMixin:
             }
             raise AdminAPIException(APIError(message=msg, code='unexpected_error'), status_code=500) from e
 
-        logger.debug(
-            '%s model %s #%s retrieved by %s',
-            type(self).__name__, self.table_schema.model.__name__, pk, user.username,
-            extra={'data': data},
-        )
         tab_counts = await self.get_tabs_count(pk)
         return schema.RetrieveResult(data=data, tab_counts=tab_counts)

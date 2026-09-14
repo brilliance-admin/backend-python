@@ -110,6 +110,19 @@ async def table_retrieve(
             parent_category,
             parent_pk,
         )
+        history_change_provider = schema_category.history_change_provider
+        if history_change_provider is not None:
+            history = history_change_provider(
+                schema_category,
+                group_slug=group,
+                category_slug=category,
+                subcategory=subcategory,
+            )
+            await history.save_retrieve(
+                user=user,
+                pk=pk,
+                data=result.data,
+            )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -145,14 +158,28 @@ async def table_create(
     context = {'language_context': language_context}
 
     try:
+        data = await request.json()
         result: CreateResult = await schema_category.create(
-            await request.json(),
+            data,
             user,
             language_context,
             schema.debug,
             parent_category,
             parent_pk,
         )
+        history_change_provider = schema_category.history_change_provider
+        if history_change_provider is not None:
+            history = history_change_provider(
+                schema_category,
+                group_slug=group,
+                category_slug=category,
+                subcategory=subcategory,
+            )
+            await history.save_create(
+                user=user,
+                pk=result.pk,
+                data=data,
+            )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -189,15 +216,29 @@ async def table_update(
     context = {'language_context': language_context}
 
     try:
+        data = await request.json()
         result: UpdateResult = await schema_category.update(
             pk,
-            await request.json(),
+            data,
             user,
             language_context,
             schema.debug,
             parent_category,
             parent_pk,
         )
+        history_change_provider = schema_category.history_change_provider
+        if history_change_provider is not None:
+            history = history_change_provider(
+                schema_category,
+                group_slug=group,
+                category_slug=category,
+                subcategory=subcategory,
+            )
+            await history.save_update(
+                user=user,
+                pk=pk,
+                data=data,
+            )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -246,6 +287,19 @@ async def table_action(
             parent_category,
             parent_pk,
         )
+        history_change_provider = schema_category.history_change_provider
+        if history_change_provider is not None:
+            history = history_change_provider(
+                schema_category,
+                group_slug=group,
+                category_slug=category,
+                subcategory=subcategory,
+            )
+            await history.save_admin_action(
+                user=user,
+                action_slug=action,
+                action_data=action_data,
+            )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 

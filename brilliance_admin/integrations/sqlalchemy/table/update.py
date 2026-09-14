@@ -99,9 +99,4 @@ class SQLAlchemyAdminUpdate:
                 APIError(message=msg, code='db_error_update'), status_code=500,
             ) from e
 
-        logger.info(
-            '%s model %s #%s updated by %s',
-            type(self).__name__, self.table_schema.model.__name__, pk, user.username,
-            extra={'data': data},
-        )
         return schema.UpdateResult(pk=pk)

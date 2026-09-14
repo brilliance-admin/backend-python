@@ -3,10 +3,6 @@ from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.integrations.django.related_field import get_record_title
 from brilliance_admin.schema.table.table_models import Record
 from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.utils import get_logger
-
-
-logger = get_logger()
 
 
 class DjangoAdminCreate:
@@ -45,9 +41,4 @@ class DjangoAdminCreate:
             title=await get_record_title(record, self.raise_async_unsafe, debug=debug),
         )
 
-        logger.info(
-            '%s model %s #%s created by %s',
-            type(self).__name__, self.table_schema.model.__name__, pk_value, user.username,
-            extra={'data': data},
-        )
         return schema.CreateResult(pk=pk_value, choice=choice, debug_info=debug_info)

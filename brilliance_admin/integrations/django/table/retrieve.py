@@ -6,10 +6,6 @@ from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.utils import get_logger
-
-
-logger = get_logger()
 
 
 class DjangoAdminRetrieveMixin:
@@ -76,10 +72,5 @@ class DjangoAdminRetrieveMixin:
             },
         )
 
-        logger.debug(
-            '%s model %s #%s retrieved by %s',
-            type(self).__name__, self.table_schema.model.__name__, pk, user.username,
-            extra={'data': data},
-        )
         tab_counts = await self.get_tabs_count(pk)
         return schema.RetrieveResult(data=data, tab_counts=tab_counts, debug_info=debug_info)

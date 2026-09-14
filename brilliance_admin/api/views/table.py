@@ -63,9 +63,6 @@ async def table_list(
             schema.debug,
             parent_category,
             parent_pk,
-            schema.history_change_provider,
-            group,
-            subcategory,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
@@ -100,6 +97,14 @@ async def table_retrieve(
     if not schema_category.has_retrieve:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for retrive")
 
+    history_logs_provider = None
+    if schema.history_change_provider is not None:
+        history_logs_provider = schema.history_change_provider(
+            category=schema_category,
+            group_slug=group,
+            subcategory=subcategory,
+        )
+
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)
     context = {'language_context': language_context}
@@ -112,10 +117,9 @@ async def table_retrieve(
             schema.debug,
             parent_category,
             parent_pk,
-            schema.history_change_provider,
-            group,
-            subcategory,
         )
+        if history_logs_provider is not None:
+            await history_logs_provider.save_retrieve(user=user, pk=pk, data=result.data)
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -146,12 +150,23 @@ async def table_create(
     if not schema_category.has_create:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for create")
 
+    history_logs_provider = None
+    if schema.history_change_provider is not None:
+        history_logs_provider = schema.history_change_provider(
+            category=schema_category,
+            group_slug=group,
+            subcategory=subcategory,
+        )
+
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)
     context = {'language_context': language_context}
 
     try:
         data = await request.json()
+        history_data = data
+        if history_logs_provider is not None:
+            history_data = schema_category.apply_parent_data(data, parent_category, parent_pk)
         result: CreateResult = await schema_category.create(
             data,
             user,
@@ -159,10 +174,9 @@ async def table_create(
             schema.debug,
             parent_category,
             parent_pk,
-            schema.history_change_provider,
-            group,
-            subcategory,
         )
+        if history_logs_provider is not None:
+            await history_logs_provider.save_create(user=user, pk=result.pk, data=history_data)
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -194,12 +208,30 @@ async def table_update(
     if not schema_category.has_update:
         raise HTTPException(status_code=404, detail=f"Category {group}.{category} is not allowed for update")
 
+    history_logs_provider = None
+    if schema.history_change_provider is not None:
+        history_logs_provider = schema.history_change_provider(
+            category=schema_category,
+            group_slug=group,
+            subcategory=subcategory,
+        )
+
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)
     context = {'language_context': language_context}
 
     try:
         data = await request.json()
+        before = None
+        if history_logs_provider is not None:
+            before = await schema_category.retrieve(
+                pk,
+                user,
+                language_context,
+                schema.debug,
+                parent_category,
+                parent_pk,
+            )
         result: UpdateResult = await schema_category.update(
             pk,
             data,
@@ -208,10 +240,9 @@ async def table_update(
             schema.debug,
             parent_category,
             parent_pk,
-            schema.history_change_provider,
-            group,
-            subcategory,
         )
+        if history_logs_provider is not None:
+            await history_logs_provider.save_update(user=user, pk=pk, before=before.data, data=data)
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 
@@ -245,6 +276,14 @@ async def table_action(
     action_data.category_slug = category
     action_data.subcategory_slug = subcategory
 
+    history_logs_provider = None
+    if schema.history_change_provider is not None:
+        history_logs_provider = schema.history_change_provider(
+            category=schema_category,
+            group_slug=group,
+            subcategory=subcategory,
+        )
+
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)
     context = {'language_context': language_context}
@@ -259,10 +298,13 @@ async def table_action(
             schema.debug,
             parent_category,
             parent_pk,
-            history_change_provider=schema.history_change_provider,
-            group_slug=group,
-            subcategory=subcategory,
         )
+        if history_logs_provider is not None:
+            await history_logs_provider.save_admin_action(
+                user=user,
+                action_slug=action,
+                action_data=action_data,
+            )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
 

@@ -18,6 +18,7 @@ docker compose -f .configs/docker/docker-compose.yml run --rm backend uv run pyt
 
 ```shell
 docker compose -f .configs/docker/docker-compose.yml run --rm backend uv run ruff check .
+docker compose -f .configs/docker/docker-compose.yml run --rm backend uv run pylint brilliance_admin
 ```
 
 ## Dependencies

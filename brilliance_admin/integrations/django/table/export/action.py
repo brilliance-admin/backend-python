@@ -2,6 +2,7 @@ from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError, ValidationError
 from brilliance_admin.schema.table.admin_action import ActionData, ActionFileResult, ActionResult, admin_action
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger, humanize_field_name, validate_email
 
@@ -40,7 +41,7 @@ class DjangoPostgresExportAction:
     export_fields: list | None = None
 
     def get_export_queryset(self):
-        return self.get_queryset(action='django_export')
+        return self.get_queryset(action=TableAction.ADMIN_ACTION, action_slug='django_export')
 
     def get_actions(self):
         actions = super().get_actions()

@@ -3,6 +3,7 @@ from typing import Any
 from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.integrations.sqlalchemy.utils import extract_integrity_detail
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
@@ -40,7 +41,7 @@ class SQLAlchemyAdminUpdate:
         col = inspect(self.table_schema.model).mapper.columns[self.pk_name]
         python_type = col.type.python_type
 
-        stmt = self.get_queryset(action='update')
+        stmt = self.get_queryset(action=TableAction.UPDATE)
         stmt = self.apply_parent_filter(stmt, parent_category, parent_pk)
         stmt = stmt.where(getattr(self.model, self.pk_name) == python_type(pk))
 

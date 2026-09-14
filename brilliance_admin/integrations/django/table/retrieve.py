@@ -4,6 +4,7 @@ from django.test.utils import CaptureQueriesContext
 
 from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
 
@@ -46,7 +47,7 @@ class DjangoAdminRetrieveMixin:
         if not self.has_retrieve:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
-        queryset = self.get_queryset(action='retrieve').filter(**{self.pk_name: pk})
+        queryset = self.get_queryset(action=TableAction.RETRIEVE).filter(**{self.pk_name: pk})
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
         debug_info = None
         if debug:

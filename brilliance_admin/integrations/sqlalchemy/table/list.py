@@ -2,6 +2,7 @@ from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.integrations.sqlalchemy.fields_schema import SQLAlchemyFieldsSchema
 from brilliance_admin.integrations.sqlalchemy.utils import extract_integrity_detail
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
@@ -119,7 +120,7 @@ class SQLAlchemyAdminListMixin:
         has_filters = bool(list_data.filters or list_data.search)
 
         try:
-            stmt = self.get_queryset(action='list')
+            stmt = self.get_queryset(action=TableAction.LIST)
             stmt = self.apply_parent_filter(stmt, parent_category, parent_pk)
             stmt = await self.apply_filters(stmt, list_data)
             stmt = self.apply_search(stmt, list_data)

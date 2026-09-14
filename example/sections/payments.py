@@ -250,17 +250,17 @@ class PaymentFieldsSchema(schema.FieldsSchema):
         fields=[
             schema.FormSet(
                 fields=[
-                    'id',
-                    'remote_id',
-                    'test_mode',
-                    'amount',
-                    'new_amount',
-                    'endpoint',
-                    'currency',
-                    'buyer',
-                    'description',
+                    schema.FormField('id', col_span=6),
+                    schema.FormField('remote_id', col_span=6),
+                    schema.FormField('test_mode', col_span=6),
+                    schema.FormField('endpoint', col_span=6),
+                    schema.FormField('currency', col_span=6),
+                    schema.FormField('buyer', col_span=6),
+                    schema.FormField('amount', col_span=12),
+                    schema.FormField('new_amount', col_span=12),
+                    schema.FormField('description', col_span=12),
                 ],
-                col_span=7,
+                col_span=6,
             ),
             schema.FormSet(
                 fields=[
@@ -270,7 +270,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
                     'get_provider_registry',
                     'get_provider_registry_info',
                 ],
-                col_span=5,
+                col_span=6,
             ),
             schema.FormSet(
                 fields=[

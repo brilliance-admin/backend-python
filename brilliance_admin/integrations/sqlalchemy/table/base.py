@@ -6,6 +6,7 @@ from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.schema.table.count_providers import CountProvider
 from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_models import AutocompleteData
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import TranslateText as _
 
 EXCEPTION_REL_NAME = '''
@@ -160,7 +161,7 @@ class SQLAlchemyAdminBase(CategoryTable):
                         f'{type(self).__name__}: ordering field "{field}" not found in model {self.model.__name__}'
                     )
 
-    def get_queryset(self, *, action: str):
+    def get_queryset(self, *, action: TableAction, action_slug: str | None = None):
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import select
         from sqlalchemy.orm import selectinload

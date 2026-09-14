@@ -4,6 +4,7 @@ from brilliance_admin.exceptions import FieldError
 from brilliance_admin.schema.chart import ChartData
 from brilliance_admin.schema.table.filter_subtable import FilterSubtable
 from brilliance_admin.schema.table.table_models import FilterSubtableData, FilterSubtableUnitSize, ListData
+from brilliance_admin.schema.table.table_action import TableAction
 
 
 class PostgreSQLFilterSubtable(FilterSubtable):
@@ -12,7 +13,7 @@ class PostgreSQLFilterSubtable(FilterSubtable):
 
     async def get_queryset(self, subtable_data: FilterSubtableData, *, view):
         list_data = ListData(filters=subtable_data.filters, search=subtable_data.search)
-        queryset = view.get_queryset(action='list')
+        queryset = view.get_queryset(action=TableAction.LIST)
         queryset = await view.apply_filters(queryset, list_data)
         return view.apply_search(queryset, list_data).order_by(None)
 

@@ -9,6 +9,7 @@ from brilliance_admin import schema
 from brilliance_admin.exceptions import FieldError
 from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
 from brilliance_admin.schema.table.fields.base import RelatedField
+from brilliance_admin.schema.table.table_action import TableAction
 
 ORDERING_NOT_ALLOWED = (
     'Ordering "{ordering}" is not allowed;'
@@ -168,7 +169,7 @@ class DjangoAdminListMixin:
         parent_category=None,
         parent_pk=None,
     ):
-        queryset = self.get_queryset(action='list')
+        queryset = self.get_queryset(action=TableAction.LIST)
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
         queryset = await self.apply_filters(queryset, list_data)
         queryset = self.apply_search(queryset, list_data)

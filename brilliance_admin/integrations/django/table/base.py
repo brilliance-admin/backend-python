@@ -9,13 +9,14 @@ from brilliance_admin.schema.table.fields.base import RelatedField
 from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_models import AutocompleteData
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.utils import get_logger, humanize_field_name
 
 logger = get_logger()
 
 
 def warn_if_list_related_fields_not_selected(category):
-    queryset = category.get_queryset(action='list')
+    queryset = category.get_queryset(action=TableAction.LIST)
     select_related = queryset.query.select_related
     if select_related is True:
         return
@@ -283,7 +284,7 @@ class DjangoAdminBase(CategoryTable):
 
         return extra
 
-    def get_queryset(self, *, action: str):
+    def get_queryset(self, *, action: TableAction, action_slug: str | None = None):
         return self.model.objects.all()
 
     def run_debug_startup_checks(self):

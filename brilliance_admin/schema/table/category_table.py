@@ -13,6 +13,7 @@ from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields.base import InlineField
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.schema.table.schema_type import SchemaType
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.schema.table.table_models import (
     AutocompleteData, AutocompleteResult, FilterSubtableData, FilterSubtableResult, ListData, TableListResult)
 from brilliance_admin.translations import LanguageContext
@@ -115,7 +116,7 @@ class CategoryTable(BaseCategory):
             if count_provider is None:
                 continue
 
-            query = category.get_queryset(action='list')
+            query = category.get_queryset(action=TableAction.LIST)
             query = category.apply_parent_filter(
                 query,
                 parent_category=self,

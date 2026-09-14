@@ -3,6 +3,7 @@ from typing import Any
 from brilliance_admin import auth, schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError
 from brilliance_admin.integrations.sqlalchemy.fields_schema import SQLAlchemyFieldsSchema
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger
@@ -34,7 +35,7 @@ class SQLAlchemyAdminRetrieveMixin:
         python_type = col.type.python_type
 
         assert self.pk_name
-        stmt = self.get_queryset(action='retrieve')
+        stmt = self.get_queryset(action=TableAction.RETRIEVE)
         stmt = self.apply_parent_filter(stmt, parent_category, parent_pk)
         stmt = stmt.where(getattr(self.model, self.pk_name) == python_type(pk))
 

@@ -18,6 +18,7 @@ from pydantic.dataclasses import dataclass
 from brilliance_admin.auth import UserABC
 from brilliance_admin.docs import build_redoc_docs, build_scalar_docs
 from brilliance_admin.schema.category import BaseCategory, TableOptions
+from brilliance_admin.schema.table.history_change_provider import HistoryChangeDefaultLogs, HistoryLogsProvider
 from brilliance_admin.translations import LanguageContext, LanguageManager
 from brilliance_admin.utils import DataclassBase, SupportsStr, get_logger
 
@@ -82,6 +83,7 @@ class AdminIndexContextData(DataclassBase):
 class AdminSchema:
     categories: List[BaseCategory]
     auth: Any
+    history_change_provider: type[HistoryLogsProvider] | None = HistoryChangeDefaultLogs
 
     api_timeout_ms: int = 1000 * 5
     debug_traceback_limit: int = 7

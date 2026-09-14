@@ -16,7 +16,7 @@ class SQLAlchemyAdminRetrieveMixin:
 
     table_schema: SQLAlchemyFieldsSchema
 
-    async def retrieve(
+    async def _retrieve(
             self,
             pk: Any,
             user: auth.UserABC,
@@ -96,3 +96,21 @@ class SQLAlchemyAdminRetrieveMixin:
 
         tab_counts = await self.get_tabs_count(pk)
         return schema.RetrieveResult(data=data, tab_counts=tab_counts)
+
+    async def retrieve(
+            self,
+            pk: Any,
+            user: auth.UserABC,
+            language_context: LanguageContext,
+            debug: bool,
+            parent_category=None,
+            parent_pk=None,
+    ) -> schema.RetrieveResult:
+        return await self._retrieve(
+            pk,
+            user,
+            language_context,
+            debug,
+            parent_category,
+            parent_pk,
+        )

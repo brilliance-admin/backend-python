@@ -31,7 +31,7 @@ class DjangoAdminRetrieveMixin:
             record = queryset.first()
         return record, DjangoAdminRetrieveMixin.get_debug_info_from_context(ctx)
 
-    async def retrieve(
+    async def _retrieve(
         self,
         pk,
         user,
@@ -74,3 +74,21 @@ class DjangoAdminRetrieveMixin:
 
         tab_counts = await self.get_tabs_count(pk)
         return schema.RetrieveResult(data=data, tab_counts=tab_counts, debug_info=debug_info)
+
+    async def retrieve(
+            self,
+            pk,
+            user,
+            language_context,
+            debug: bool,
+            parent_category=None,
+            parent_pk=None,
+    ) -> schema.RetrieveResult:
+        return await self._retrieve(
+            pk,
+            user,
+            language_context,
+            debug,
+            parent_category,
+            parent_pk,
+        )

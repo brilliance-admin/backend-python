@@ -73,6 +73,10 @@ class DjangoAdminBase(CategoryTable):
         if model is not None:
             self.model = model
 
+        if isinstance(self.model, str):
+            from django.apps import apps
+            self.model = apps.get_model(self.model)
+
         if raise_async_unsafe is not None:
             self.raise_async_unsafe = raise_async_unsafe
 

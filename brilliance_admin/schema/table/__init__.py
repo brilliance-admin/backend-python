@@ -6,7 +6,7 @@ from .count_providers import CountProvider, CountResult
 from .filter_subtable import FilterSubtable
 from .fields import *
 from .fields_schema import FieldsSchema, FormField, FormSet
-from .history_change_provider import HistoryChangeDefaultLogs, HistoryChangeProvider
+from .history_change_provider import HistoryChangeDefaultLogs, HistoryLogsProvider
 from .table_action import TableAction
 from .table_models import (
     AutocompleteData, AutocompleteResult, CreateResult, DebugInfo, DebugQuery, FilterSubtableData,

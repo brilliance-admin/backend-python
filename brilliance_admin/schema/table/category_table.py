@@ -12,9 +12,6 @@ from brilliance_admin.schema.category import BaseCategory, TableInfoSchemaData, 
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.fields.base import InlineField
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
-from brilliance_admin.schema.table.history_change_provider import (
-    HistoryChangeDefaultLogs, HistoryChangeProvider,
-)
 from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.schema.table.table_models import (
@@ -44,7 +41,6 @@ class CategoryTable(BaseCategory):
     default_ordering: str | None = None
 
     pk_name: str | None = None
-    history_change_provider: type[HistoryChangeProvider] | None = HistoryChangeDefaultLogs
 
     def __init__(self, *args, table_schema=None, table_filters=None, subcategories=None, **kwargs):
         super().__init__(*args, **kwargs)

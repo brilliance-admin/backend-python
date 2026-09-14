@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 
 from brilliance_admin.api.utils import get_category, get_user
 from brilliance_admin.exceptions import AdminAPIException, APIError
-from brilliance_admin.schema import AdminSchema
+from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.schema.table.table_models import (

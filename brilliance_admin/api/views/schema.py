@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 
 from brilliance_admin.auth import AdminAuthentication
 from brilliance_admin.exceptions import AdminAPIException, APIError
-from brilliance_admin.schema import AdminSchema, AdminSchemaData
+from brilliance_admin.schema.admin_schema import AdminSchema, AdminSchemaData
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
 

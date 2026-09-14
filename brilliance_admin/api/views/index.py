@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from jinja2 import Environment, PackageLoader, select_autoescape
 
-from brilliance_admin.schema import AdminSchema
+from brilliance_admin.schema.admin_schema import AdminSchema
 
 router = APIRouter()
 

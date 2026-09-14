@@ -1,11 +1,11 @@
 from asgiref.sync import sync_to_async
 
-from brilliance_admin.schema.table.history_change_provider import HistoryLogsProvider
+from brilliance_admin.schema.table.history_change_provider import HistoryChangeDefaultLogs
 
 
-class DjangoLogsProvider(HistoryLogsProvider):
+class DjangoLogsProvider(HistoryChangeDefaultLogs):
     def get_category_path(self) -> str:
-        return '/'.join(filter(None, [self.group_slug, self.category_slug, self.subcategory]))
+        return '/'.join(filter(None, [self.group_slug, self.category.slug, self.subcategory]))
 
     async def get_content_type(self):
         from django.contrib.contenttypes.models import ContentType
@@ -19,16 +19,19 @@ class DjangoLogsProvider(HistoryLogsProvider):
         return await sync_to_async(ContentType.objects.get_for_model, thread_sensitive=True)(model)
 
     async def save_retrieve(self, *, user, pk, data, **kwargs) -> None:
+        await super().save_retrieve(user=user, pk=pk, data=data, **kwargs)
         from .models import LogType
 
         await self.save_record_change(LogType.RETRIEVE, user=user, pk=pk, data=data)
 
     async def save_create(self, *, user, pk, data, **kwargs) -> None:
+        await super().save_create(user=user, pk=pk, data=data, **kwargs)
         from .models import LogType
 
         await self.save_record_change(LogType.CREATE, user=user, pk=pk, data=data)
 
     async def save_update(self, *, user, pk, before, data, **kwargs) -> None:
+        await super().save_update(user=user, pk=pk, before=before, data=data, **kwargs)
         from .models import LogType
 
         await self.save_record_change(
@@ -51,6 +54,12 @@ class DjangoLogsProvider(HistoryLogsProvider):
         )
 
     async def save_admin_action(self, *, user, action_slug, action_data, **kwargs) -> None:
+        await super().save_admin_action(
+            user=user,
+            action_slug=action_slug,
+            action_data=action_data,
+            **kwargs,
+        )
         from .models import HistoryChange, LogType
 
         await HistoryChange.objects.acreate(

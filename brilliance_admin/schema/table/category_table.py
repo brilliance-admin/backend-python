@@ -231,6 +231,9 @@ class CategoryTable(BaseCategory):
             debug: bool,
             parent_category: BaseCategory | None = None,
             parent_pk: Any | None = None,
+            history_change_provider=None,
+            group_slug: str | None = None,
+            subcategory: str | None = None,
     ) -> ActionResult:
         action_fn = self.get_actions().get(action)
 
@@ -251,6 +254,17 @@ class CategoryTable(BaseCategory):
             result: ActionResult | None = await action_fn(action_data=action_data, user=user)
             if result is None:
                 result = ActionResult()
+
+            if history_change_provider is not None:
+                await history_change_provider(
+                    category=self,
+                    group_slug=group_slug,
+                    subcategory=subcategory,
+                ).save_admin_action(
+                    user=user,
+                    action_slug=action,
+                    action_data=action_data,
+                )
 
         except ValidationError as e:
             raise AdminAPIException(

@@ -63,6 +63,9 @@ async def table_list(
             schema.debug,
             parent_category,
             parent_pk,
+            schema.history_change_provider,
+            group,
+            subcategory,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
@@ -109,6 +112,9 @@ async def table_retrieve(
             schema.debug,
             parent_category,
             parent_pk,
+            schema.history_change_provider,
+            group,
+            subcategory,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
@@ -153,6 +159,9 @@ async def table_create(
             schema.debug,
             parent_category,
             parent_pk,
+            schema.history_change_provider,
+            group,
+            subcategory,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
@@ -199,6 +208,9 @@ async def table_update(
             schema.debug,
             parent_category,
             parent_pk,
+            schema.history_change_provider,
+            group,
+            subcategory,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
@@ -247,6 +259,9 @@ async def table_action(
             schema.debug,
             parent_category,
             parent_pk,
+            history_change_provider=schema.history_change_provider,
+            group_slug=group,
+            subcategory=subcategory,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)

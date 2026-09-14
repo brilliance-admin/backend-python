@@ -25,6 +25,9 @@ class DjangoAdminCreate:
         debug: bool,
         parent_category=None,
         parent_pk=None,
+        history_change_provider=None,
+        group_slug: str | None = None,
+        subcategory: str | None = None,
     ) -> schema.CreateResult:
         if not self.has_create:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -41,4 +44,11 @@ class DjangoAdminCreate:
             title=await get_record_title(record, self.raise_async_unsafe, debug=debug),
         )
 
-        return schema.CreateResult(pk=pk_value, choice=choice, debug_info=debug_info)
+        result = schema.CreateResult(pk=pk_value, choice=choice, debug_info=debug_info)
+        if history_change_provider is not None:
+            await history_change_provider(
+                category=self,
+                group_slug=group_slug,
+                subcategory=subcategory,
+            ).save_create(user=user, pk=pk_value, data=data)
+        return result

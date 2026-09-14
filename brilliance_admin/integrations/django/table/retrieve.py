@@ -83,8 +83,11 @@ class DjangoAdminRetrieveMixin:
             debug: bool,
             parent_category=None,
             parent_pk=None,
+            history_change_provider=None,
+            group_slug: str | None = None,
+            subcategory: str | None = None,
     ) -> schema.RetrieveResult:
-        return await self._retrieve(
+        result = await self._retrieve(
             pk,
             user,
             language_context,
@@ -92,3 +95,10 @@ class DjangoAdminRetrieveMixin:
             parent_category,
             parent_pk,
         )
+        if history_change_provider is not None:
+            await history_change_provider(
+                category=self,
+                group_slug=group_slug,
+                subcategory=subcategory,
+            ).save_retrieve(user=user, pk=pk, data=result.data)
+        return result

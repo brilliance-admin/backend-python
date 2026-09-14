@@ -11,6 +11,14 @@ export:
   email_required_for_async: 'Укажите email, чтобы получить выгрузку.'
   successfully_async_message: 'Выгрузка будет отправлена на %(email)s.'
 
+history:
+  title: 'История изменений'
+  log_type:
+    retrieve: 'Просмотр'
+    create: 'Создание'
+    update: 'Обновление'
+    admin_action: 'Действие администратора'
+
 errors:
   pk_not_found: 'Поле "%(pk_name)s" не найдено среди переданных данных.'
   record_not_found: 'Запись по ключу %(pk_name)s=%(pk)s не найдена.'

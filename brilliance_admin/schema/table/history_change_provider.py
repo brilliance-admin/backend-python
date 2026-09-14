@@ -7,10 +7,9 @@ from brilliance_admin.utils import get_logger
 
 
 class HistoryLogsProvider(ABC):
-    def __init__(self, category, *, group_slug: str, category_slug: str, subcategory: str | None):
+    def __init__(self, category, *, group_slug: str, subcategory: str | None):
         self.category = category
         self.group_slug = group_slug
-        self.category_slug = category_slug
         self.subcategory = subcategory
 
     @staticmethod

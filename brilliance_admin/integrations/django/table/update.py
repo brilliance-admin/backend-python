@@ -15,6 +15,9 @@ class DjangoAdminUpdate:
         debug: bool,
         parent_category=None,
         parent_pk=None,
+        history_change_provider=None,
+        group_slug: str | None = None,
+        subcategory: str | None = None,
     ) -> schema.UpdateResult:
         if not self.has_update:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -23,6 +26,22 @@ class DjangoAdminUpdate:
             raise AdminAPIException(
                 APIError(message=_('errors.pk_not_found') % {'pk_name': self.pk_name}, code='pk_not_found'),
                 status_code=400,
+            )
+
+        history_logs_provider = None if history_change_provider is None else history_change_provider(
+            category=self,
+            group_slug=group_slug,
+            subcategory=subcategory,
+        )
+        before = None
+        if history_logs_provider is not None:
+            before = await self._retrieve(
+                pk,
+                user,
+                language_context,
+                debug,
+                parent_category,
+                parent_pk,
             )
 
         queryset = self.model.objects.filter(**{self.pk_name: pk})
@@ -43,4 +62,12 @@ class DjangoAdminUpdate:
         else:
             await self.table_schema.update(record, user, data)
 
-        return schema.UpdateResult(pk=pk, debug_info=debug_info)
+        result = schema.UpdateResult(pk=pk, debug_info=debug_info)
+        if history_logs_provider is not None:
+            await history_logs_provider.save_update(
+                user=user,
+                pk=pk,
+                before=before.data,
+                data=data,
+            )
+        return result

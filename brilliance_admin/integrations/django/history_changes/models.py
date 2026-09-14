@@ -54,7 +54,16 @@ class HistoryChange(models.Model):
     class Meta:
         ordering = ['-action_time']
         indexes = [
-            models.Index(fields=['category_path', 'action_time']),
-            models.Index(fields=['content_type', 'object_id']),
-            models.Index(fields=['log_type', 'action_time']),
+            models.Index(
+                fields=['category_path', 'action_time'],
+                name='brilliance__categor_ee5c66_idx',
+            ),
+            models.Index(
+                fields=['content_type', 'object_id'],
+                name='brilliance__content_a53302_idx',
+            ),
+            models.Index(
+                fields=['log_type', 'action_time'],
+                name='brilliance__log_typ_04fd19_idx',
+            ),
         ]

@@ -24,6 +24,9 @@ class SQLAlchemyAdminRetrieveMixin:
             debug: bool,
             parent_category=None,
             parent_pk=None,
+            history_change_provider=None,
+            group_slug: str | None = None,
+            subcategory: str | None = None,
     ) -> schema.RetrieveResult:
         if not self.has_retrieve:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -106,7 +109,7 @@ class SQLAlchemyAdminRetrieveMixin:
             parent_category=None,
             parent_pk=None,
     ) -> schema.RetrieveResult:
-        return await self._retrieve(
+        result = await self._retrieve(
             pk,
             user,
             language_context,
@@ -114,3 +117,10 @@ class SQLAlchemyAdminRetrieveMixin:
             parent_category,
             parent_pk,
         )
+        if history_change_provider is not None:
+            await history_change_provider(
+                category=self,
+                group_slug=group_slug,
+                subcategory=subcategory,
+            ).save_retrieve(user=user, pk=pk, data=result.data)
+        return result

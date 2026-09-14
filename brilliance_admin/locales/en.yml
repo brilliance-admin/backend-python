@@ -11,6 +11,14 @@ export:
   email_required_for_async: 'Enter an email to receive the export.'
   successfully_async_message: 'The export will be sent to %(email)s.'
 
+history:
+  title: 'History logs'
+  log_type:
+    retrieve: 'Viewed'
+    create: 'Created'
+    update: 'Updated'
+    admin_action: 'Admin action'
+
 errors:
   pk_not_found: 'The "%(pk_name)s" field was not found in the submitted data.'
   record_not_found: 'No record found for %(pk_name)s=%(pk)s.'

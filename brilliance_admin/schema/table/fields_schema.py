@@ -3,6 +3,7 @@ import json
 from copy import deepcopy
 from typing import Any, ClassVar, Dict, List
 
+import pydantic
 from pydantic import Field
 from pydantic.dataclasses import dataclass
 from pydantic_core import core_schema
@@ -48,16 +49,66 @@ class DeserializeError(Exception):
 
 
 @dataclass
+class AJVRule(DataclassBase):
+    type: Any = None
+    const: Any = None
+    enum: Any = None
+    properties: Any = None
+    required: Any = None
+    all_of: Any = None
+    any_of: Any = None
+    one_of: Any = None
+    not_: Any = None
+    if_: Any = None
+    then: Any = None
+    else_: Any = None
+    minimum: Any = None
+    maximum: Any = None
+    min_length: Any = None
+    pattern: Any = None
+    contains: Any = None
+    min_items: Any = None
+    ref: Any = None
+
+    @pydantic.model_serializer(mode='plain')
+    def serialize_model(self):
+        fields = {
+            'type': self.type,
+            'const': self.const,
+            'enum': self.enum,
+            'properties': self.properties,
+            'required': self.required,
+            'allOf': self.all_of,
+            'anyOf': self.any_of,
+            'oneOf': self.one_of,
+            'not': self.not_,
+            'if': self.if_,
+            'then': self.then,
+            'else': self.else_,
+            'minimum': self.minimum,
+            'maximum': self.maximum,
+            'minLength': self.min_length,
+            'pattern': self.pattern,
+            'contains': self.contains,
+            'minItems': self.min_items,
+            '$ref': self.ref,
+        }
+        return {key: value for key, value in fields.items() if value is not None}
+
+
+@dataclass
 class FormField(DataclassBase):
     title: SupportsStr | None = None
     col_span: int | None = None
+    rule: AJVRule | None = None
 
-    def __init__(self, *args, title=None, col_span=None, **kwargs):
+    def __init__(self, *args, title=None, col_span=None, rule=None, **kwargs):
         if args:
             title = args[0]
 
         self.title = title
         self.col_span = col_span
+        self.rule = rule
 
 
 @dataclass

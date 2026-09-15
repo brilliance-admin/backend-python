@@ -22,7 +22,6 @@ class DjangoLogsFieldsSchema(DjangoFieldsSchema):
 
     extra_kwargs = {
         **HISTORY_LOGS_EXTRA_KWARGS,
-        'content_type': {'label': _('history.fields.content_type')},
         'object_id': {'label': _('history.fields.object_id')},
     }
     formset = FormSet(
@@ -32,7 +31,6 @@ class DjangoLogsFieldsSchema(DjangoFieldsSchema):
             FormField('user', col_span=3),
             FormField('log_type', col_span=3),
             FormField('category_path', col_span=6),
-            FormField('content_type', col_span=3),
             FormField('object_id', col_span=3),
             FormField('action_slug', col_span=12),
             FormField('data', col_span=12),
@@ -51,13 +49,11 @@ class DjangoLogsFiltersSchema(DjangoLogsFieldsSchema):
 
     fields = [
         *HISTORY_LOGS_FILTER_FIELDS,
-        'content_type',
         'object_id',
         'log_type',
     ]
     extra_kwargs = {
         **HISTORY_LOGS_FILTER_EXTRA_KWARGS,
-        'content_type': {'label': _('history.fields.content_type')},
         'object_id': {'label': _('history.fields.object_id')},
     }
 

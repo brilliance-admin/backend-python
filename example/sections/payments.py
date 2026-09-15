@@ -7,7 +7,7 @@ from typing import Any
 from faker import Faker
 
 from brilliance_admin import auth, schema
-from brilliance_admin.exceptions import FieldError
+from brilliance_admin.exceptions import FieldError, ValidationError
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult, admin_action
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
@@ -353,6 +353,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
 class CreatePaymentSchema(schema.FieldsSchema):
     amount = schema.IntegerField(label=_('amount'))
     is_throw_error = schema.BooleanField(label=_('is_throw_error'))
+    error_message = schema.StringField(label=_('error_message'))
     addtional_fields = schema.MultipleChoiceField(
         label=_('addtional_fields'),
         default_all_selected=True,
@@ -366,10 +367,29 @@ class CreatePaymentSchema(schema.FieldsSchema):
         ],
     )
 
-    async def validate_is_throw_error(self, value):
-        if value:
-            raise FieldError(_('throw_error'))
-        return value
+    formset = schema.FormSet(
+        fields=[
+            'amount',
+            'is_throw_error',
+            schema.FormField(
+                'error_message',
+                rule=schema.AJVRule(
+                    type='object',
+                    properties={'is_throw_error': {'const': True}},
+                    required=['is_throw_error'],
+                ),
+            ),
+            'addtional_fields',
+        ],
+    )
+
+    async def deserialize_fields(self, *args, **kwargs):
+        data = await super().deserialize_fields(*args, **kwargs)
+        if data['is_throw_error']:
+            raise ValidationError(data={
+                'error_message': FieldError(data['error_message'] or _('throw_error')),
+            })
+        return data
 
 
 class LogsAdmin(schema.CategoryTable):
@@ -608,6 +628,7 @@ class PaymentsAdmin(schema.CategoryTable):
         debug: bool,
         parent_category=None,
         parent_pk=None,
+        history_change_provider=None,
     ) -> schema.RetrieveResult:
         line_data = self._get_data(int(pk))
         line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})

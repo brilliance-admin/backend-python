@@ -17,11 +17,6 @@ from brilliance_admin.integrations.django.related_field import DjangoRelatedFiel
 from brilliance_admin.utils import DeserializeAction
 from brilliance_admin.utils import humanize_field_name
 
-INLINE_FIELD_NOT_SUPPORTED = (
-    '{class_name}: field "{field_slug}" is InlineField, but DjangoFieldsSchema supports only DjangoInlineField'
-)
-
-
 class DjangoFieldsSchema(schema.FieldsSchema):
     model = None
     _has_explicit_fields = False
@@ -125,15 +120,6 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 for slug in self.list_display
                 if not isinstance(self.get_field(slug), InlineField)
             ]
-
-        for field_slug, field in self.get_fields().items():
-            if isinstance(field, InlineField) and not isinstance(field, DjangoInlineField):
-                raise AttributeError(
-                    INLINE_FIELD_NOT_SUPPORTED.format(
-                        class_name=type(self).__name__,
-                        field_slug=field_slug,
-                    )
-                )
 
     def get_list_display(self) -> list[str]:
         return [

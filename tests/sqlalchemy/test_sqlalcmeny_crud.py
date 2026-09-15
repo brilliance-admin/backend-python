@@ -10,9 +10,10 @@ from brilliance_admin.schema.table.admin_action import ActionData
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction
 from example.sections.models import (
-    City, CountryFactory, Currency, CurrencyFactory, Fee, FeeAccrualType, FeeFactory, FeeFixType,
+    City, CityFactory, CountryFactory, Currency, CurrencyFactory, Fee, FeeAccrualType, FeeFactory, FeeFixType,
     FeeOperationType, FeeSourceType, FeeTypeFactory, Merchant, MerchantFactory, Terminal, TerminalFactory,
     TerminalStatuses)
+from example.sections.users import UserAdmin
 from tests.sqlalchemy.test_sqlalcmeny_schema import FIELDS
 
 
@@ -999,6 +1000,32 @@ async def test_autocomplete(postgres_sessionmaker, language_context):
         debug=True,
     )
     assert autocomplete_result == schema.AutocompleteResult(records=[], current_count=0, total_count='0')
+
+
+@pytest.mark.asyncio
+async def test_city_autocomplete_casts_country_key(postgres_sessionmaker, language_context):
+    country = await CountryFactory(name='Brazil', code='BR')
+    city = await CityFactory(name='Brasilia', country_id=country.id)
+    category = UserAdmin(db_async_session=postgres_sessionmaker)
+
+    result = await category.autocomplete(
+        data=schema.AutocompleteData(
+            field_slug='city_id',
+            is_filter=True,
+            form_data={
+                'country_id': {
+                    'key': str(country.id),
+                    'title': country.name,
+                },
+            },
+            limit=30,
+        ),
+        user=auth.UserABC(username='test'),
+        language_context=language_context,
+        debug=True,
+    )
+
+    assert [record.key for record in result.records] == [city.id]
 
 
 @pytest.mark.asyncio

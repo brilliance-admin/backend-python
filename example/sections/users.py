@@ -16,6 +16,8 @@ async def cities_filter(stmt, data: AutocompleteData, user: UserABC):
     if not country_id:
         return stmt.where(False)
 
+    country_id = City.__table__.c.country_id.type.python_type(country_id)
+
     return stmt.options(selectinload(City.country)).where(City.country_id == country_id)
 
 

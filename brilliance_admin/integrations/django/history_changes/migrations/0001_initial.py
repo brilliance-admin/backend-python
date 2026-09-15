@@ -8,7 +8,6 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('contenttypes', '0002_remove_content_type_name'),
     ]
 
     operations = [
@@ -22,15 +21,6 @@ class Migration(migrations.Migration):
                 ('action_slug', models.CharField(blank=True, max_length=100)),
                 ('category_path', models.CharField(max_length=255)),
                 ('data', models.JSONField(default=dict)),
-                (
-                    'content_type',
-                    models.ForeignKey(
-                        blank=True,
-                        null=True,
-                        on_delete=django.db.models.deletion.SET_NULL,
-                        to='contenttypes.contenttype',
-                    ),
-                ),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={'ordering': ['-action_time']},
@@ -38,10 +28,6 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name='historychange',
             index=models.Index(fields=['category_path', 'action_time'], name='brilliance__categor_ee5c66_idx'),
-        ),
-        migrations.AddIndex(
-            model_name='historychange',
-            index=models.Index(fields=['content_type', 'object_id'], name='brilliance__content_a53302_idx'),
         ),
         migrations.AddIndex(
             model_name='historychange',

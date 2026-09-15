@@ -91,6 +91,7 @@ class HistoryChangeDataField(InlineField):
         return result
 
 
+@dataclass
 class HistoryCategoryField(RelatedField):
     choices: list[dict] = field(default_factory=list)
 
@@ -153,10 +154,10 @@ class HistoryLogsAdmin(CategoryTable):
     icon = 'mdi-history'
 
     list_display = [
+        'id',
         'category_path',
         'action_time',
         'user',
-        'content_type',
         'object_id',
         'log_type',
         'action_slug',

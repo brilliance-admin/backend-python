@@ -9,6 +9,7 @@ from structlog.dev import RichTracebackFormatter
 
 from brilliance_admin import schema
 from brilliance_admin.integrations import sqlalchemy
+from brilliance_admin.integrations.sqlalchemy.history_changes import SQLAlchemyLogsAdmin, SQLAlchemyLogsProvider
 from brilliance_admin.auth import AdminAuthentication, AuthData, AuthResult, UserABC, UserResult
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.translations import LanguageManager
@@ -124,7 +125,7 @@ admin_schema = schema.AdminSchema(
     main_page='/main/dashboard/',
 
     auth=FakeAdminAuthentication(),
-    history_change_provider=sqlalchemy.SQLAlchemyLogsProvider(db_async_session=async_sessionmaker_),
+    history_change_provider=SQLAlchemyLogsProvider(db_async_session=async_sessionmaker_),
     language_manager=LanguageManager(
         locales_dir='example/locales',
         languages={
@@ -206,7 +207,7 @@ admin_schema = schema.AdminSchema(
             title=_('history.title'),
             icon='mdi-history',
             subcategories=[
-                sqlalchemy.SQLAlchemyLogsAdmin(db_async_session=async_sessionmaker_),
+                SQLAlchemyLogsAdmin(db_async_session=async_sessionmaker_),
             ],
         ),
     ],

@@ -5,7 +5,7 @@ from .category_table import CategoryTable
 from .count_providers import CountProvider, CountResult
 from .filter_subtable import FilterSubtable
 from .fields import *
-from .fields_schema import FieldsSchema, FormField, FormSet
+from .fields_schema import AJVRule, FieldsSchema, FormField, FormSet
 from .history_change_provider import HistoryChangeDefaultLogs, HistoryLogsProvider
 from .history_logs_category import HistoryLogsAdmin
 from .table_action import TableAction

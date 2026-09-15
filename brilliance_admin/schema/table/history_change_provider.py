@@ -35,11 +35,13 @@ class LogType(Enum):
 class HistoryLogsProvider(ABC):
     @staticmethod
     def get_update_data(before: dict, data: dict) -> dict:
-        return to_jsonable_python({
-            field_slug: {'from': before.get(field_slug), 'to': value}
-            for field_slug, value in data.items()
-            if before.get(field_slug) != value
-        })
+        before = to_jsonable_python(before)
+        data = to_jsonable_python(data)
+        result = {}
+        for field_slug, value in data.items():
+            if before.get(field_slug) != value:
+                result[field_slug] = {'from': before.get(field_slug), 'to': value}
+        return result
 
     @abstractmethod
     async def save_create(

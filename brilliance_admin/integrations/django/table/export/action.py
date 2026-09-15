@@ -1,7 +1,7 @@
 from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError, ValidationError
 from brilliance_admin.schema.table.admin_action import ActionData, ActionFileResult, ActionResult, admin_action
-from brilliance_admin.schema.table.fields_schema import FieldsSchema
+from brilliance_admin.schema.table.fields_schema import AJVRule, FieldsSchema, FormField, FormSet
 from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import get_logger, humanize_field_name, validate_email
@@ -26,6 +26,21 @@ class ExportFieldsSchema(FieldsSchema):
     export_fields = schema.MultipleChoiceField(
         label=_('export.fields'),
         default_all_selected=True,
+    )
+
+    formset = FormSet(
+        fields=[
+            FormField('is_async'),
+            FormField(
+                'email',
+                rule=AJVRule(
+                    type='object',
+                    properties={'is_async': {'const': True}},
+                    required=['is_async'],
+                ),
+            ),
+            FormField('export_fields'),
+        ],
     )
 
     async def deserialize_fields(self, *args, **kwargs):

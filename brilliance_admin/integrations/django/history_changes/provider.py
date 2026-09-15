@@ -1,6 +1,4 @@
-from asgiref.sync import sync_to_async
-
-from brilliance_admin.schema.table.history_change_provider import HistoryChangeDefaultLogs
+from brilliance_admin.schema.table.history_change_provider import HistoryChangeDefaultLogs, LogType
 
 
 class DjangoLogsProvider(HistoryChangeDefaultLogs):
@@ -15,22 +13,10 @@ class DjangoLogsProvider(HistoryChangeDefaultLogs):
         path.append(category.slug)
         return '/'.join(path)
 
-    async def get_content_type(self, category):
-        from django.contrib.contenttypes.models import ContentType
-
-        model = getattr(category.table_schema, 'model', None)
-        if model is None:
-            raise TypeError(
-                f'{type(self).__name__} requires category.table_schema.model; got {type(category.table_schema).__name__}'
-            )
-        return await sync_to_async(ContentType.objects.get_for_model, thread_sensitive=True)(model)
-
     async def save_create(self, *, category, parent_category, user, pk, data, **kwargs) -> None:
         await super().save_create(
             category=category, parent_category=parent_category, user=user, pk=pk, data=data, **kwargs,
         )
-        from .models import LogType
-
         await self.save_record_change(
             LogType.CREATE, category=category, parent_category=parent_category, user=user, pk=pk, data=data,
         )
@@ -40,8 +26,6 @@ class DjangoLogsProvider(HistoryChangeDefaultLogs):
             category=category, parent_category=parent_category,
             user=user, pk=pk, before=before, data=data, **kwargs,
         )
-        from .models import LogType
-
         await self.save_record_change(
             LogType.UPDATE,
             category=category,
@@ -56,7 +40,6 @@ class DjangoLogsProvider(HistoryChangeDefaultLogs):
 
         await HistoryChange.objects.acreate(
             user=user,
-            content_type=await self.get_content_type(category),
             object_id=str(pk),
             log_type=log_type.value,
             category_path=self.get_category_path(category, parent_category),
@@ -72,11 +55,10 @@ class DjangoLogsProvider(HistoryChangeDefaultLogs):
             action_data=action_data,
             **kwargs,
         )
-        from .models import HistoryChange, LogType
+        from .models import HistoryChange
 
         await HistoryChange.objects.acreate(
             user=user,
-            content_type=await self.get_content_type(category),
             log_type=LogType.ADMIN_ACTION.value,
             action_slug=action_slug,
             category_path=self.get_category_path(category, parent_category),

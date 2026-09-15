@@ -256,7 +256,11 @@ class DeviceType(Enum):
 class UserSession(BaseIDModel):
     __tablename__ = "user_session"
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), index=True, nullable=False)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("user.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False,
+    )
     user: Mapped["User"] = relationship()
 
     ip_address: Mapped[str] = mapped_column(String(45), nullable=False)

@@ -1,10 +1,12 @@
+from sqlalchemy.orm import selectinload
+
 from brilliance_admin import schema, sqlalchemy
 from brilliance_admin.auth import UserABC
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult, admin_action
 from brilliance_admin.schema.table.table_models import AutocompleteData
 from brilliance_admin.translations import TranslateText as _
+from brilliance_admin.utils import validate_email
 from example.sections.models import City, User
-from sqlalchemy.orm import selectinload
 
 
 async def cities_filter(stmt, data: AutocompleteData, user: UserABC):
@@ -33,6 +35,9 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
         model=User,
         exclude_fields=['password'],
         extra_kwargs={
+            'email': {
+                'validator': validate_email,
+            },
             'city_id': {
                 'filter_fn': cities_filter,
                 'help_text': _('city_country_filter_help_text'),
@@ -69,6 +74,7 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
             ],
         ),
         list_display=[
+            'id',
             'username',
             'email',
             'country_id',

@@ -22,6 +22,12 @@ class DebugInfo(DataclassBase):
     serialize_ms: float | None = None
 
 
+def serialize_total_count(value):
+    if value is None or isinstance(value, str):
+        return value
+    return str(value)
+
+
 @dataclass
 class TableListResult(DataclassBase):
     data: List[dict]
@@ -31,10 +37,8 @@ class TableListResult(DataclassBase):
 
     @field_validator('total_count', mode='before')
     @classmethod
-    def serialize_total_count(cls, value):
-        if value is None or isinstance(value, str):
-            return value
-        return str(value)
+    def validate_total_count(cls, value):
+        return serialize_total_count(value)
 
 
 class AutocompleteData(BaseModel):
@@ -68,6 +72,11 @@ class AutocompleteResult(BaseModel):
     records: List[Record] = Field(default_factory=list)
     current_count: int = 0
     total_count: str | None = None
+
+    @field_validator('total_count', mode='before')
+    @classmethod
+    def validate_total_count(cls, value):
+        return serialize_total_count(value)
 
 
 class FilterSubtableUnitSize(str, Enum):

@@ -14,10 +14,22 @@ export:
 history:
   title: 'История изменений'
   log_type:
-    retrieve: 'Просмотр'
     create: 'Создание'
     update: 'Обновление'
     admin_action: 'Действие администратора'
+  fields:
+    field: 'Поле'
+    from: 'Было'
+    to: 'Стало'
+    pk: 'PK'
+    action_time: 'Время действия'
+    user: 'Пользователь'
+    content_type: 'Тип объекта'
+    object_id: 'ID объекта'
+    log_type: 'Тип лога'
+    action_slug: 'Действие'
+    action_slug_help: 'Показываются только действия выбранной категории.'
+    category_path: 'Категория'
 
 errors:
   pk_not_found: 'Поле "%(pk_name)s" не найдено среди переданных данных.'

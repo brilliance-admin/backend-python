@@ -80,6 +80,7 @@ CATEGORY_SCHEMA_DATA = {
                     'type': 'integer',
                 },
                 'is_h2h': {
+                    'default': True,
                     'header': {},
                     'label': 'Is H2H',
                     'read_only': False,

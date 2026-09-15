@@ -6,6 +6,7 @@ from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from testcontainers.postgres import PostgresContainer
 
+from brilliance_admin.integrations.sqlalchemy.history_changes import HistoryChangesBase
 from brilliance_admin.translations import LanguageContext, LanguageManager
 from example.sections.models import ModelBase
 from example.utils import SQLAlchemyFactoryBase
@@ -42,8 +43,10 @@ async def async_engine(postgres_container):
     )
     async with engine.begin() as conn:
         await conn.run_sync(ModelBase.metadata.create_all)
+        await conn.run_sync(HistoryChangesBase.metadata.create_all)
     yield engine
     async with engine.begin() as conn:
+        await conn.run_sync(HistoryChangesBase.metadata.drop_all)
         await conn.run_sync(ModelBase.metadata.drop_all)
     await engine.dispose(close=True)
 
@@ -75,7 +78,9 @@ async def cleanup_tables(async_engine):
     yield
     async with async_engine.begin() as conn:
         tables = ", ".join(
-            f'"{t.name}"' for t in reversed(ModelBase.metadata.sorted_tables)
+            f'"{table.name}"'
+            for metadata in (ModelBase.metadata, HistoryChangesBase.metadata)
+            for table in reversed(metadata.sorted_tables)
         )
         await conn.exec_driver_sql(f"TRUNCATE {tables} RESTART IDENTITY CASCADE")
 
@@ -101,6 +106,23 @@ async def patch_admin_sessions(postgres_sessionmaker):
         for cat in group.subcategories:
             if id(cat) in original:
                 cat.db_async_session = original[id(cat)]
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def patch_history_logs_session(postgres_sessionmaker):
+    from example.main import admin_schema
+
+    history_change_provider = admin_schema.history_change_provider
+    if history_change_provider is None:
+        yield
+        return
+
+    original = history_change_provider.db_async_session
+    history_change_provider.db_async_session = postgres_sessionmaker
+
+    yield
+
+    history_change_provider.db_async_session = original
 
 
 @pytest_asyncio.fixture

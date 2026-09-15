@@ -28,7 +28,7 @@ class SupportsStr(Protocol):
         return handler(core_schema.str_schema())
 
 
-def validate_email(value: str) -> str:
+def validate_email(value: str, data=None) -> str:
     _, email = parseaddr(value) if isinstance(value, str) else (None, None)
     if not isinstance(value, str) or email != value or '@' not in email or email.rsplit('@', 1)[1] == '':
         from brilliance_admin.exceptions import FieldError

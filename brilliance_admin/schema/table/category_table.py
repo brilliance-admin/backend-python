@@ -231,6 +231,7 @@ class CategoryTable(BaseCategory):
             debug: bool,
             parent_category: BaseCategory | None = None,
             parent_pk: Any | None = None,
+            history_change_provider=None,
     ) -> ActionResult:
         action_fn = self.get_actions().get(action)
 
@@ -251,6 +252,15 @@ class CategoryTable(BaseCategory):
             result: ActionResult | None = await action_fn(action_data=action_data, user=user)
             if result is None:
                 result = ActionResult()
+
+            if history_change_provider is not None:
+                await history_change_provider.save_admin_action(
+                    category=self,
+                    parent_category=parent_category,
+                    user=user,
+                    action_slug=action,
+                    action_data=action_data,
+                )
 
         except ValidationError as e:
             raise AdminAPIException(
@@ -274,8 +284,11 @@ class CategoryTable(BaseCategory):
 
         return result
 
-    def get_extra_autocomplete(self, data: AutocompleteData) -> dict:
-        return {}
+    def get_extra_autocomplete(self, data: AutocompleteData, admin_schema=None) -> dict:
+        return {
+            'admin_schema': admin_schema,
+            'language_context': None,
+        }
 
     async def autocomplete(
             self,
@@ -285,6 +298,7 @@ class CategoryTable(BaseCategory):
             debug: bool,
             parent_category: BaseCategory | None = None,
             parent_pk: Any | None = None,
+            admin_schema=None,
     ) -> AutocompleteResult:
         form_schema = None
 
@@ -337,7 +351,10 @@ class CategoryTable(BaseCategory):
         return await field.autocomplete(
             data,
             user,
-            extra=self.get_extra_autocomplete(data),
+            extra={
+                **self.get_extra_autocomplete(data, admin_schema=admin_schema),
+                'language_context': language_context,
+            },
             parent_category=parent_category,
             parent_pk=parent_pk if parent_pk is not None else data.parent_pk,
             debug=debug,

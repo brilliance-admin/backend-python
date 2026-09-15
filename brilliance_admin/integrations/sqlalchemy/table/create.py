@@ -37,6 +37,7 @@ class SQLAlchemyAdminCreate:
             debug: bool,
             parent_category=None,
             parent_pk=None,
+            history_change_provider=None,
     ) -> schema.CreateResult:
         if not self.has_create:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -98,4 +99,8 @@ class SQLAlchemyAdminCreate:
             ) from e
 
         result = schema.CreateResult(pk=pk_value, choice=choice)
+        if history_change_provider is not None:
+            await history_change_provider.save_create(
+                category=self, parent_category=parent_category, user=user, pk=pk_value, data=data,
+            )
         return result

@@ -4,4 +4,5 @@ from .related_field import SQLAlchemyRelatedField
 from .inline_field import SQLAlchemyInlineField
 from .auth import SQLAlchemyJWTAdminAuthentication
 from .fields_schema import SQLAlchemyFieldsSchema
+from .history_changes import SQLAlchemyLogsAdmin, SQLAlchemyLogsProvider
 from .table import *

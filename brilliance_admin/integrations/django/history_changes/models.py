@@ -1,36 +1,9 @@
-from enum import Enum
-
 from django.conf import settings
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 
-from brilliance_admin.translations import TranslateText as _
-
-
-class LogType(Enum):
-    RETRIEVE = 1
-    CREATE = 2
-    UPDATE = 3
-    ADMIN_ACTION = 4
-
-    @property
-    def label(self):
-        return {
-            self.RETRIEVE: _('history.log_type.retrieve'),
-            self.CREATE: _('history.log_type.create'),
-            self.UPDATE: _('history.log_type.update'),
-            self.ADMIN_ACTION: _('history.log_type.admin_action'),
-        }[self]
-
-    @property
-    def tag_color(self):
-        return {
-            self.RETRIEVE: 'blue',
-            self.CREATE: 'green',
-            self.UPDATE: 'orange',
-            self.ADMIN_ACTION: 'purple',
-        }[self]
+from brilliance_admin.schema.table.history_change_provider import LogType
 
 
 class HistoryChange(models.Model):

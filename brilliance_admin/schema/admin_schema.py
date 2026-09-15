@@ -83,7 +83,6 @@ class AdminIndexContextData(DataclassBase):
 class AdminSchema:
     categories: List[BaseCategory]
     auth: Any
-    history_change_provider: type[HistoryLogsProvider] | None = HistoryChangeDefaultLogs
 
     api_timeout_ms: int = 1000 * 5
     debug_traceback_limit: int = 7
@@ -108,6 +107,8 @@ class AdminSchema:
     default_theme: str | None = None
     custom_themes: List[dict] = Field(default_factory=list)
     default_table_options: TableOptions = Field(default_factory=TableOptions)
+
+    history_change_provider: HistoryLogsProvider | None = Field(default_factory=HistoryChangeDefaultLogs)
 
     def __post_init__(self):
         for category in self.categories:

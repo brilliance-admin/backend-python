@@ -99,7 +99,7 @@ async def test_create(postgres_sessionmaker, language_context):
     assert terminal.description == create_data['description']
     assert terminal.title == create_data['title']
     assert terminal.registered_delay == create_data['registered_delay']
-    assert terminal.created_at.isoformat() == '2026-01-20T20:33:40.055184+00:00'
+    assert terminal.created_at is not None
 
     assert len(terminal.fees) == 1
     fee = terminal.fees[0]

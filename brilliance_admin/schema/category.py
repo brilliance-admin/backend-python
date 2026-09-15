@@ -150,6 +150,9 @@ class BaseCategory(KwargsInitMixin, abc.ABC):
     title: SupportsStr | None = None
     description: SupportsStr | None = None
 
+    # Set for categories included in a CategoryGroup.
+    _group_slug: str | None = None
+
     # https://pictogrammers.com/library/mdi/
     icon: str | None = None
 
@@ -229,6 +232,7 @@ class CategoryGroup(BaseCategory):
         for category in self.subcategories:
             if not isinstance(category, BaseCategory):
                 raise TypeError(f'Category "{category}" is not instance of BaseCategory subclass')
+            category._group_slug = self.slug
 
     def generate_category_schema(
         self,

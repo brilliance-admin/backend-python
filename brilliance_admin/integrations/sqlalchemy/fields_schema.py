@@ -46,7 +46,11 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
         from brilliance_admin.integrations.sqlalchemy.inline_field import SQLAlchemyInlineField
 
         for field_slug, field in generated_fields.items():
-            if isinstance(field, schema.InlineField) and not isinstance(field, SQLAlchemyInlineField):
+            if (
+                isinstance(field, schema.InlineField)
+                and not field.read_only
+                and not isinstance(field, SQLAlchemyInlineField)
+            ):
                 msg = INLINE_FIELD_NOT_SUPPORTED.format(
                     class_name=type(self).__name__,
                     field_slug=field_slug,
@@ -78,7 +82,9 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
             field_data["label"] = info.get('label', humanize_field_name(field_slug))
             field_data["help_text"] = info.get('help_text')
 
-            field_data["read_only"] = col.primary_key
+            field_data["read_only"] = col.primary_key or (
+                isinstance(col.type, sqltypes.DateTime) and col.server_default is not None
+            )
             if col.default is not None and col.default.is_scalar:
                 field_data["default"] = col.default.arg
 
@@ -89,6 +95,17 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                 py_t = col_type.python_type
             except Exception:
                 py_t = None
+
+            if (
+                "default" not in field_data
+                and isinstance(col_type, sqltypes.Boolean)
+                and col.server_default is not None
+            ):
+                server_default = str(col.server_default.arg).lower()
+                if server_default in {'true', '1'}:
+                    field_data['default'] = True
+                elif server_default in {'false', '0'}:
+                    field_data['default'] = False
 
             impl = getattr(attr, 'impl', None)
             is_impl_mutable = isinstance(impl, Mutable)

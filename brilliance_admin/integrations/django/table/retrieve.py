@@ -83,6 +83,7 @@ class DjangoAdminRetrieveMixin:
             debug: bool,
             parent_category=None,
             parent_pk=None,
+            history_change_provider=None,
     ) -> schema.RetrieveResult:
         result = await self._retrieve(
             pk,

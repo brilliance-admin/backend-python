@@ -32,6 +32,7 @@ async_sessionmaker_ = async_sessionmaker(
 
 async def recreate_tables_async():
     from example.sections.models import ModelBase
+    from brilliance_admin.integrations.sqlalchemy.history_changes import HistoryChangesBase
 
     async with ASYNC_ENGINE.begin() as conn:
         if ASYNC_ENGINE.sync_engine.dialect.name == 'postgresql':
@@ -39,7 +40,9 @@ async def recreate_tables_async():
             await conn.execute(text("CREATE SCHEMA public"))
         else:
             await conn.run_sync(ModelBase.metadata.drop_all)
+            await conn.run_sync(HistoryChangesBase.metadata.drop_all)
         await conn.run_sync(ModelBase.metadata.create_all)
+        await conn.run_sync(HistoryChangesBase.metadata.create_all)
 
 
 @asynccontextmanager

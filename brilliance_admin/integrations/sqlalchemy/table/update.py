@@ -24,6 +24,7 @@ class SQLAlchemyAdminUpdate:
             debug: bool,
             parent_category=None,
             parent_pk=None,
+            history_change_provider=None,
     ) -> schema.UpdateResult:
         if not self.has_update:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -36,6 +37,16 @@ class SQLAlchemyAdminUpdate:
             raise AdminAPIException(
                 APIError(message=_('errors.pk_not_found') % {'pk_name': self.pk_name}, code='pk_not_found'),
                 status_code=400,
+            )
+
+        if history_change_provider is not None:
+            before = await self._retrieve(
+                pk,
+                user,
+                language_context,
+                debug,
+                parent_category,
+                parent_pk,
             )
 
         col = inspect(self.table_schema.model).mapper.columns[self.pk_name]
@@ -99,4 +110,14 @@ class SQLAlchemyAdminUpdate:
                 APIError(message=msg, code='db_error_update'), status_code=500,
             ) from e
 
-        return schema.UpdateResult(pk=pk)
+        result = schema.UpdateResult(pk=pk)
+        if history_change_provider is not None:
+            await history_change_provider.save_update(
+                category=self,
+                parent_category=parent_category,
+                user=user,
+                pk=pk,
+                before=before.data,
+                data=data,
+            )
+        return result

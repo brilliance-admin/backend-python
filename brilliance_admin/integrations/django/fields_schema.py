@@ -29,6 +29,11 @@ class DjangoFieldsSchema(schema.FieldsSchema):
     def __init__(self, *args, fields=None, model=None, **kwargs):
         if model is not None:
             self.model = model
+
+        if isinstance(self.model, str):
+            from django.apps import apps
+            self.model = apps.get_model(self.model)
+
         self._has_explicit_fields = fields is not None
         super().__init__(*args, fields=fields, **kwargs)
 

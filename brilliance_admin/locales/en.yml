@@ -14,10 +14,22 @@ export:
 history:
   title: 'History logs'
   log_type:
-    retrieve: 'Viewed'
     create: 'Created'
     update: 'Updated'
     admin_action: 'Admin action'
+  fields:
+    field: 'Field'
+    from: 'From'
+    to: 'To'
+    pk: 'PK'
+    action_time: 'Action time'
+    user: 'User'
+    content_type: 'Content type'
+    object_id: 'Object ID'
+    log_type: 'Log type'
+    action_slug: 'Action'
+    action_slug_help: 'Only actions available in the selected category are shown.'
+    category_path: 'Category'
 
 errors:
   pk_not_found: 'The "%(pk_name)s" field was not found in the submitted data.'

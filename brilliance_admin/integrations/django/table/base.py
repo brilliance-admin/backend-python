@@ -275,8 +275,8 @@ class DjangoAdminBase(CategoryTable):
         fk_field_name = self.get_parent_fk_field_name(parent_category)
         return queryset.filter(**{fk_field_name: parent_pk})
 
-    def get_extra_autocomplete(self, data: AutocompleteData) -> dict:
-        extra = super().get_extra_autocomplete(data)
+    def get_extra_autocomplete(self, data: AutocompleteData, admin_schema=None) -> dict:
+        extra = super().get_extra_autocomplete(data, admin_schema=admin_schema)
         extra['category'] = self
         extra['model'] = self.model
         extra['raise_async_unsafe'] = self.raise_async_unsafe

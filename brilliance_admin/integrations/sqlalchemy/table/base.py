@@ -107,8 +107,8 @@ class SQLAlchemyAdminBase(CategoryTable):
 
         super().__init__(*args, **kwargs)
 
-    def get_extra_autocomplete(self, data: AutocompleteData) -> dict:
-        extra = super().get_extra_autocomplete(data)
+    def get_extra_autocomplete(self, data: AutocompleteData, admin_schema=None) -> dict:
+        extra = super().get_extra_autocomplete(data, admin_schema=admin_schema)
         extra['db_async_session'] = self.db_async_session
         extra['category'] = self
         extra['model'] = self.model

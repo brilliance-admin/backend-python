@@ -1,4 +1,5 @@
 from dataclasses import field
+from html import escape
 from typing import Any
 
 from pydantic.dataclasses import dataclass
@@ -45,13 +46,13 @@ class HistoryChangeDataSchema(FieldsSchema):
     fields = ['field', 'from', 'to']
 
     field = StringField(label=_('history.fields.field'), read_only=True)
-    to = StringField(label=_('history.fields.to'), read_only=True)
+    to = StringField(label=_('history.fields.to'), read_only=True, allow_html=True)
 
     def __init__(self, *args, **kwargs):
         super().__init__(
             *args,
             **{
-                'from': StringField(label=_('history.fields.from'), read_only=True),
+                'from': StringField(label=_('history.fields.from'), read_only=True, allow_html=True),
                 **kwargs,
             },
         )
@@ -65,10 +66,12 @@ class HistoryChangeDataField(InlineField):
     table_schema: Any = field(default_factory=HistoryChangeDataSchema)
 
     @staticmethod
-    def serialize_value(value):
-        if value is None or isinstance(value, str):
+    def serialize_value(value, *, is_html_diff: bool):
+        if value is None:
             return value
-        return json.dumps(value, ensure_ascii=False)
+        if isinstance(value, str):
+            return value if is_html_diff else escape(value)
+        return escape(json.dumps(value, ensure_ascii=False))
 
     async def serialize(self, value, extra: dict, *args, **kwargs):
         if value is None:
@@ -78,15 +81,20 @@ class HistoryChangeDataField(InlineField):
 
         result = []
         for field_slug, change in value.items():
-            if isinstance(change, dict) and set(change) == {'from', 'to'}:
+            is_html_diff = (
+                isinstance(change, dict)
+                and set(change) == {'from', 'to', 'html_diff'}
+                and change['html_diff'] is True
+            )
+            if isinstance(change, dict) and set(change) in ({'from', 'to'}, {'from', 'to', 'html_diff'}):
                 before, after = change['from'], change['to']
             else:
                 before, after = None, change
 
             result.append({
                 'field': field_slug,
-                'from': self.serialize_value(before),
-                'to': self.serialize_value(after),
+                'from': self.serialize_value(before, is_html_diff=is_html_diff),
+                'to': self.serialize_value(after, is_html_diff=is_html_diff),
             })
         return result
 

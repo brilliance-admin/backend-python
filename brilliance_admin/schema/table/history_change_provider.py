@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 from enum import Enum
+from html import escape
+import json
 from typing import Any
 
+from fast_diff_match_patch import diff
 from pydantic_core import core_schema, to_jsonable_python
 
 from brilliance_admin.auth import UserABC
@@ -34,13 +37,47 @@ class LogType(Enum):
 
 class HistoryLogsProvider(ABC):
     @staticmethod
-    def get_update_data(before: dict, data: dict) -> dict:
+    def diff(before: str, after: str) -> tuple[str, str]:
+        before_result = []
+        after_result = []
+        changes = diff(before, after, counts_only=False)
+
+        for operation, text in changes:
+            text = escape(text)
+            if operation == '=':
+                before_result.append(text)
+                after_result.append(text)
+            elif operation == '-':
+                before_result.append(f'<span class="history-diff-removed">{text}</span>')
+            elif operation == '+':
+                after_result.append(f'<span class="history-diff-added">{text}</span>')
+            else:
+                raise RuntimeError(f'Unknown diff operation: {operation}')
+
+        return ''.join(before_result), ''.join(after_result)
+
+    @staticmethod
+    def serialize_diff_value(value: Any) -> str:
+        if isinstance(value, str):
+            return value
+        return json.dumps(value, ensure_ascii=False, sort_keys=True)
+
+    @classmethod
+    def get_update_data(cls, before: dict, data: dict) -> dict:
         before = to_jsonable_python(before)
         data = to_jsonable_python(data)
         result = {}
         for field_slug, value in data.items():
             if before.get(field_slug) != value:
-                result[field_slug] = {'from': before.get(field_slug), 'to': value}
+                before_value = before.get(field_slug)
+                if before_value is not None and value is not None:
+                    before_value, value = cls.diff(
+                        cls.serialize_diff_value(before_value),
+                        cls.serialize_diff_value(value),
+                    )
+                    result[field_slug] = {'from': before_value, 'to': value, 'html_diff': True}
+                else:
+                    result[field_slug] = {'from': before_value, 'to': value}
         return result
 
     @abstractmethod

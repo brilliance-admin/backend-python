@@ -2,12 +2,56 @@ import pytest
 
 from brilliance_admin import schema
 from brilliance_admin.auth import AdminAuthentication, UserABC
+from brilliance_admin.schema.table.history_change_provider import HistoryLogsProvider
 from brilliance_admin.schema.table.history_logs_category import HistoryCategoryField, HistoryLogsAdmin
 
 
 class TestAuth(AdminAuthentication):
     async def authenticate(self, headers):
         return UserABC(username='test')
+
+
+def test_history_diff_marks_only_changed_parts_of_chains_payment_settings():
+    before = [{
+        'id': 5,
+        'option': {'key': 1, 'title': 'Test'},
+        'success_weight': 1,
+        'fail_weight': 1,
+        'terminal': False,
+        'reverse': False,
+        'active': True,
+        'created_at': '2026-08-11T08:04:22.655685Z',
+    }]
+    after = [{
+        'terminal': False,
+        'reverse': False,
+        'active': True,
+        'id': 5,
+        'option': {'key': 2, 'title': 'Test'},
+        'success_weight': 1,
+        'fail_weight': 1,
+        'created_at': '2026-08-11T08:04:22.655685Z',
+    }]
+    assert HistoryLogsProvider.get_update_data(
+        {'chains_payment_settings': before},
+        {'chains_payment_settings': after},
+    ) == {
+        'chains_payment_settings': {
+            'from': (
+                '[{&quot;active&quot;: true, &quot;created_at&quot;: &quot;2026-08-11T08:04:22.655685Z&quot;, '
+                '&quot;fail_weight&quot;: 1, &quot;id&quot;: 5, &quot;option&quot;: {&quot;key&quot;: '
+                '<span class="history-diff-removed">1</span>, &quot;title&quot;: &quot;Test&quot;}, '
+                '&quot;reverse&quot;: false, &quot;success_weight&quot;: 1, &quot;terminal&quot;: false}]'
+            ),
+            'to': (
+                '[{&quot;active&quot;: true, &quot;created_at&quot;: &quot;2026-08-11T08:04:22.655685Z&quot;, '
+                '&quot;fail_weight&quot;: 1, &quot;id&quot;: 5, &quot;option&quot;: {&quot;key&quot;: '
+                '<span class="history-diff-added">2</span>, &quot;title&quot;: &quot;Test&quot;}, '
+                '&quot;reverse&quot;: false, &quot;success_weight&quot;: 1, &quot;terminal&quot;: false}]'
+            ),
+            'html_diff': True,
+        },
+    }
 
 
 @pytest.mark.asyncio

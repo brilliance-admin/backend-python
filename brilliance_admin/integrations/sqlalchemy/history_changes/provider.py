@@ -53,10 +53,10 @@ class SQLAlchemyLogsProvider(HistoryChangeDefaultLogs):
             LogType.CREATE, category=category, parent_category=parent_category, user=user, pk=pk, data=data,
         )
 
-    async def save_update(self, *, category, parent_category, user, pk, before, data, **kwargs) -> None:
+    async def save_update(self, *, category, parent_category, user, pk, before, data, language_context, **kwargs) -> None:
         await super().save_update(
             category=category, parent_category=parent_category,
-            user=user, pk=pk, before=before, data=data, **kwargs,
+            user=user, pk=pk, before=before, data=data, language_context=language_context, **kwargs,
         )
         await self.save_record_change(
             LogType.UPDATE,
@@ -64,7 +64,7 @@ class SQLAlchemyLogsProvider(HistoryChangeDefaultLogs):
             parent_category=parent_category,
             user=user,
             pk=pk,
-            data=self.get_update_data(before, data),
+            data=self.get_update_data(before, data, language_context),
         )
 
     async def save_admin_action(self, *, category, parent_category, user, action_slug, action_data, **kwargs) -> None:

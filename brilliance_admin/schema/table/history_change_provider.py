@@ -63,9 +63,10 @@ class HistoryLogsProvider(ABC):
         return json.dumps(value, ensure_ascii=False, sort_keys=True)
 
     @classmethod
-    def get_update_data(cls, before: dict, data: dict) -> dict:
-        before = to_jsonable_python(before)
-        data = to_jsonable_python(data)
+    def get_update_data(cls, before: dict, data: dict, language_context) -> dict:
+        context = {'language_context': language_context}
+        before = to_jsonable_python(before, context=context)
+        data = to_jsonable_python(data, context=context)
         result = {}
         for field_slug, value in data.items():
             if before.get(field_slug) != value:
@@ -88,7 +89,7 @@ class HistoryLogsProvider(ABC):
 
     @abstractmethod
     async def save_update(
-            self, *, category, parent_category, user: UserABC, pk: Any, before: dict, data: dict, **kwargs,
+            self, *, category, parent_category, user: UserABC, pk: Any, before: dict, data: dict, language_context, **kwargs,
     ) -> None:
         raise NotImplementedError()
 
@@ -125,11 +126,11 @@ class HistoryChangeDefaultLogs(HistoryLogsProvider):
             extra={'data': data},
         )
 
-    async def save_update(self, *, category, parent_category, user, pk, before, data, **kwargs) -> None:
+    async def save_update(self, *, category, parent_category, user, pk, before, data, language_context, **kwargs) -> None:
         self.logger.info(
             '%s #%s updated by %s',
             type(category).__name__, pk, user.username,
-            extra={'data': self.get_update_data(before, data)},
+            extra={'data': self.get_update_data(before, data, language_context)},
         )
 
     async def save_admin_action(self, *, category, parent_category, user, action_slug, action_data, **kwargs) -> None:

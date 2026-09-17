@@ -21,10 +21,10 @@ class DjangoLogsProvider(HistoryChangeDefaultLogs):
             LogType.CREATE, category=category, parent_category=parent_category, user=user, pk=pk, data=data,
         )
 
-    async def save_update(self, *, category, parent_category, user, pk, before, data, **kwargs) -> None:
+    async def save_update(self, *, category, parent_category, user, pk, before, data, language_context, **kwargs) -> None:
         await super().save_update(
             category=category, parent_category=parent_category,
-            user=user, pk=pk, before=before, data=data, **kwargs,
+            user=user, pk=pk, before=before, data=data, language_context=language_context, **kwargs,
         )
         await self.save_record_change(
             LogType.UPDATE,
@@ -32,7 +32,7 @@ class DjangoLogsProvider(HistoryChangeDefaultLogs):
             parent_category=parent_category,
             user=user,
             pk=pk,
-            data=self.get_update_data(before, data),
+            data=self.get_update_data(before, data, language_context),
         )
 
     async def save_record_change(self, log_type, *, category, parent_category, user, pk, data: dict) -> None:

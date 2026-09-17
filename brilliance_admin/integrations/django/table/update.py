@@ -63,5 +63,6 @@ class DjangoAdminUpdate:
                 pk=pk,
                 before=before.data,
                 data=data,
+                language_context=language_context,
             )
         return result

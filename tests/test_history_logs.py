@@ -4,6 +4,7 @@ from brilliance_admin import schema
 from brilliance_admin.auth import AdminAuthentication, UserABC
 from brilliance_admin.schema.table.history_change_provider import HistoryLogsProvider
 from brilliance_admin.schema.table.history_logs_category import HistoryCategoryField, HistoryLogsAdmin
+from brilliance_admin.translations import TranslateText
 
 
 class TestAuth(AdminAuthentication):
@@ -11,7 +12,18 @@ class TestAuth(AdminAuthentication):
         return UserABC(username='test')
 
 
-def test_history_diff_marks_only_changed_parts_of_chains_payment_settings():
+def test_history_diff_serializes_translated_value_without_language_context(language_context):
+    before = {
+        'options_chains': [{'option': {'key': 1, 'title': TranslateText('option.title')}}],
+    }
+    after = {
+        'options_chains': [{'option': {'key': 2, 'title': TranslateText('option.title')}}],
+    }
+
+    HistoryLogsProvider.get_update_data(before, after, language_context)
+
+
+def test_history_diff_marks_only_changed_parts_of_chains_payment_settings(language_context):
     before = [{
         'id': 5,
         'option': {'key': 1, 'title': 'Test'},
@@ -35,6 +47,7 @@ def test_history_diff_marks_only_changed_parts_of_chains_payment_settings():
     assert HistoryLogsProvider.get_update_data(
         {'chains_payment_settings': before},
         {'chains_payment_settings': after},
+        language_context,
     ) == {
         'chains_payment_settings': {
             'from': (

@@ -76,6 +76,7 @@ image: 'Изображение'
 payments_search_fields: 'Доступные поля для поиска: id'
 create_payment: 'Создать платеж'
 create_payment_description: 'Создать платеж и отправить его на обработку в платежную систему.'
+payment_amount_change_result: 'Платёж #%(id)s: сумма изменена на %(amount)s (демо)'
 
 payment_create_result: |
   <h3>Платеж успешно создан!</h3>

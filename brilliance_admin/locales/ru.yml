@@ -51,6 +51,7 @@ errors:
     %(details)s
   delete_integrity_error: "Невозможно удалить: существуют связанные записи: %(detail)s"
   db_integrity_error: "Ошибка целостности базы данных: %(detail)s"
+  unique_violation: 'Значение уникального поля или сочетание значений уже используется.'
 
   password_exception: 'Произошла неизвестная ошибка при проверке пароля: %(error_type)s'
 

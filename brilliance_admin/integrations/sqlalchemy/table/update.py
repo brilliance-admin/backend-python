@@ -30,6 +30,7 @@ class SQLAlchemyAdminUpdate:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
         # pylint: disable=import-outside-toplevel
+        from asyncpg.exceptions import UniqueViolationError
         from sqlalchemy import inspect
         from sqlalchemy.exc import IntegrityError
 
@@ -89,6 +90,11 @@ class SQLAlchemyAdminUpdate:
                 type(self).__name__, self.table_schema.model.__name__, pk, e,
                 extra={'data': data},
             )
+            if isinstance(e.orig.__cause__, UniqueViolationError):
+                raise AdminAPIException(
+                    APIError(message=_('errors.unique_violation'), code='unique_violation'),
+                    status_code=400,
+                ) from e
             detail = extract_integrity_detail(e)
             raise AdminAPIException(
                 APIError(

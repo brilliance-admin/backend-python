@@ -45,6 +45,7 @@ class SQLAlchemyAdminCreate:
         data = self.apply_parent_data(data, parent_category, parent_pk)
 
         # pylint: disable=import-outside-toplevel
+        from asyncpg.exceptions import UniqueViolationError
         from sqlalchemy.exc import IntegrityError
 
         try:
@@ -77,6 +78,11 @@ class SQLAlchemyAdminCreate:
                 type(self).__name__, self.table_schema.model.__name__, e,
                 extra={'data': data},
             )
+            if isinstance(e.orig.__cause__, UniqueViolationError):
+                raise AdminAPIException(
+                    APIError(message=_('errors.unique_violation'), code='unique_violation'),
+                    status_code=400,
+                ) from e
             detail = extract_integrity_detail(e)
             raise AdminAPIException(
                 APIError(

@@ -2,6 +2,7 @@ import asyncio
 import datetime
 import traceback
 import uuid
+from html import escape
 from typing import Any
 
 from faker import Faker
@@ -512,7 +513,12 @@ class PaymentsAdmin(schema.CategoryTable):
     )
     async def change_amount(self, action_data: ActionData, **kwargs):
         await asyncio.sleep(settings.fake_delay_seconds)
-        return ActionResult(f'Amount changed to {action_data.form_data["amount"]}')
+        amount = action_data.form_data['amount']
+        message = '<br>'.join(
+            escape(str(_('payment_amount_change_result') % {'id': pk, 'amount': amount}))
+            for pk in action_data.pks
+        )
+        return ActionResult(persistent_message=message)
 
     @admin_action(
         title='Update status',

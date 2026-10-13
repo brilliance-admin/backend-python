@@ -51,6 +51,7 @@ errors:
     %(details)s
   delete_integrity_error: "Cannot delete: related records exist: %(detail)s"
   db_integrity_error: "Database integrity error: %(detail)s"
+  unique_violation: 'A unique field value or combination of values is already in use.'
 
 serialize_error:
   field_error: 'Field %(field_slug)s serialize error: %(error)s'

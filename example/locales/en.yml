@@ -76,6 +76,7 @@ image: 'Image'
 payments_search_fields: 'Search fields: id'
 create_payment: 'Create payment'
 create_payment_description: 'Create a payment and send it to the payment system for processing.'
+payment_amount_change_result: 'Payment #%(id)s: amount changed to %(amount)s (demo)'
 
 payment_create_result: |
   <h3>The payment was created successfully!</h3>

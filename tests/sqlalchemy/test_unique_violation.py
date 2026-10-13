@@ -9,6 +9,8 @@ from sqlalchemy.exc import IntegrityError
 from example.main import admin_schema, app
 from example.sections.models import Currency, CurrencyFactory
 
+client = TestClient(app)
+
 
 @pytest.mark.parametrize('operation', ['create', 'update'])
 @pytest.mark.parametrize('field', ['num_code', 'char_code'])
@@ -29,25 +31,24 @@ async def test_duplicate_returns_friendly_error_and_rolls_back(
     url = app.url_path_for(f'table_{operation}', **route_params)
     method = 'POST' if operation == 'create' else 'PATCH'
 
-    with TestClient(app) as client:
-        response = client.request(method, url, json=data, headers={'Accept-Language': language})
-        assert response.status_code == 400, response.text
-        assert response.json() == {
-            'message': message,
-            'code': 'unique_violation',
-            'field_errors': None,
-        }
+    response = client.request(method, url, json=data, headers={'Accept-Language': language})
+    assert response.status_code == 400, response.text
+    assert response.json() == {
+        'message': message,
+        'code': 'unique_violation',
+        'field_errors': None,
+    }
 
-        async with postgres_sessionmaker() as session:
-            records = (await session.execute(select(Currency).order_by(Currency.id))).scalars().all()
-            assert [(record.title, record.num_code, record.char_code) for record in records] == [
-                ('Original', 123, 'ORIGINAL'),
-                ('Target', 456, 'TARGET'),
-            ]
+    async with postgres_sessionmaker() as session:
+        records = (await session.execute(select(Currency).order_by(Currency.id))).scalars().all()
+        assert [(record.title, record.num_code, record.char_code) for record in records] == [
+            ('Original', 123, 'ORIGINAL'),
+            ('Target', 456, 'TARGET'),
+        ]
 
-        data[field] = 789 if field == 'num_code' else 'CHANGED'
-        response = client.request(method, url, json=data, headers={'Accept-Language': language})
-        assert response.status_code == 200, response.text
+    data[field] = 789 if field == 'num_code' else 'CHANGED'
+    response = client.request(method, url, json=data, headers={'Accept-Language': language})
+    assert response.status_code == 200, response.text
 
 
 @pytest.mark.parametrize('operation', ['create', 'update'])
@@ -69,13 +70,12 @@ async def test_other_integrity_errors_keep_existing_response(mocker, operation, 
         route_params['pk'] = target.id
     url = app.url_path_for(f'table_{operation}', **route_params)
 
-    with TestClient(app) as client:
-        response = client.request(
-            'POST' if operation == 'create' else 'PATCH',
-            url,
-            json={'title': 'Changed', 'num_code': 789, 'char_code': 'CHANGED', 'depth': 2},
-            headers={'Accept-Language': 'en'},
-        )
+    response = client.request(
+        'POST' if operation == 'create' else 'PATCH',
+        url,
+        json={'title': 'Changed', 'num_code': 789, 'char_code': 'CHANGED', 'depth': 2},
+        headers={'Accept-Language': 'en'},
+    )
 
     assert response.status_code == 500, response.text
     assert response.json() == {

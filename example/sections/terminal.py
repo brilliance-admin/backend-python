@@ -1,6 +1,28 @@
+import uuid
+
+from sqlalchemy import select
+
 from brilliance_admin import schema, sqlalchemy
 from brilliance_admin.translations import TranslateText as _
-from example.sections.models import Fee, Terminal, TerminalRouting, Worktime, WorktimeDayOfWeek
+from example.sections.models import (
+    Currency, Fee, Merchant, Terminal, TerminalRouting, TerminalStatuses, Worktime, WorktimeDayOfWeek,
+)
+
+
+async def default_merchant(*, category, **context):
+    async with category.db_async_session() as session:
+        record = (
+            await session.execute(select(Merchant).order_by(Merchant.id).limit(1))
+        ).scalar_one()
+        return {'key': record.id, 'title': str(record)}
+
+
+async def default_currency(*, category, **context):
+    async with category.db_async_session() as session:
+        record = (
+            await session.execute(select(Currency).order_by(Currency.id).limit(1))
+        ).scalar_one()
+        return {'key': record.id, 'title': str(record)}
 
 
 class FeeFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
@@ -117,8 +139,18 @@ class TerminalFieldsSchema(sqlalchemy.SQLAlchemyFieldsSchema):
         table_schema=WorktimeFieldsSchema(),
     )
     extra_kwargs = {
-        'secret_key': {'help_text': 'help_text help_text'},
+        'secret_key': {
+            'help_text': 'help_text help_text',
+            'default_fn': lambda **context: str(uuid.uuid4()),
+        },
         'test_mode': {'read_only': True},
+        'title': {'default_fn': lambda user, **context: f'Terminal by {user.username}'},
+        'description': {'default': 'Demo terminal'},
+        'manager_id': {'default': 1},
+        'status': {'default': TerminalStatuses.NONE.value},
+        'public_id': {'default_fn': lambda **context: str(uuid.uuid4())},
+        'merchant_id': {'default_fn': default_merchant},
+        'currency_id': {'default_fn': default_currency},
     }
     formset = schema.FormSet(
         fields=[

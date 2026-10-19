@@ -15,7 +15,8 @@ from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.schema.table.table_models import (
-    AutocompleteData, AutocompleteResult, FilterSubtableData, FilterSubtableResult, ListData, TableListResult)
+    AutocompleteData, AutocompleteResult, BeforeCreateResult, FilterSubtableData, FilterSubtableResult,
+    ListData, TableListResult)
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import DeserializeAction, SupportsStr, get_logger
 
@@ -283,6 +284,37 @@ class CategoryTable(BaseCategory):
             ) from e
 
         return result
+
+    async def _before_create(
+            self,
+            action_data: ActionData,
+            action_name: str | None,
+            user: UserABC,
+            language_context: LanguageContext,
+            debug: bool,
+            parent_category: BaseCategory | None,
+            parent_pk: Any | None,
+    ) -> BeforeCreateResult:
+        form_schema = self.table_schema
+        if action_name is not None:
+            action_fn = self.get_actions().get(action_name)
+            if action_fn is None:
+                raise HTTPException(status_code=404, detail=f'Action "{action_name}" is not found')
+
+            form_schema = action_fn.action_info['form_schema']
+            if form_schema is None:
+                raise HTTPException(status_code=400, detail=f'Action "{action_name}" has no form')
+
+        return await form_schema.get_default_form(
+            category=self,
+            action_data=action_data,
+            action_name=action_name,
+            user=user,
+            language_context=language_context,
+            debug=debug,
+            parent_category=parent_category,
+            parent_pk=parent_pk,
+        )
 
     def get_extra_autocomplete(self, data: AutocompleteData, admin_schema=None) -> dict:
         return {

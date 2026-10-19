@@ -10,10 +10,11 @@ from pydantic_core import core_schema
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import APIError, AdminAPIException, AsyncUnsafeTitleLoad, FieldError, ValidationError
-from brilliance_admin.schema.category import FieldSchemaData, FieldsSchemaData
+from brilliance_admin.schema.category import BaseCategory, FieldSchemaData, FieldsSchemaData
 from brilliance_admin.schema.table.fields.base import TableField
 from brilliance_admin.schema.table.fields.function_field import FunctionField
 from brilliance_admin.schema.table.schema_type import SchemaType
+from brilliance_admin.schema.table.table_models import BeforeCreateResult
 from brilliance_admin.translations import DataclassBase, LanguageContext
 from brilliance_admin.utils import DeserializeAction, SupportsStr
 
@@ -418,6 +419,41 @@ class FieldsSchema:
 
     def get_fields(self) -> Dict[str, TableField]:
         return self._generated_fields
+
+    async def get_default_form(
+            self,
+            category: BaseCategory,
+            action_data,
+            action_name: str | None,
+            user: UserABC,
+            language_context: LanguageContext,
+            debug: bool,
+            parent_category: BaseCategory | None,
+            parent_pk: Any | None,
+    ) -> BeforeCreateResult:
+        data = {}
+
+        for field_slug, field in self.get_fields().items():
+            if field.default_fn is None and field.default is None:
+                continue
+
+            if field.default_fn is None:
+                value = field.default
+            else:
+                value = field.default_fn(
+                    user=user,
+                    category=category,
+                    parent_category=parent_category,
+                    parent_pk=parent_pk,
+                    action_name=action_name,
+                    action_data=action_data,
+                )
+                if inspect.isawaitable(value):
+                    value = await value
+
+            data[field_slug] = value
+
+        return BeforeCreateResult(form_data=data)
 
     def generate_form_schema(
             self,

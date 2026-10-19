@@ -11,7 +11,8 @@ from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
 from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.schema.table.table_models import (
-    CreateResult, FilterSubtableData, FilterSubtableResult, ListData, RetrieveResult, TableListResult, UpdateResult)
+    BeforeCreateResult, CreateResult, FilterSubtableData, FilterSubtableResult, ListData,
+    RetrieveResult, TableListResult, UpdateResult)
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
 
@@ -28,6 +29,46 @@ def stream_storage_file(storage_name):
     finally:
         file.close()
         default_storage.delete(storage_name)
+
+
+@router.post(path='/{group}/{category}/before-create/')
+async def before_create(
+        request: Request,
+        group: str,
+        category: str,
+        action_data: ActionData,
+        action_name: str | None = None,
+        subcategory: str | None = None,
+        parent_pk: Any | None = None,
+) -> BeforeCreateResult:
+    schema: AdminSchema = request.app.state.schema
+    user = await get_user(request)
+    schema_category, parent_category = get_category(
+        schema, group, category, subcategory, check_type=CategoryTable,
+    )
+
+    language_slug = request.headers.get('Accept-Language')
+    language_context: LanguageContext = schema.get_language_context(language_slug)
+    context = {'language_context': language_context}
+
+    try:
+        result: BeforeCreateResult = await schema_category._before_create(
+            action_data=action_data,
+            action_name=action_name,
+            user=user,
+            language_context=language_context,
+            debug=schema.debug,
+            parent_category=parent_category,
+            parent_pk=parent_pk,
+        )
+    except AdminAPIException as e:
+        return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
+    except Exception as e:
+        logger.exception('Before create %s.%s exception: %s', group, category, e, extra={'data': action_data})
+        message = f'Before create error: {e}' if schema.debug else 'Internal before create exception'
+        return JSONResponse({'message': message}, status_code=500)
+
+    return JSONResponse(result.model_dump(mode='json', context=context))
 
 
 # pylint: disable=too-many-arguments

@@ -6,7 +6,7 @@ import inspect
 import re
 from decimal import Decimal, InvalidOperation
 from enum import Enum
-from typing import Any, Callable, ClassVar
+from typing import Any, Awaitable, Callable, ClassVar
 
 from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
@@ -73,6 +73,9 @@ class TableField(abc.ABC, FieldSchemaData):
     label: SupportsStr | None = None
     help_text: SupportsStr | None = None
     validator: Callable | None = None
+    # Computes the initial field value when opening a create or action form.
+    # Overrides default. Supports sync and async callbacks.
+    default_fn: Callable[..., Any | Awaitable[Any]] | None = None
 
     def generate_field_schema(
         self,

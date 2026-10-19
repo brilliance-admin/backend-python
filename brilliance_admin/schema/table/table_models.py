@@ -41,6 +41,10 @@ class TableListResult(DataclassBase):
         return serialize_total_count(value)
 
 
+class BeforeCreateResult(BaseModel):
+    form_data: Dict[str, Any]
+
+
 class AutocompleteData(BaseModel):
     # The view receives field_slug as a query parameter and assigns it after body validation.
     field_slug: str | None = None

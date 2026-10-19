@@ -17,6 +17,8 @@ from pydantic.dataclasses import dataclass
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.docs import build_redoc_docs, build_scalar_docs
+from brilliance_admin.permissions.allow_all import AllowAllPermissionsManager
+from brilliance_admin.permissions.interfaces import PermissionsManager
 from brilliance_admin.schema.category import BaseCategory, TableOptions
 from brilliance_admin.schema.table.history_change_provider import HistoryChangeDefaultLogs, HistoryLogsProvider
 from brilliance_admin.translations import LanguageContext, LanguageManager
@@ -83,6 +85,8 @@ class AdminIndexContextData(DataclassBase):
 class AdminSchema:
     categories: List[BaseCategory]
     auth: Any
+
+    permissions_manager: PermissionsManager = Field(default_factory=AllowAllPermissionsManager)
 
     api_timeout_ms: int = 1000 * 5
     debug_traceback_limit: int = 7

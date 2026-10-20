@@ -232,7 +232,12 @@ class CategoryGroup(BaseCategory):
         for category in self.subcategories:
             if not isinstance(category, BaseCategory):
                 raise TypeError(f'Category "{category}" is not instance of BaseCategory subclass')
-            category._group_slug = self.slug
+            self._set_group_slug(category)
+
+    def _set_group_slug(self, category: BaseCategory):
+        category._group_slug = self.slug
+        for subcategory in getattr(category, 'subcategories', []):
+            self._set_group_slug(subcategory)
 
     def generate_category_schema(
         self,

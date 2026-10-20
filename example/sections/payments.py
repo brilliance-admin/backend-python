@@ -353,6 +353,10 @@ class PaymentFieldsSchema(schema.FieldsSchema):
 
 class CreatePaymentSchema(schema.FieldsSchema):
     amount = schema.IntegerField(label=_('amount'))
+    description = schema.StringField(
+        label=_('description'),
+        default_fn=lambda user, **context: f'Created by {user.username}',
+    )
     is_throw_error = schema.BooleanField(label=_('is_throw_error'))
     error_message = schema.StringField(label=_('error_message'))
     addtional_fields = schema.MultipleChoiceField(
@@ -371,6 +375,7 @@ class CreatePaymentSchema(schema.FieldsSchema):
     formset = schema.FormSet(
         fields=[
             'amount',
+            'description',
             'is_throw_error',
             schema.FormField(
                 'error_message',
@@ -471,10 +476,9 @@ class PaymentsAdmin(schema.CategoryTable):
     )
     async def create_payment(self, action_data: ActionData, **kwargs):
         await asyncio.sleep(settings.fake_delay_seconds)
-        fake = Faker()
         msg = _('payment_create_result') % {
             'gateway_id': str(uuid.uuid4()),
-            'desctiption': fake.sentence(nb_words=100),
+            'desctiption': escape(action_data.form_data['description'] or ''),
             'redirect_url': 'https://www.google.com',
         }
         return ActionResult(persistent_message=msg)

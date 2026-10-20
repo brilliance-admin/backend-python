@@ -1,15 +1,73 @@
 import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import select
 
 from brilliance_admin import schema
 from brilliance_admin.auth import AdminAuthentication, UserABC
-from brilliance_admin.schema.table.history_change_provider import HistoryLogsProvider
+from brilliance_admin.integrations.sqlalchemy.history_changes.models import HistoryChange
+from brilliance_admin.schema.table.history_change_provider import HistoryLogsProvider, LogType
 from brilliance_admin.schema.table.history_logs_category import HistoryCategoryField, HistoryLogsAdmin
 from brilliance_admin.translations import TranslateText
+from example.main import admin_schema, app
+from example.sections.models import (
+    CurrencyFactory, Fee, FeeFactory, FeeTypeFactory, MerchantFactory, TerminalFactory,
+)
+
+client = TestClient(app)
 
 
 class TestAuth(AdminAuthentication):
     async def authenticate(self, headers):
         return UserABC(username='test')
+
+
+@pytest.mark.asyncio
+async def test_subcategory_save_and_action_write_history(postgres_sessionmaker, mocker):
+    merchant = await MerchantFactory()
+    currency = await CurrencyFactory()
+    terminal = await TerminalFactory(merchant=merchant, currency=currency)
+    fee_type = await FeeTypeFactory()
+    fee = await FeeFactory(terminal=terminal, fee_type=fee_type, title='111')
+
+    category = admin_schema.get_group('payments').get_category('terminal').get_subcategory('fee')
+    mocker.patch.object(category, 'db_async_session', postgres_sessionmaker)
+    params = {'subcategory': 'fee', 'parent_pk': terminal.id}
+
+    response = client.patch(
+        app.url_path_for('table_update', group='payments', category='terminal', pk=str(fee.id)),
+        params=params,
+        json={'title': '222'},
+    )
+    assert response.status_code == 200, response.text
+
+    async with postgres_sessionmaker() as session:
+        updated = await session.get(Fee, fee.id)
+        assert updated.title == '222'
+        entry = (await session.execute(select(HistoryChange))).scalar_one()
+        assert entry.category_path == 'payments/terminal/fee'
+        assert entry.log_type == LogType.UPDATE.value
+        assert entry.pk == str(fee.id)
+        assert entry.user == 'test_admin'
+        assert '111' in entry.data['title']['from']
+        assert '222' in entry.data['title']['to']
+
+    response = client.post(
+        app.url_path_for('table_action', group='payments', category='terminal', action='delete'),
+        params=params,
+        json={'pks': [fee.id]},
+    )
+    assert response.status_code == 200, response.text
+
+    async with postgres_sessionmaker() as session:
+        assert await session.get(Fee, fee.id) is None
+        entries = (await session.execute(select(HistoryChange).order_by(HistoryChange.id))).scalars().all()
+        assert len(entries) == 2
+        entry = entries[1]
+        assert entry.category_path == 'payments/terminal/fee'
+        assert entry.log_type == LogType.ADMIN_ACTION.value
+        assert entry.action_slug == 'delete'
+        assert entry.user == 'test_admin'
+        assert entry.data['pks'] == [fee.id]
 
 
 def test_history_diff_serializes_translated_value_without_language_context(language_context):

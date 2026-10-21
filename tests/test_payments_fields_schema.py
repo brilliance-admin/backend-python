@@ -24,7 +24,11 @@ category_schema_data = {
 @pytest.mark.asyncio
 async def test_generate_category_schema(language_context):
     category = PaymentsAdmin()
-    new_schema = category.generate_category_schema(UserABC(username="test"), language_context, admin_schema)
+    user = UserABC(username='test')
+    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+    new_schema = category.generate_category_schema(
+        user, language_context, admin_schema, user_permissions=permissions,
+    )
     assert new_schema.model_dump() == category_schema_data, new_schema.model_dump()
 
 

@@ -387,10 +387,14 @@ async def test_generate_category_schema_django(language_context):
             ),
         )
     )
+    user = UserABC(username='test')
+    admin_schema = get_admin_schema(category, language_context)
+    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
     new_schema = category.generate_category_schema(
-        UserABC(username="test"),
+        user,
         language_context,
-        get_admin_schema(category, language_context),
+        admin_schema,
+        user_permissions=permissions,
     )
     context = {'language_context': language_context}
     schema_data = new_schema.model_dump(mode='json', context=context)
@@ -416,10 +420,14 @@ async def test_django_search_help_uses_field_titles_by_line(language_context):
         search_fields=['title', 'owner__username', 'payload__phone'],
     )
 
+    user = UserABC(username='test')
+    admin_schema = get_admin_schema(category, language_context)
+    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
     category_schema = category.generate_category_schema(
-        UserABC(username="test"),
+        user,
         language_context,
-        get_admin_schema(category, language_context),
+        admin_schema,
+        user_permissions=permissions,
     )
 
     assert category_schema.table_info.search_help == (
@@ -443,10 +451,14 @@ async def test_django_search_help_related_title_does_not_render_none(search_help
         search_fields=['provider__name'],
     )
 
+    user = UserABC(username='test')
+    admin_schema = get_admin_schema(category, language_context)
+    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
     category_schema = category.generate_category_schema(
-        UserABC(username="test"),
+        user,
         language_context,
-        get_admin_schema(category, language_context),
+        admin_schema,
+        user_permissions=permissions,
     )
 
     assert 'None' not in category_schema.table_info.search_help

@@ -279,7 +279,10 @@ def test_subcategory_schema_removes_reverse_fk(postgres_sessionmaker, language_c
         'UserSessionAdmin must resolve user_id as the FK to UserAdmin parent'
     )
 
-    user_schema = user_category.generate_category_schema(user, language_context, admin_schema)
+    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+    user_schema = user_category.generate_category_schema(
+        user, language_context, admin_schema, user_permissions=permissions,
+    )
     subcategory_schema = user_schema.table_info.subcategories['usersession']
     subcategory_fields = subcategory_schema['table_info']['table_schema']['fields']
 
@@ -292,6 +295,7 @@ def test_subcategory_schema_removes_reverse_fk(postgres_sessionmaker, language_c
         user,
         language_context,
         admin_schema,
+        user_permissions=permissions,
     )
     direct_subcategory_fields = direct_subcategory_schema.table_info.table_schema.fields
 
@@ -304,6 +308,6 @@ def test_subcategory_schema_removes_reverse_fk(postgres_sessionmaker, language_c
         slug='users',
         title='Users',
         subcategories=[user_category],
-    ).generate_category_schema(user, language_context, admin_schema)
+    ).generate_category_schema(user, language_context, admin_schema, user_permissions=permissions)
 
     assert 'user' in group_schema.categories

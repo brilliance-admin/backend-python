@@ -2,6 +2,8 @@ from sqlalchemy.orm import selectinload
 
 from brilliance_admin import schema, sqlalchemy
 from brilliance_admin.auth import UserABC
+from brilliance_admin.permissions.category import PermissionsSettingsCategory
+from brilliance_admin.permissions.inline_field import PermissionsSettingsInlineField
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult, admin_action
 from brilliance_admin.schema.table.table_models import AutocompleteData
 from brilliance_admin.translations import TranslateText as _
@@ -25,6 +27,11 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
     model = User
     title = _('users')
     icon = 'mdi-account-details'
+    permissions_category = PermissionsSettingsCategory()
+
+    def post_schema_generation(self, admin_schema):
+        self.permissions_category.post_schema_generation(admin_schema)
+        super().post_schema_generation(admin_schema)
 
     ordering_fields = [
         'id',
@@ -35,6 +42,7 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
 
     table_schema = sqlalchemy.SQLAlchemyFieldsSchema(
         model=User,
+        permissions_settings=PermissionsSettingsInlineField(permissions_category),
         exclude_fields=['password'],
         extra_kwargs={
             'email': {
@@ -73,6 +81,7 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
                         schema.FormField('created_at', col_span=6),
                     ],
                 ),
+                'permissions_settings',
             ],
         ),
         list_display=[

@@ -143,14 +143,24 @@ class DjangoAdminBase(CategoryTable):
             admin_schema=admin_schema,
         )
 
-    def generate_category_schema(self, user, language_context, admin_schema, parent_category=None):
+    def generate_category_schema(
+            self,
+            user,
+            language_context,
+            admin_schema,
+            parent_category=None,
+            *,
+            user_permissions,
+    ):
         if self.title is None:
             meta = self.model._meta
             verbose_name = getattr(meta, 'verbose_name_plural', None) or getattr(meta, 'verbose_name', None)
             if verbose_name:
                 self.title = force_str(verbose_name)
 
-        category_schema = super().generate_category_schema(user, language_context, admin_schema, parent_category)
+        category_schema = super().generate_category_schema(
+            user, language_context, admin_schema, parent_category, user_permissions=user_permissions,
+        )
         if self.search_fields and self.search_help is None:
             category_schema.table_info.search_help = language_context.get_text(
                 _('sqlalchemy_search_help') % {'fields': self.get_search_help_fields()}
@@ -292,4 +302,5 @@ class DjangoAdminBase(CategoryTable):
         return self.model.objects.all()
 
     def run_debug_startup_checks(self):
+        super().run_debug_startup_checks()
         warn_if_list_related_fields_not_selected(self)

@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from brilliance_admin.api.utils import get_category, get_user
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.schema.admin_schema import AdminSchema
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.schema.table.table_models import AutocompleteData, AutocompleteResult
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
@@ -29,6 +30,12 @@ async def autocomplete(
     schema: AdminSchema = request.app.state.schema
     user = await get_user(request)
     schema_category, parent_category = get_category(schema, group, category, subcategory)
+
+    # Permissions
+    permissions = schema.permissions_manager.get_user_permissions(user, for_schema_generation=False)
+    action_type = TableAction.ADMIN_ACTION if data.action_name is not None else TableAction.LIST
+    if not permissions.has_action_permission(schema_category, action_type, data.action_name):
+        raise HTTPException(status_code=403, detail='Permission denied')
 
     language_slug = request.headers.get('Accept-Language')
     language_context: LanguageContext = schema.get_language_context(language_slug)

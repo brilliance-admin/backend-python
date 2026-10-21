@@ -657,6 +657,7 @@ class ImageField(TableField):
 @dataclass
 class ChoiceField(TableField):
     _type = 'choice'
+    btn_toggle: bool | None = None
 
     # Tag color available:
     # https://vuetifyjs.com/en/styles/colors/#classes
@@ -696,6 +697,8 @@ class ChoiceField(TableField):
         schema = super().generate_field_schema(user, field_slug, fields_schema, admin_schema, language_context, schema_type, **kwargs)
 
         schema.choices = self.generate_choices()
+
+        schema.btn_toggle = self.btn_toggle
 
         schema.size = self.size
         schema.variant = self.variant

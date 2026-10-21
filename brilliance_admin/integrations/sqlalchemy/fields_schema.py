@@ -17,10 +17,6 @@ ORM_FIELD_NOT_SUPPORTED = (
     'SQLAlchemy autogenerate ORM field {model}.{field_slug}'
     ' is not supported for type: {col_type}'
 )
-INLINE_FIELD_NOT_SUPPORTED = (
-    '{class_name} field "{field_slug}" has unsupported type "{field_type}". '
-    'Use sqlalchemy.SQLAlchemyInlineField instead of schema.InlineField'
-)
 
 
 class SQLAlchemyFieldsSchema(schema.FieldsSchema):
@@ -41,22 +37,6 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
 
     def generate_fields(self, kwargs) -> dict:
         generated_fields = super().generate_fields(kwargs)
-
-        # pylint: disable=import-outside-toplevel
-        from brilliance_admin.integrations.sqlalchemy.inline_field import SQLAlchemyInlineField
-
-        for field_slug, field in generated_fields.items():
-            if (
-                isinstance(field, schema.InlineField)
-                and not field.read_only
-                and not isinstance(field, SQLAlchemyInlineField)
-            ):
-                msg = INLINE_FIELD_NOT_SUPPORTED.format(
-                    class_name=type(self).__name__,
-                    field_slug=field_slug,
-                    field_type=type(field).__name__,
-                )
-                raise AttributeError(msg)
 
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import inspect
@@ -372,7 +352,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
             deserialized_data = await self.deserialize_fields(
                 data,
                 DeserializeAction.CREATE,
-                extra={'model': self.model},
+                extra={'model': self.model, 'record': None, 'user': user},
             )
         except ValidationError as e:
             raise AdminAPIException(
@@ -416,7 +396,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
             deserialized_data = await self.deserialize_fields(
                 data,
                 DeserializeAction.UPDATE,
-                extra={'model': self.model},
+                extra={'model': self.model, 'record': record, 'user': user},
             )
         except ValidationError as e:
             raise AdminAPIException(

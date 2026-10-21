@@ -565,7 +565,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             deserialized_data = await self.deserialize_fields(
                 data,
                 DeserializeAction.CREATE,
-                extra={'model': self.model},
+                extra={'model': self.model, 'record': None, 'user': user},
             )
         except ValidationError as e:
             raise AdminAPIException(
@@ -700,7 +700,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
             deserialized_data = await self.deserialize_fields(
                 data,
                 DeserializeAction.UPDATE,
-                extra={'model': self.model},
+                extra={'model': self.model, 'record': record, 'user': user},
             )
             if debug:
                 return await self.update_from_deserialized_with_debug(record, deserialized_data)

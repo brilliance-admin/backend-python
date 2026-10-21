@@ -208,7 +208,10 @@ def test_subcategory_schema_removes_reverse_fk(language_context):
         language_manager=language_context.language_manager,
     )
 
-    example_schema = example_category.generate_category_schema(user, language_context, admin_schema)
+    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+    example_schema = example_category.generate_category_schema(
+        user, language_context, admin_schema, user_permissions=permissions,
+    )
     subcategories = example_schema.table_info.subcategories
     subcategory_schema = (
         subcategories['djangonotherexample']
@@ -227,6 +230,7 @@ def test_subcategory_schema_removes_reverse_fk(language_context):
         user,
         language_context,
         admin_schema,
+        user_permissions=permissions,
     )
     direct_subcategory_fields = direct_subcategory_schema.table_info.table_schema.fields
     direct_formset_fields = another_subcategory.table_schema._collect_formset_fields(
@@ -240,6 +244,6 @@ def test_subcategory_schema_removes_reverse_fk(language_context):
         slug='examples',
         title='Examples',
         subcategories=[example_category],
-    ).generate_category_schema(user, language_context, admin_schema)
+    ).generate_category_schema(user, language_context, admin_schema, user_permissions=permissions)
 
     assert 'djangoexample' in group_schema.categories

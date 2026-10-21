@@ -1,12 +1,13 @@
 from typing import Any
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse
 
 from brilliance_admin.api.utils import get_category, get_user
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.dashboard.category_dashboard import CategoryDashboard, DashboardContainer, DashboardData
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
 
@@ -33,6 +34,11 @@ async def dashboard_data(
         subcategory,
         check_type=CategoryDashboard,
     )
+
+    # Permissions
+    permissions = schema.permissions_manager.get_user_permissions(user, for_schema_generation=False)
+    if not permissions.has_action_permission(schema_category, TableAction.LIST):
+        raise HTTPException(status_code=403, detail='Permission denied')
 
     result: DashboardContainer = await schema_category.get_data(
         data,

@@ -9,7 +9,7 @@ from pydantic.dataclasses import dataclass
 from pydantic_core import core_schema
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.exceptions import APIError, AdminAPIException, AsyncUnsafeTitleLoad, FieldError, ValidationError
+from brilliance_admin.exceptions import APIError, AdminAPIException, AsyncUnsafeTitleLoad, FieldError, SkipField, ValidationError
 from brilliance_admin.schema.category import BaseCategory, FieldSchemaData, FieldsSchemaData
 from brilliance_admin.schema.table.fields.base import TableField
 from brilliance_admin.schema.table.fields.function_field import FunctionField
@@ -555,6 +555,8 @@ class FieldsSchema:
                     deserialized_value = await validate_method(value)  # pylint: disable=not-callable
 
                 field.set_deserialized_value(result, field_slug, deserialized_value, action, extra)
+            except SkipField:
+                continue
             except FieldError as e:
                 errors[field_slug] = e
 

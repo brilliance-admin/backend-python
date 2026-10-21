@@ -34,6 +34,7 @@ class FieldSchemaData(DataclassBase):
     password: bool | None = None
 
     choices: List[dict] | None = None
+    btn_toggle: bool | None = None
     default_all_selected: bool | None = None
 
     variant: str | None = None
@@ -158,12 +159,20 @@ class BaseCategory(KwargsInitMixin, abc.ABC):
 
     _type_slug: ClassVar[str]
 
+    def post_schema_generation(self, admin_schema):
+        pass
+
+    def run_debug_startup_checks(self):
+        pass
+
     def generate_category_schema(
         self,
         user: UserABC,
         language_context: LanguageContext,
         admin_schema,
         parent_category=None,
+        *,
+        user_permissions,
     ) -> CategorySchemaData:
         type_slug = getattr(type(self), '_type_slug', None)
         if not type_slug:
@@ -215,8 +224,12 @@ class CategoryLink(BaseCategory):
         language_context: LanguageContext,
         admin_schema,
         parent_category=None,
+        *,
+        user_permissions,
     ) -> CategorySchemaData:
-        result = super().generate_category_schema(user, language_context, admin_schema, parent_category)
+        result = super().generate_category_schema(
+            user, language_context, admin_schema, parent_category, user_permissions=user_permissions,
+        )
         result.link = self.link
         return result
 
@@ -225,6 +238,16 @@ class CategoryGroup(BaseCategory):
     _type_slug: str = 'group'
 
     subcategories: list = Field(default_factory=list)
+
+    def post_schema_generation(self, admin_schema):
+        super().post_schema_generation(admin_schema)
+        for category in self.subcategories:
+            category.post_schema_generation(admin_schema)
+
+    def run_debug_startup_checks(self):
+        super().run_debug_startup_checks()
+        for category in self.subcategories:
+            category.run_debug_startup_checks()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -245,8 +268,14 @@ class CategoryGroup(BaseCategory):
         language_context: LanguageContext,
         admin_schema,
         parent_category=None,
+        *,
+        user_permissions,
     ) -> CategorySchemaData:
-        result = super().generate_category_schema(user, language_context, admin_schema, parent_category)
+        from brilliance_admin.schema.table.table_action import TableAction
+
+        result = super().generate_category_schema(
+            user, language_context, admin_schema, parent_category, user_permissions=user_permissions,
+        )
 
         for category in self.subcategories:
 
@@ -259,12 +288,16 @@ class CategoryGroup(BaseCategory):
                 msg = f'Category {type(category).__name__}.slug "{self.slug}" already registered by "{exists.title}"'
                 raise KeyError(msg)
 
+            if not user_permissions.has_action_permission(category, TableAction.LIST):
+                continue
+
             try:
                 result.categories[category.slug] = category.generate_category_schema(
                     user,
                     language_context,
                     parent_category=self,
                     admin_schema=admin_schema,
+                    user_permissions=user_permissions,
                 )
             except Exception as e:
                 msg = f'Category "{category.slug}" {type(category).__name__} generate_category_schema error: {e}'

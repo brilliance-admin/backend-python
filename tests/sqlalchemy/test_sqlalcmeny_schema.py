@@ -234,5 +234,9 @@ async def test_generate_category_schema_sqlalchemy(postgres_sessionmaker, langua
             created_at=schema.DateTimeField(range=True),
         ),
     )
-    new_schema = category.generate_category_schema(UserABC(username="test"), language_context, admin_schema)
+    user = UserABC(username='test')
+    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+    new_schema = category.generate_category_schema(
+        user, language_context, admin_schema, user_permissions=permissions,
+    )
     assert new_schema.model_dump() == CATEGORY_SCHEMA_DATA, new_schema.model_dump()

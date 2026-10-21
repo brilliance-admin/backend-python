@@ -177,12 +177,21 @@ class HistoryLogsAdmin(CategoryTable):
     has_update = False
     has_delete = False
 
-    def generate_category_schema(self, user, language_context, admin_schema, parent_category=None):
+    def generate_category_schema(
+            self,
+            user,
+            language_context,
+            admin_schema,
+            parent_category=None,
+            *,
+            user_permissions,
+    ):
         result = super().generate_category_schema(
             user,
             language_context,
             admin_schema,
             parent_category,
+            user_permissions=user_permissions,
         )
 
         choices = []

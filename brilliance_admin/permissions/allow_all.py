@@ -9,7 +9,7 @@ class AllowAllUserPermissions(UserPermissions):
             self,
             category: BaseCategory,
             action_type: TableAction,
-            action_name: str,
+            action_name: str | None = None,
     ) -> bool:
         return True
 

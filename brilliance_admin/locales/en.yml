@@ -1,3 +1,14 @@
+permissions:
+  title: 'Permissions settings'
+  inherit: 'Inherit'
+  allow: 'Allow'
+  deny: 'Deny'
+  actions:
+    list: 'View'
+    retrieve: 'View record'
+    create: 'Create record'
+    update: 'Update record'
+
 delete: 'Delete'
 delete_confirmation_text: "Are you sure you want to delete those records?\nThis action cannot be undone."
 deleted_successfully: 'The entries were successfully deleted.'

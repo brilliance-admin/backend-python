@@ -43,6 +43,16 @@ class CategoryTable(BaseCategory):
 
     pk_name: str | None = None
 
+    def post_schema_generation(self, admin_schema):
+        super().post_schema_generation(admin_schema)
+        for category in self.subcategories:
+            category.post_schema_generation(admin_schema)
+
+    def run_debug_startup_checks(self):
+        super().run_debug_startup_checks()
+        for category in self.subcategories:
+            category.run_debug_startup_checks()
+
     def __init__(self, *args, table_schema=None, table_filters=None, subcategories=None, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -141,8 +151,18 @@ class CategoryTable(BaseCategory):
             admin_schema=admin_schema,
         )
 
-    def generate_category_schema(self, user, language_context: LanguageContext, admin_schema, parent_category=None) -> dict:
-        schema = super().generate_category_schema(user, language_context, admin_schema, parent_category)
+    def generate_category_schema(
+            self,
+            user,
+            language_context: LanguageContext,
+            admin_schema,
+            parent_category=None,
+            *,
+            user_permissions,
+    ) -> dict:
+        schema = super().generate_category_schema(
+            user, language_context, admin_schema, parent_category, user_permissions=user_permissions,
+        )
 
         table_schema = getattr(self, 'table_schema', None)
         if not table_schema or not issubclass(table_schema.__class__, FieldsSchema):
@@ -164,10 +184,10 @@ class CategoryTable(BaseCategory):
             search_help=language_context.get_text(self.search_help),
 
             pk_name=self.pk_name,
-            can_retrieve=self.has_retrieve,
+            can_retrieve=self.has_retrieve and user_permissions.has_action_permission(self, TableAction.RETRIEVE),
 
-            can_create=self.has_create,
-            can_update=self.has_update,
+            can_create=self.has_create and user_permissions.has_action_permission(self, TableAction.CREATE),
+            can_update=self.has_update and user_permissions.has_action_permission(self, TableAction.UPDATE),
         )
 
         if self.table_filters:
@@ -180,6 +200,9 @@ class CategoryTable(BaseCategory):
 
         actions = {}
         for action_slug, action in self.get_actions().items():
+            if not user_permissions.has_action_permission(self, TableAction.ADMIN_ACTION, action_slug):
+                continue
+
             action = copy.copy(action.action_info)
 
             action['title'] = language_context.get_text(action.get('title'))
@@ -210,13 +233,20 @@ class CategoryTable(BaseCategory):
                 msg = f'{type(self).__name__}.slug subcategory {type(category).__name__}.slug is empty'
                 raise AttributeError(msg)
 
+            if not user_permissions.has_action_permission(category, TableAction.LIST):
+                continue
+
             category_schema = category.generate_category_schema(
                 user,
                 language_context,
                 admin_schema=admin_schema,
                 parent_category=self,
+                user_permissions=user_permissions,
             )
-            table.subcategories[category.slug] = category_schema.to_dict(keep_none=False)
+            table.subcategories[category.slug] = category_schema.to_dict(
+                keep_none=False,
+                context={'language_context': language_context},
+            )
 
         return schema
 

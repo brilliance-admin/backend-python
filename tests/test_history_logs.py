@@ -182,10 +182,13 @@ def test_history_logs_category_skips_root_links(language_context):
         ],
     )
 
+    user = UserABC(username='test')
+    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
     result = logs.generate_category_schema(
-        UserABC(username='test'),
+        user,
         language_context,
         admin_schema,
+        user_permissions=permissions,
     )
 
     assert logs.table_filters.get_field('category_path').choices == [

@@ -20,6 +20,7 @@ from brilliance_admin.docs import build_redoc_docs, build_scalar_docs
 from brilliance_admin.permissions.allow_all import AllowAllPermissionsManager
 from brilliance_admin.permissions.interfaces import PermissionsManager
 from brilliance_admin.schema.category import BaseCategory, TableOptions
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.schema.table.history_change_provider import HistoryChangeDefaultLogs, HistoryLogsProvider
 from brilliance_admin.translations import LanguageContext, LanguageManager
 from brilliance_admin.utils import DataclassBase, SupportsStr, get_logger
@@ -123,6 +124,9 @@ class AdminSchema:
         if not self.language_manager:
             self.language_manager = LanguageManager(DEFAULT_LANGUAGES)
 
+        for category in self.categories:
+            category.post_schema_generation(self)
+
     def _apply_default_table_options(self, category: BaseCategory) -> None:
         if getattr(category, '_type_slug', None) == 'table' and category.options is None:
             category.options = deepcopy(self.default_table_options)
@@ -135,6 +139,7 @@ class AdminSchema:
 
     def generate_admin_schema(self, user: UserABC, language_slug: str | None) -> AdminSchemaData:
         language_context: LanguageContext = self.get_language_context(language_slug)
+        user_permissions = self.permissions_manager.get_user_permissions(user, for_schema_generation=True)
 
         result = AdminSchemaData(profile=user)
 
@@ -143,13 +148,20 @@ class AdminSchema:
                 msg = f'Category {type(category).__name__}.slug is empty'
                 raise AttributeError(msg)
 
+            if not user_permissions.has_action_permission(category, TableAction.LIST):
+                continue
+
             try:
                 category_schema = category.generate_category_schema(
                     user,
                     language_context,
                     admin_schema=self,
+                    user_permissions=user_permissions,
                 )
-                result.categories[category.slug] = category_schema.to_dict(keep_none=False)
+                result.categories[category.slug] = category_schema.to_dict(
+                    keep_none=False,
+                    context={'language_context': language_context},
+                )
             except Exception as e:
                 msg = f'Root category "{category.slug}" generate_schema error: {e}'
                 raise Exception(msg) from e
@@ -251,17 +263,8 @@ class AdminSchema:
         return app
 
     def run_debug_startup_checks(self):
-        for category in self.iter_categories():
-            check = getattr(category, 'run_debug_startup_checks', None)
-            if check is not None:
-                check()
-
-    def iter_categories(self):
-        stack = list(self.categories)
-        while stack:
-            category = stack.pop(0)
-            yield category
-            stack.extend(getattr(category, 'subcategories', []) or [])
+        for category in self.categories:
+            category.run_debug_startup_checks()
 
     async def get_index_context_data(self, request: Request) -> dict:
         language_context = self.get_language_context(language_slug=None)

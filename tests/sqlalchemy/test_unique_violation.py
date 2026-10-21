@@ -55,11 +55,7 @@ async def test_duplicate_returns_friendly_error_and_rolls_back(
 @pytest.mark.parametrize('cause_type', [ForeignKeyViolationError, None])
 async def test_other_integrity_errors_keep_existing_response(mocker, operation, cause_type):
     target = await CurrencyFactory(title='Target', num_code=456, char_code='TARGET')
-    category = next(
-        category
-        for category in admin_schema.iter_categories()
-        if getattr(category, 'model', None) is Currency
-    )
+    category = admin_schema.get_group('currencies').get_category('currency')
     original = Exception('Database constraint failure')
     if cause_type is not None:
         original.__cause__ = cause_type('Database constraint failure')

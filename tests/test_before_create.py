@@ -7,24 +7,27 @@ from fastapi.testclient import TestClient
 
 from brilliance_admin.api.views.table import router
 from brilliance_admin.auth import UserABC
+from brilliance_admin.permissions.interfaces import PermissionsManager, UserPermissions
 from brilliance_admin.schema.category import CategoryGroup
 from brilliance_admin.schema.table.admin_action import admin_action
 from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.schema.table.fields.base import IntegerField
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
 from brilliance_admin.translations import LanguageContext, LanguageManager
-from example.sections.models import Currency, CurrencyFactory
+
+
+class DenyAllUserPermissions(UserPermissions):
+    def has_action_permission(self, category, action_type, action_name=None):
+        return False
+
+
+class DenyAllPermissionsManager(PermissionsManager):
+    def get_user_permissions(self, user, for_schema_generation):
+        return DenyAllUserPermissions(user)
 
 
 async def max_default(*, user, category, parent_category, parent_pk, action_name, action_data):
-    if action_data.send_to_all or not action_data.pks:
-        return 1000
-
-    async with category.db_async_session() as session:
-        currency = await session.get(Currency, action_data.pks[0])
-        if currency is None:
-            raise ValueError(f'Currency {action_data.pks[0]} not found')
-        return currency.depth
+    raise AssertionError('Denied request must not compute defaults')
 
 
 class DefaultForm(FieldsSchema):
@@ -46,10 +49,9 @@ class GatewayCategory(CategoryTable):
 
 
 @pytest.fixture
-def before_create_context(postgres_sessionmaker):
+def before_create_context():
     user = UserABC(username='admin')
     category = GatewayCategory()
-    category.db_async_session = postgres_sessionmaker
     parent = GatewayCategory(slug='parents', subcategories=[category])
     group = CategoryGroup(slug='test', subcategories=[parent])
     language_context = LanguageContext('en', LanguageManager({'en': 'English'}))
@@ -57,6 +59,7 @@ def before_create_context(postgres_sessionmaker):
     app.include_router(router)
     app.state.schema = SimpleNamespace(
         auth=SimpleNamespace(authenticate=AsyncMock(return_value=user)),
+        permissions_manager=DenyAllPermissionsManager(),
         get_group=lambda slug: group if slug == 'test' else None,
         get_language_context=lambda slug: language_context,
         debug=False,
@@ -67,45 +70,16 @@ def before_create_context(postgres_sessionmaker):
         )
 
 
-@pytest.mark.parametrize('for_action', [False, True])
-def test_before_create_defaults(for_action, before_create_context):
-    context = before_create_context
-    action_name = 'make_active_provider' if for_action else None
-    params = {'subcategory': 'gateways', 'parent_pk': '42'}
-    if for_action:
-        params['action_name'] = action_name
-    payload = {
-        'pks': [],
-        'send_to_all': for_action,
-        'filters': {'currency': 2},
-        'search': 'gateway',
-    }
+def test_before_create_denies_all(before_create_context, mocker):
+    client = before_create_context.client
+    category = client.app.state.schema.get_group('test').get_category('parents').get_subcategory('gateways')
+    handler = mocker.spy(category, '_before_create')
 
-    response = context.client.post('/table/test/parents/before-create/', params=params, json=payload)
-
-    assert response.status_code == 200, response.text
-    assert response.json() == {
-        'form_data': {'static': 10, 'max_amount': 1000, 'cleared': None},
-    }
-
-
-@pytest.mark.asyncio
-async def test_before_create_default_from_first_selected_record(before_create_context):
-    first = await CurrencyFactory(depth=3)
-    second = await CurrencyFactory(depth=2)
-
-    response = before_create_context.client.post(
+    response = client.post(
         '/table/test/parents/before-create/',
-        params={
-            'subcategory': 'gateways',
-            'parent_pk': '42',
-            'action_name': 'make_active_provider',
-        },
-        json={
-            'pks': [first.id, second.id],
-            'send_to_all': False,
-        },
+        params={'subcategory': 'gateways', 'parent_pk': '42', 'action_name': 'make_active_provider'},
+        json={'send_to_all': True},
     )
 
-    assert response.status_code == 200, response.text
-    assert response.json()['form_data']['max_amount'] == first.depth
+    assert response.status_code == 403, response.text
+    handler.assert_not_called()

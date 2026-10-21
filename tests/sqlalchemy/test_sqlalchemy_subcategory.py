@@ -74,6 +74,7 @@ async def test_subcategory_list(
     assert [row['merchant_id']['key'] for row in list_result.data] == [merchant_1.id, merchant_1.id]
 
     retrieve_result = await merchant_category.retrieve(
+        admin_schema=admin_schema,
         pk=merchant_1.id,
         user=user,
         language_context=language_context,
@@ -113,6 +114,7 @@ async def test_subcategory_retrieve(
     fee_2 = await FeeFactory(title='fee 2', terminal=terminal_2, fee_type=fee_type, fix_amount=1)
 
     retrieve_result = await fees_subcategory.retrieve(
+        admin_schema=admin_schema,
         pk=fee_1.id,
         user=user,
         language_context=language_context,
@@ -130,6 +132,7 @@ async def test_subcategory_retrieve(
 
     with pytest.raises(AdminAPIException) as exc_info:
         await fees_subcategory.retrieve(
+            admin_schema=admin_schema,
             pk=fee_2.id,
             user=user,
             language_context=language_context,
@@ -164,6 +167,7 @@ async def test_subcategory_create(
     fee_type = await FeeTypeFactory(title='provider')
 
     create_result = await fees_subcategory.create(
+        admin_schema=admin_schema,
         data={
             'title': 'created fee',
             'accrual_type': {'value': 'above', 'title': 'Above (from user)'},
@@ -217,6 +221,7 @@ async def test_subcategory_update(
     fee_2 = await FeeFactory(title='fee 2', terminal=terminal_2, fee_type=fee_type, fix_amount=1)
 
     update_result = await fees_subcategory.update(
+        admin_schema=admin_schema,
         pk=fee_1.id,
         data={
             'title': 'updated fee',
@@ -241,6 +246,7 @@ async def test_subcategory_update(
 
     with pytest.raises(AdminAPIException) as exc_info:
         await fees_subcategory.update(
+            admin_schema=admin_schema,
             pk=fee_2.id,
             data={
                 'title': 'must fail',

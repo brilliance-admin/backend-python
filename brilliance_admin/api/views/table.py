@@ -169,6 +169,7 @@ async def table_retrieve(
             parent_category,
             parent_pk,
             schema.history_change_provider,
+            admin_schema=schema,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
@@ -220,6 +221,7 @@ async def table_create(
             parent_category,
             parent_pk,
             schema.history_change_provider,
+            admin_schema=schema,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)
@@ -273,6 +275,7 @@ async def table_update(
             parent_category,
             parent_pk,
             schema.history_change_provider,
+            admin_schema=schema,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)

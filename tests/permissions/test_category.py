@@ -2,7 +2,7 @@ from brilliance_admin.auth import UserABC
 from brilliance_admin.permissions.category import PermissionsSettingsCategory
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.category import CategoryGroup
-from brilliance_admin.schema.table.fields.base import ChoiceField
+from brilliance_admin.schema.table.fields.base import BooleanField, ChoiceField
 from example.main import admin_schema
 from example.sections.user_session import UserSessionAdmin
 from example.sections.users import UserAdmin
@@ -25,6 +25,7 @@ def test_permissions_category_generates_rules_on_startup(postgres_sessionmaker):
 
     fields = permissions_category.table_schema.get_fields()
     assert set(fields) == {
+        'is_superuser',
         'users.user.list',
         'users.user.retrieve',
         'users.user.create',
@@ -37,6 +38,8 @@ def test_permissions_category_generates_rules_on_startup(postgres_sessionmaker):
         'users.user.usersession.update',
         'users.user.usersession.admin_action.delete',
     }
+    assert isinstance(fields['is_superuser'], BooleanField)
+    assert fields['is_superuser'].default is False
     field = fields['users.user.admin_action.change_password']
     assert isinstance(field, ChoiceField)
     choices = field.generate_choices()

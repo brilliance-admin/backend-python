@@ -558,14 +558,14 @@ class DjangoFieldsSchema(schema.FieldsSchema):
     def get_connection(self):
         return connections[self.model.objects.db]
 
-    async def create(self, user, data, debug: bool = False):
+    async def create(self, user, data, debug: bool = False, *, admin_schema):
         self.validate_incoming_data(data)
 
         try:
             deserialized_data = await self.deserialize_fields(
                 data,
                 DeserializeAction.CREATE,
-                extra={'model': self.model, 'record': None, 'user': user},
+                extra={'admin_schema': admin_schema, 'model': self.model, 'record': None, 'user': user},
             )
         except ValidationError as e:
             raise AdminAPIException(
@@ -579,7 +579,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
         try:
             if debug:
                 return await self.create_from_deserialized_with_debug(deserialized_data)
-            return await self.create_from_deserialized(deserialized_data)
+            return await self.create_from_deserialized(deserialized_data), None
         except IntegrityError as e:
             raise AdminAPIException(
                 APIError(
@@ -693,18 +693,18 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
         return record
 
-    async def update(self, record, user, data, debug: bool = False):
+    async def update(self, record, user, data, debug: bool = False, *, admin_schema):
         self.validate_incoming_data(data)
 
         try:
             deserialized_data = await self.deserialize_fields(
                 data,
                 DeserializeAction.UPDATE,
-                extra={'model': self.model, 'record': record, 'user': user},
+                extra={'admin_schema': admin_schema, 'model': self.model, 'record': record, 'user': user},
             )
             if debug:
                 return await self.update_from_deserialized_with_debug(record, deserialized_data)
-            return await self.update_from_deserialized(record, deserialized_data)
+            return await self.update_from_deserialized(record, deserialized_data), None
         except ValidationError as e:
             raise AdminAPIException(
                 APIError(

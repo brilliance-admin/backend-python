@@ -1,34 +1,12 @@
-from enum import Enum
+from brilliance_admin.permissions.settings import PermissionsData, PermissionValue
 
 from brilliance_admin.schema.category import BaseCategory, CategoryGroup
 from brilliance_admin.schema.table.category_table import CategoryTable
-from brilliance_admin.schema.table.fields.base import ChoiceField
+from brilliance_admin.schema.table.fields.base import BooleanField, ChoiceField
 from brilliance_admin.schema.table.fields_schema import FieldsSchema, FormField, FormSet
 from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import humanize_field_name
-
-
-class PermissionValue(str, Enum):
-    INHERIT = 'inherit'
-    ALLOW = 'allow'
-    DENY = 'deny'
-
-    @property
-    def label(self):
-        return {
-            self.INHERIT: _('permissions.inherit'),
-            self.ALLOW: _('permissions.allow'),
-            self.DENY: _('permissions.deny'),
-        }[self]
-
-    @property
-    def tag_color(self):
-        return {
-            self.INHERIT: 'grey',
-            self.ALLOW: 'success',
-            self.DENY: 'error',
-        }[self]
 
 
 class PermissionsSettingsCategory(CategoryTable):
@@ -36,19 +14,22 @@ class PermissionsSettingsCategory(CategoryTable):
     title = _('permissions.title')
     icon = 'mdi-shield-account'
 
+    async def get_list(self, *args, **kwargs):
+        raise NotImplementedError('Permissions settings storage is forbidden')
+
     def post_schema_generation(self, admin_schema):
         self.table_schema = self.generate_rules_schema(admin_schema.categories)
         super().post_schema_generation(admin_schema)
 
-    async def get_data(self, record, extra: dict) -> list[dict]:
-        return [{}]
-
-    async def save_data(self, record, data: dict, extra: dict) -> None:
-        print('Permissions settings:', record, data)
-
     def generate_rules_schema(self, categories: list[BaseCategory]) -> FieldsSchema:
-        fields = {}
-        formsets = []
+        fields = {
+            'is_superuser': BooleanField(
+                label=_('permissions.is_superuser'),
+                help_text=_('permissions.is_superuser_help'),
+                default=False,
+            ),
+        }
+        formsets = [FormField('is_superuser')]
         for category in categories:
             formsets.extend(self._collect_rules(category, '', fields))
         return FieldsSchema(formset=FormSet(fields=formsets), **fields)
@@ -109,5 +90,15 @@ class PermissionsSettingsCategory(CategoryTable):
         )
         return FormField(key, col_span=4)
 
-    async def get_list(self, *args, **kwargs):
-        raise NotImplementedError('Permissions settings storage is not implemented')
+    async def get_data(self, record, data: PermissionsData, extra: dict) -> None:
+        permissions = extra['admin_schema'].permissions_manager.get_user_permissions(
+            record, for_schema_generation=True,
+        )
+        stored_data = permissions.get_permissions_data()
+        data.is_superuser = stored_data.is_superuser
+        rules = {rule.name: rule for rule in data.iter_rules()}
+        for rule in stored_data.iter_rules():
+            rules[rule.name].set_value(rule.value)
+
+    async def save_data(self, record, data: PermissionsData, extra: dict) -> None:
+        await extra['admin_schema'].permissions_manager.save_permissions(data, extra)

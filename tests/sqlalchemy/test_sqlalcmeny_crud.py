@@ -9,6 +9,7 @@ from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.schema.table.admin_action import ActionData
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction
+from example.main import admin_schema
 from example.sections.models import (
     City, CityFactory, CountryFactory, Currency, CurrencyFactory, Fee, FeeAccrualType, FeeFactory, FeeFixType,
     FeeOperationType, FeeSourceType, FeeTypeFactory, Merchant, MerchantFactory, Terminal, TerminalFactory,
@@ -78,6 +79,7 @@ async def test_create(postgres_sessionmaker, language_context):
         ],
     }
     create_result: schema.CreateResult = await category.create(
+        admin_schema=admin_schema,
         data=create_data,
         user=user,
         language_context=language_context,
@@ -139,6 +141,7 @@ async def test_create_bad_fk(postgres_sessionmaker, language_context):
     }
     with pytest.raises(AdminAPIException) as e:
         schema.CreateResult = await category.create(
+            admin_schema=admin_schema,
             data=create_data,
             user=user,
             language_context=language_context,
@@ -197,6 +200,7 @@ async def test_create_bad_inline_fk_rollbacks_all(postgres_sessionmaker, languag
 
     with pytest.raises(AdminAPIException) as e:
         await category.create(
+            admin_schema=admin_schema,
             data=create_data,
             user=user,
             language_context=language_context,
@@ -234,6 +238,7 @@ async def test_create_inline_validation_error(postgres_sessionmaker, language_co
 
     with pytest.raises(AdminAPIException) as e:
         await category.create(
+            admin_schema=admin_schema,
             data={
                 'manager_id': 0,
                 'merchant_id': merchant.id,
@@ -316,6 +321,7 @@ async def test_retrieve(postgres_sessionmaker, language_context):
     )
 
     retrieve_result = await category.retrieve(
+        admin_schema=admin_schema,
         pk=terminal.id,
         user=user,
         language_context=language_context,
@@ -411,6 +417,7 @@ async def test_retrieve_currency(postgres_sessionmaker, language_context):
     )
 
     retrieve_result = await category.retrieve(
+        admin_schema=admin_schema,
         pk=currency.id,
         user=user,
         language_context=language_context,
@@ -446,6 +453,7 @@ async def test_create_bad_json(postgres_sessionmaker, language_context):
     }
     with pytest.raises(AdminAPIException) as e:
         await category.create(
+            admin_schema=admin_schema,
             data=create_data,
             user=user,
             language_context=language_context,
@@ -567,6 +575,7 @@ async def test_update_related_one(postgres_sessionmaker, language_context):
         'description': 'new description',
     }
     update_result = await category.update(
+        admin_schema=admin_schema,
         pk=terminal.id,
         data=update_data,
         user=user,
@@ -652,6 +661,7 @@ async def test_update_inline_existing_and_create_new(postgres_sessionmaker, lang
     }
 
     update_result = await category.update(
+        admin_schema=admin_schema,
         pk=terminal.id,
         data=update_data,
         user=user,
@@ -738,6 +748,7 @@ async def test_update_inline_retrieve_and_list_show_actual_state(postgres_sessio
     )
 
     await category.update(
+        admin_schema=admin_schema,
         pk=terminal.id,
         data={
             'description': 'new description',
@@ -777,6 +788,7 @@ async def test_update_inline_retrieve_and_list_show_actual_state(postgres_sessio
     )
 
     retrieve_result = await category.retrieve(
+        admin_schema=admin_schema,
         pk=terminal.id,
         user=user,
         language_context=language_context,
@@ -847,6 +859,7 @@ async def test_update_inline_validation_error(postgres_sessionmaker, language_co
 
     with pytest.raises(AdminAPIException) as e:
         await category.update(
+            admin_schema=admin_schema,
             pk=terminal.id,
             data={'fees': [{'fix_amount': 0}]},
             user=user,
@@ -919,6 +932,7 @@ async def test_update_related_many(postgres_sessionmaker, language_context):
         ],
     }
     update_result = await category.update(
+        admin_schema=admin_schema,
         pk=currency_rub.id,
         data=update_data,
         user=user,
@@ -965,6 +979,7 @@ async def test_update_bad_value_int16(postgres_sessionmaker, language_context):
     }
     with pytest.raises(AdminAPIException) as e:
         await category.update(
+            admin_schema=admin_schema,
             pk=currency.id,
             data=update_data,
             user=user,

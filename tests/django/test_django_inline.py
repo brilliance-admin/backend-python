@@ -4,6 +4,7 @@ from django.db import connection, models
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, FieldError
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema, DjangoInlineField
+from example.main import admin_schema
 from example.sections.django_models import (
     DjangoAnotherExample, DjangoAnotherExampleFactory, DjangoExample, DjangoExampleFactory, DjangoUserFactory)
 
@@ -146,6 +147,7 @@ async def test_inline_retrieve(language_context):
     child_2 = await DjangoAnotherExampleFactory(example=example, title='child 2')
 
     result = await category.retrieve(
+        admin_schema=admin_schema,
         pk=example.id,
         user=user,
         language_context=language_context,
@@ -174,6 +176,7 @@ async def test_inline_get_data_sync_uses_async_unsafe_fallback(language_context,
     child = await DjangoAnotherExampleFactory(example=example, title='child')
 
     result = await category.retrieve(
+        admin_schema=admin_schema,
         pk=example.pk,
         user=user,
         language_context=language_context,
@@ -194,6 +197,7 @@ async def test_inline_create(language_context):
     owner = await DjangoUserFactory()
 
     result = await category.create(
+        admin_schema=admin_schema,
         data={
             'owner': owner.id,
             'title': 'parent',
@@ -222,6 +226,7 @@ async def test_inline_update(language_context):
     child = await DjangoAnotherExampleFactory(example=example, title='child 1')
 
     update_result = await category.update(
+        admin_schema=admin_schema,
         pk=example.id,
         data={
             'title': 'parent updated',
@@ -257,6 +262,7 @@ async def test_inline_update_accepts_related_field_payload(language_context, inl
     target = await InlineBugTarget.objects.acreate(id=4, title='target')
 
     await category.update(
+        admin_schema=admin_schema,
         pk=parent.pk,
         data={
             'title': 'list_342',
@@ -281,6 +287,7 @@ async def test_inline_update_accepts_related_field_payload(language_context, inl
 
     with pytest.raises(AdminAPIException) as exc:
         await category.update(
+            admin_schema=admin_schema,
             pk=parent.pk,
             data={
                 'title': 'list_342',
@@ -324,6 +331,7 @@ async def test_inline_update_accepts_many_to_many_related_field(language_context
     many_target = await InlineBugTarget.objects.acreate(id=5, title='many target')
 
     await category.update(
+        admin_schema=admin_schema,
         pk=parent.pk,
         data={
             'title': 'list_342',
@@ -353,6 +361,7 @@ async def test_inline_create_rolls_back_parent_if_inline_save_fails(language_con
 
     with pytest.raises(AdminAPIException):
         await category.create(
+            admin_schema=admin_schema,
             data={
                 'title': 'parent',
                 'items': [

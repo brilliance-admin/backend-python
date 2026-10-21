@@ -38,6 +38,7 @@ class SQLAlchemyAdminCreate:
             parent_category=None,
             parent_pk=None,
             history_change_provider=None,
+            *, admin_schema,
     ) -> schema.CreateResult:
         if not self.has_create:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -50,7 +51,7 @@ class SQLAlchemyAdminCreate:
 
         try:
             async with self.db_async_session() as session:
-                record = await self.table_schema.create(user, data, session)
+                record = await self.table_schema.create(user, data, session, admin_schema=admin_schema)
                 pk_value = getattr(record, self.pk_name, None)
                 choice = Record(
                     key=pk_value,

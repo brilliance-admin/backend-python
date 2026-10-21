@@ -4,6 +4,7 @@ from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
+from example.main import admin_schema
 from example.sections.django_models import (
     DjangoAnotherExample,
     DjangoAnotherExampleFactory,
@@ -78,6 +79,7 @@ async def test_subcategory_list(language_context):
     assert [row['id'] for row in list_result.data] == [another_2.id, another_1.id]
 
     retrieve_result = await example_category.retrieve(
+        admin_schema=admin_schema,
         pk=example_1.id,
         user=user,
         language_context=language_context,
@@ -108,6 +110,7 @@ async def test_subcategory_retrieve(language_context):
     another_2 = await DjangoAnotherExampleFactory(example=example_2)
 
     retrieve_result = await another_subcategory.retrieve(
+        admin_schema=admin_schema,
         pk=another_1.id,
         user=user,
         language_context=language_context,
@@ -121,6 +124,7 @@ async def test_subcategory_retrieve(language_context):
 
     with pytest.raises(AdminAPIException) as exc_info:
         await another_subcategory.retrieve(
+            admin_schema=admin_schema,
             pk=another_2.id,
             user=user,
             language_context=language_context,
@@ -140,6 +144,7 @@ async def test_subcategory_create(language_context):
     example = await DjangoExampleFactory()
 
     create_result = await another_subcategory.create(
+        admin_schema=admin_schema,
         data={
             'title': 'created child',
         },
@@ -168,6 +173,7 @@ async def test_subcategory_update(language_context):
     another_2 = await DjangoAnotherExampleFactory(example=example_2)
 
     update_result = await another_subcategory.update(
+        admin_schema=admin_schema,
         pk=another_1.id,
         data={
             'title': 'updated child',
@@ -187,6 +193,7 @@ async def test_subcategory_update(language_context):
 
     with pytest.raises(AdminAPIException) as exc_info:
         await another_subcategory.update(
+            admin_schema=admin_schema,
             pk=another_2.id,
             data={'title': 'must fail'},
             user=user,

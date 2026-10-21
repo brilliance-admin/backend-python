@@ -16,6 +16,7 @@ class DjangoAdminUpdate:
         parent_category=None,
         parent_pk=None,
         history_change_provider=None,
+        *, admin_schema,
     ) -> schema.UpdateResult:
         if not self.has_update:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -34,6 +35,7 @@ class DjangoAdminUpdate:
                 debug,
                 parent_category,
                 parent_pk,
+                admin_schema=admin_schema,
             )
 
         queryset = self.model.objects.filter(**{self.pk_name: pk})
@@ -48,11 +50,9 @@ class DjangoAdminUpdate:
                 error,
                 status_code=400,
             )
-        debug_info = None
-        if debug:
-            record, debug_info = await self.table_schema.update(record, user, data, debug=True)
-        else:
-            await self.table_schema.update(record, user, data)
+        record, debug_info = await self.table_schema.update(
+            record, user, data, debug=debug, admin_schema=admin_schema,
+        )
 
         result = schema.UpdateResult(pk=pk, debug_info=debug_info)
         if history_change_provider is not None:

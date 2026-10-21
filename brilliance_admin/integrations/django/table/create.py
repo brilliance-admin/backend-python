@@ -26,16 +26,15 @@ class DjangoAdminCreate:
         parent_category=None,
         parent_pk=None,
         history_change_provider=None,
+        *, admin_schema,
     ) -> schema.CreateResult:
         if not self.has_create:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
         data = self.apply_parent_data(data, parent_category, parent_pk)
-        debug_info = None
-        if debug:
-            record, debug_info = await self.table_schema.create(user, data, debug=True)
-        else:
-            record = await self.table_schema.create(user, data)
+        record, debug_info = await self.table_schema.create(
+            user, data, debug=debug, admin_schema=admin_schema,
+        )
         pk_value = getattr(record, self.pk_name, None)
         choice = Record(
             key=pk_value,

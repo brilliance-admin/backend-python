@@ -639,9 +639,12 @@ class PaymentsAdmin(schema.CategoryTable):
         parent_category=None,
         parent_pk=None,
         history_change_provider=None,
+        *, admin_schema,
     ) -> schema.RetrieveResult:
         line_data = self._get_data(int(pk))
-        line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
+        line = await self.table_schema.serialize(
+            line_data, extra={'admin_schema': admin_schema, 'user': user, 'record': line_data},
+        )
         return schema.RetrieveResult(data=line)
 
     async def update(
@@ -653,6 +656,7 @@ class PaymentsAdmin(schema.CategoryTable):
         debug: bool,
         parent_category=None,
         parent_pk=None,
+        *, admin_schema,
     ) -> schema.UpdateResult:
         logger.info('Updated pk=%s data=%s', pk, data)
         await asyncio.sleep(settings.fake_delay_seconds)
@@ -666,6 +670,7 @@ class PaymentsAdmin(schema.CategoryTable):
         debug: bool,
         parent_category=None,
         parent_pk=None,
+        *, admin_schema,
     ) -> schema.CreateResult:
         logger.info('Create data=%s', data)
         return schema.CreateResult(pk=0)

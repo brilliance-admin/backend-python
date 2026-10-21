@@ -345,14 +345,14 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
 
         return record
 
-    async def create(self, user, data, session):
+    async def create(self, user, data, session, *, admin_schema):
         self.validate_incoming_data(data)
 
         try:
             deserialized_data = await self.deserialize_fields(
                 data,
                 DeserializeAction.CREATE,
-                extra={'model': self.model, 'record': None, 'user': user},
+                extra={'admin_schema': admin_schema, 'model': self.model, 'record': None, 'user': user},
             )
         except ValidationError as e:
             raise AdminAPIException(
@@ -389,14 +389,14 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
 
         return record
 
-    async def update(self, record, user, data, session):
+    async def update(self, record, user, data, session, *, admin_schema):
         self.validate_incoming_data(data)
 
         try:
             deserialized_data = await self.deserialize_fields(
                 data,
                 DeserializeAction.UPDATE,
-                extra={'model': self.model, 'record': record, 'user': user},
+                extra={'admin_schema': admin_schema, 'model': self.model, 'record': record, 'user': user},
             )
         except ValidationError as e:
             raise AdminAPIException(

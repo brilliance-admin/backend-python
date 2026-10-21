@@ -25,6 +25,7 @@ class SQLAlchemyAdminUpdate:
             parent_category=None,
             parent_pk=None,
             history_change_provider=None,
+            *, admin_schema,
     ) -> schema.UpdateResult:
         if not self.has_update:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -48,6 +49,7 @@ class SQLAlchemyAdminUpdate:
                 debug,
                 parent_category,
                 parent_pk,
+                admin_schema=admin_schema,
             )
 
         col = inspect(self.table_schema.model).mapper.columns[self.pk_name]
@@ -67,7 +69,7 @@ class SQLAlchemyAdminUpdate:
                         status_code=400,
                     )
 
-                await self.table_schema.update(record, user, data, session)
+                await self.table_schema.update(record, user, data, session, admin_schema=admin_schema)
 
         except AdminAPIException as e:
             raise e

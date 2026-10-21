@@ -13,6 +13,7 @@ from brilliance_admin.exceptions import AdminAPIException, FieldError
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
 from brilliance_admin.schema.table.admin_action import ActionData
 from brilliance_admin.translations import TranslateText as _
+from example.main import admin_schema
 from example.sections.django_models import DjangoExample, DjangoExampleFactory, DjangoUserFactory
 
 
@@ -95,6 +96,7 @@ async def test_create(language_context):
     user_django = await DjangoUserFactory()
 
     result = await category.create(
+        admin_schema=admin_schema,
         data={
             'owner': user_django.pk,
             'title': 'test title',
@@ -137,6 +139,7 @@ async def test_create_validates_required_related_field(language_context):
 
     with pytest.raises(AdminAPIException) as exc:
         await category.create(
+            admin_schema=admin_schema,
                 data={
                     'title': 'test title',
                     'description': 'test description',
@@ -163,6 +166,7 @@ async def test_create_with_callable_fk_default(callable_default_schema, language
     user = UserABC(username='test')
 
     result = await category.create(
+        admin_schema=admin_schema,
         data={
             'title': 'created with default',
         },
@@ -191,6 +195,7 @@ async def test_update(language_context):
     )
     new_owner = await DjangoUserFactory()
     result = await category.update(
+        admin_schema=admin_schema,
         pk=record.pk,
         data={
             'owner': new_owner.pk,
@@ -237,6 +242,7 @@ async def test_update_file_from_base64_payload(language_context, tmp_path):
     record = await DjangoExampleFactory(title='before')
 
     result = await category.update(
+        admin_schema=admin_schema,
         pk=record.pk,
         data={
             'file': {
@@ -274,6 +280,7 @@ async def test_retrieve(language_context):
     )
 
     result = await category.retrieve(
+        admin_schema=admin_schema,
         pk=record.pk,
         user=user,
         language_context=language_context,

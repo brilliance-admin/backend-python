@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from brilliance_admin.api.views.table import router
 from brilliance_admin.auth import UserABC
 from brilliance_admin.permissions.interfaces import PermissionsManager, UserPermissions
+from brilliance_admin.permissions.settings import PermissionsData
 from brilliance_admin.schema.category import CategoryGroup
 from brilliance_admin.schema.table.admin_action import admin_action
 from brilliance_admin.schema.table.category_table import CategoryTable
@@ -17,6 +18,9 @@ from brilliance_admin.translations import LanguageContext, LanguageManager
 
 
 class DenyAllUserPermissions(UserPermissions):
+    def get_permissions_data(self):
+        return PermissionsData([])
+
     def has_action_permission(self, category, action_type, action_name=None):
         return False
 

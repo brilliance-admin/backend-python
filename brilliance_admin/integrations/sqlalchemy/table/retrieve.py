@@ -24,6 +24,7 @@ class SQLAlchemyAdminRetrieveMixin:
             debug: bool,
             parent_category=None,
             parent_pk=None,
+            *, admin_schema,
     ) -> schema.RetrieveResult:
         if not self.has_retrieve:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
@@ -66,6 +67,7 @@ class SQLAlchemyAdminRetrieveMixin:
             data = await self.table_schema.serialize(
                 record,
                 extra={
+                    'admin_schema': admin_schema,
                     "record": record,
                     "user": user,
                     "debug": debug,
@@ -106,6 +108,7 @@ class SQLAlchemyAdminRetrieveMixin:
             parent_category=None,
             parent_pk=None,
             history_change_provider=None,
+            *, admin_schema,
     ) -> schema.RetrieveResult:
         result = await self._retrieve(
             pk,
@@ -114,5 +117,6 @@ class SQLAlchemyAdminRetrieveMixin:
             debug,
             parent_category,
             parent_pk,
+            admin_schema=admin_schema,
         )
         return result

@@ -2,11 +2,15 @@ import pytest
 
 from brilliance_admin.auth import UserABC
 from brilliance_admin.permissions.interfaces import PermissionsManager, UserPermissions
+from brilliance_admin.permissions.settings import PermissionsData
 from brilliance_admin.schema.table.table_action import TableAction
 from example.main import admin_schema
 
 
 class SchemaUserPermissions(UserPermissions):
+    def get_permissions_data(self):
+        return PermissionsData([])
+
     def __init__(self, user, denied_category, denied_action):
         super().__init__(user)
         self.denied_category = denied_category

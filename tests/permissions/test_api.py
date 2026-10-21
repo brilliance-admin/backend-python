@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from brilliance_admin.permissions.interfaces import PermissionsManager, UserPermissions
+from brilliance_admin.permissions.settings import PermissionsData
 from brilliance_admin.schema.table.table_action import TableAction
 from example.main import admin_schema, app
 
@@ -8,6 +9,9 @@ client = TestClient(app)
 
 
 class ApiUserPermissions(UserPermissions):
+    def get_permissions_data(self):
+        return PermissionsData([])
+
     def __init__(self, user, denied_category, denied_action, denied_action_name):
         super().__init__(user)
         self.denied_category = denied_category

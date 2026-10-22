@@ -37,8 +37,8 @@ def django_export_payment_schema():
 
 
 class DjangoExportFormattedAmountTestAdmin(DjangoPostgresExportAction, DjangoAdmin):
-    def get_export_queryset(self):
-        return super().get_export_queryset().annotate(
+    def get_export_queryset(self, export_fields: list[str]):
+        return super().get_export_queryset(export_fields).annotate(
             amount=Func(
                 ExpressionWrapper(
                     F('count') / Value(100.0),
@@ -52,8 +52,8 @@ class DjangoExportFormattedAmountTestAdmin(DjangoPostgresExportAction, DjangoAdm
 
 
 class DjangoExportFormattedBigAmountTestAdmin(DjangoPostgresExportAction, DjangoAdmin):
-    def get_export_queryset(self):
-        return super().get_export_queryset().annotate(
+    def get_export_queryset(self, export_fields: list[str]):
+        return super().get_export_queryset(export_fields).annotate(
             amount_minor=Func(
                 ExpressionWrapper(
                     F('amount') / Value(100.0),

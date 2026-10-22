@@ -55,7 +55,7 @@ class ExportFieldsSchema(FieldsSchema):
 class DjangoPostgresExportAction:
     export_fields: list | None = None
 
-    def get_export_queryset(self):
+    def get_export_queryset(self, export_fields: list[str]):
         return self.get_queryset(action=TableAction.ADMIN_ACTION, action_slug='django_export')
 
     def get_actions(self):
@@ -67,7 +67,7 @@ class DjangoPostgresExportAction:
         django_export_field = actions['django_export']
         fields_field = django_export_field.action_info['form_schema'].get_field('export_fields')
 
-        annotations = self.get_export_queryset().query.annotations
+        annotations = self.get_export_queryset(self.export_fields).query.annotations
         for field_path in self.export_fields:
             if field_path not in annotations:
                 self.validate_lookup_path(field_path, 'export')

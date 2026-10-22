@@ -88,7 +88,7 @@ class PermissionsSettingsCategory(CategoryTable):
             choices=PermissionValue,
             default=PermissionValue.INHERIT.value,
         )
-        return FormField(key, col_span=4)
+        return FormField(key, col_span=3)
 
     async def get_data(self, record, data: PermissionsData, extra: dict) -> None:
         permissions = await extra['admin_schema'].permissions_manager.get_user_permissions(

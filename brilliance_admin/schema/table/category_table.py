@@ -369,16 +369,15 @@ class CategoryTable(BaseCategory):
         form_schema = None
 
         if data.action_name is not None:
-            action_fn = self._get_action_fn(data.action_name)
+            action_fn = self.get_actions().get(data.action_name)
             if not action_fn:
                 msg = f'Autocomplete: action "{data.action_name}" is not found'
                 raise AdminAPIException(APIError(message=msg), status_code=500)
 
-            if not action_fn.form_schema:
+            form_schema = action_fn.action_info['form_schema']
+            if form_schema is None:
                 msg = f'Autocomplete: action "{data.action_name}" form_schema is None'
                 raise AdminAPIException(APIError(message=msg), status_code=500)
-
-            form_schema = action_fn.form_schema
 
         elif data.is_filter:
             if not self.table_filters:

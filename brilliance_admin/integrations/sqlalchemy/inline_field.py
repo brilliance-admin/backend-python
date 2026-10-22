@@ -83,7 +83,7 @@ class SQLAlchemyInlineField(InlineField):
             raise TypeError(msg)
 
         for line_data in value:
-            line_record = await self.table_schema.create_from_deserialized(line_data, session)
+            line_record = await self.table_schema.create(line_data, session)
             getattr(parent_record, field_slug).append(line_record)
 
     async def update_inline(self, parent_record, field_slug, value, session, user):
@@ -105,7 +105,7 @@ class SQLAlchemyInlineField(InlineField):
             line_id = line_data.pop(pk_name, None)
 
             if line_id is None:
-                line_record = await self.table_schema.create_from_deserialized(line_data, session)
+                line_record = await self.table_schema.create(line_data, session)
                 records_to_add.append(line_record)
                 continue
 
@@ -118,7 +118,7 @@ class SQLAlchemyInlineField(InlineField):
                 )
                 raise AdminAPIException(APIError(message=msg, code='record_not_found'), status_code=400)
 
-            await self.table_schema.update_from_deserialized(line_record, line_data, session, user)
+            await self.table_schema.update(line_record, line_data, session, user)
 
         rel_records = getattr(parent_record, field_slug)
         for record in existing_records:

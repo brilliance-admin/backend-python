@@ -6,10 +6,6 @@ from pydantic.dataclasses import dataclass
 from brilliance_admin.utils import DataclassBase, SupportsStr
 
 
-class SkipField(Exception):
-    pass
-
-
 @dataclass
 class ValidationError(DataclassBase, Exception):
     data: dict

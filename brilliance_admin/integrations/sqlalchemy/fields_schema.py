@@ -313,7 +313,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
                     status_code=400,
                 )
 
-    async def create_from_deserialized(self, deserialized_data, session):
+    async def create(self, deserialized_data: dict, session):
         record = self.model()
 
         # сначала простые поля
@@ -345,34 +345,7 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
 
         return record
 
-    async def create(self, user, data, session, *, admin_schema):
-        self.validate_incoming_data(data)
-
-        try:
-            deserialized_data = await self.deserialize_fields(
-                data,
-                DeserializeAction.CREATE,
-                extra={'admin_schema': admin_schema, 'model': self.model, 'record': None, 'user': user},
-            )
-        except ValidationError as e:
-            raise AdminAPIException(
-                APIError(
-                    code='validation_error',
-                    field_errors=e.data,
-                ),
-                status_code=400,
-            ) from e
-
-        try:
-            record = await self.create_from_deserialized(deserialized_data, session)
-            await session.commit()
-            await session.refresh(record)
-            return record
-        except Exception:
-            await session.rollback()
-            raise
-
-    async def update_from_deserialized(self, record, deserialized_data, session, user):
+    async def update(self, record, deserialized_data: dict, session, user):
         for field_slug, value in deserialized_data.items():
             field = self.get_field(field_slug)
 
@@ -388,29 +361,3 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
             setattr(record, field_slug, value)
 
         return record
-
-    async def update(self, record, user, data, session, *, admin_schema):
-        self.validate_incoming_data(data)
-
-        try:
-            deserialized_data = await self.deserialize_fields(
-                data,
-                DeserializeAction.UPDATE,
-                extra={'admin_schema': admin_schema, 'model': self.model, 'record': record, 'user': user},
-            )
-        except ValidationError as e:
-            raise AdminAPIException(
-                APIError(
-                    code='validation_error',
-                    field_errors=e.data,
-                ),
-                status_code=400,
-            ) from e
-
-        try:
-            await self.update_from_deserialized(record, deserialized_data, session, user)
-            await session.commit()
-            return record
-        except Exception:
-            await session.rollback()
-            raise

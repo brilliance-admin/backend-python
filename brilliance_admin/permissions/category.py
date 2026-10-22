@@ -1,4 +1,4 @@
-from brilliance_admin.permissions.settings import PermissionsData, PermissionValue
+from brilliance_admin.permissions.settings import PermissionRule, PermissionsData, PermissionValue
 
 from brilliance_admin.schema.category import BaseCategory, CategoryGroup
 from brilliance_admin.schema.table.category_table import CategoryTable
@@ -100,5 +100,14 @@ class PermissionsSettingsCategory(CategoryTable):
         for rule in stored_data.iter_rules():
             rules[rule.name].set_value(rule.value)
 
-    async def save_data(self, record, data: PermissionsData, extra: dict) -> None:
-        await extra['admin_schema'].permissions_manager.save_permissions(data, extra)
+    async def save_permissions(self, record, data: dict, extra: dict) -> None:
+        permissions = PermissionsData([
+            PermissionRule(name) for name in self.table_schema.get_fields()
+            if name != 'is_superuser'
+        ], is_superuser=data['is_superuser'])
+        for rule in permissions.iter_rules():
+            if rule.name in data:
+                rule.set_value(data[rule.name])
+        await extra['admin_schema'].permissions_manager.save_permissions(
+            permissions, {**extra, 'record': record},
+        )

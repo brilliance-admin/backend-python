@@ -2,6 +2,7 @@ from brilliance_admin.integrations.django.table import DjangoAdmin
 from brilliance_admin.integrations.django.fields_schema import DjangoFieldsSchema
 from brilliance_admin.schema.table.fields.base import ChoiceField
 from brilliance_admin.schema.table.fields_schema import FormField, FormSet
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.schema.table.history_change_provider import LogType
 from brilliance_admin.schema.table.history_logs_category import (
     HISTORY_LOGS_EXTRA_KWARGS,
@@ -60,6 +61,9 @@ class DjangoLogsFiltersSchema(DjangoLogsFieldsSchema):
 
 class DjangoLogsAdmin(HistoryLogsAdmin, DjangoAdmin):
     model = 'brilliance_admin_history_changes.HistoryChange'
+
+    def get_queryset(self, *, action: TableAction, action_slug: str | None = None):
+        return super().get_queryset(action=action, action_slug=action_slug).select_related('user')
 
     def __init__(self, *args, **kwargs):
         super().__init__(

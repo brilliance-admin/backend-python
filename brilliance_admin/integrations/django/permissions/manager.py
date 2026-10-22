@@ -19,7 +19,6 @@ class DjangoUserPermissions(UserPermissions):
             if is_superuser:
                 self.default_value = PermissionValue.ALLOW
                 self.rules.clear()
-                continue
             for name, value in level.rules.items():
                 value = PermissionValue(value)
                 if value != PermissionValue.INHERIT:

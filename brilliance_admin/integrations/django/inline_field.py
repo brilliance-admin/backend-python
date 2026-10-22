@@ -300,7 +300,7 @@ class DjangoInlineField(InlineField):
                 continue
             await record.adelete()
 
-        # Newly created rows are already linked by FK in create_from_deserialized.
+        # Newly created rows are already linked by FK.
 
     def update_inline_sync(self, parent_record, field_slug, value, session, user):
         if value is None:
@@ -340,4 +340,4 @@ class DjangoInlineField(InlineField):
                 continue
             record.delete()
 
-        # Newly created rows are already linked by FK in create_from_deserialized.
+        # Newly created rows are already linked by FK.

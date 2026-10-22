@@ -1,6 +1,7 @@
 from brilliance_admin import schema
-from brilliance_admin.exceptions import AdminAPIException, APIError
+from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationError
 from brilliance_admin.translations import TranslateText as _
+from brilliance_admin.utils import DeserializeAction
 
 
 class DjangoAdminUpdate:
@@ -50,8 +51,19 @@ class DjangoAdminUpdate:
                 error,
                 status_code=400,
             )
+        self.table_schema.validate_incoming_data(data)
+        try:
+            deserialized_data = await self.table_schema.deserialize_fields(
+                data,
+                DeserializeAction.UPDATE,
+                extra={'admin_schema': admin_schema, 'model': self.model, 'record': record, 'user': user},
+            )
+        except ValidationError as e:
+            raise AdminAPIException(
+                APIError(code='validation_error', field_errors=e.data), status_code=400,
+            ) from e
         record, debug_info = await self.table_schema.update(
-            record, user, data, debug=debug, admin_schema=admin_schema,
+            record, deserialized_data, user=user, debug=debug, admin_schema=admin_schema,
         )
 
         result = schema.UpdateResult(pk=pk, debug_info=debug_info)
@@ -61,8 +73,8 @@ class DjangoAdminUpdate:
                 parent_category=parent_category,
                 user=user,
                 pk=pk,
-                before=before.data,
-                data=data,
+                before=self.table_schema.normalize_history_data(before.data),
+                data=self.table_schema.normalize_history_data(deserialized_data),
                 language_context=language_context,
             )
         return result

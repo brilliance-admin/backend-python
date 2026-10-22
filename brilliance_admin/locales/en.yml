@@ -1,6 +1,6 @@
 permissions:
   is_superuser: 'All permissions'
-  is_superuser_help: 'Allows all actions at this permission level. Permissions may be overridden at higher priority levels.'
+  is_superuser_help: 'Allows all actions except those explicitly denied in these settings. Permissions may be overridden at higher priority levels.'
   title: 'Permissions settings'
   inherit: 'Inherit'
   allow: 'Allow'

@@ -1,11 +1,11 @@
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
-from brilliance_admin.exceptions import AdminAPIException, APIError
+from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationError
 from brilliance_admin.integrations.sqlalchemy.utils import extract_integrity_detail
 from brilliance_admin.integrations.sqlalchemy.related_field import get_record_title
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.utils import get_logger
+from brilliance_admin.utils import DeserializeAction, get_logger
 from brilliance_admin.schema.table.table_models import Record
 
 logger = get_logger()
@@ -44,6 +44,7 @@ class SQLAlchemyAdminCreate:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
         data = self.apply_parent_data(data, parent_category, parent_pk)
+        self.table_schema.validate_incoming_data(data)
 
         # pylint: disable=import-outside-toplevel
         from asyncpg.exceptions import UniqueViolationError
@@ -51,12 +52,24 @@ class SQLAlchemyAdminCreate:
 
         try:
             async with self.db_async_session() as session:
-                record = await self.table_schema.create(user, data, session, admin_schema=admin_schema)
+                deserialized_data = await self.table_schema.deserialize_fields(
+                    data,
+                    DeserializeAction.CREATE,
+                    extra={'admin_schema': admin_schema, 'model': self.model, 'record': None, 'user': user},
+                )
+                record = await self.table_schema.create(deserialized_data, session)
+                await session.commit()
+                await session.refresh(record)
                 pk_value = getattr(record, self.pk_name, None)
                 choice = Record(
                     key=pk_value,
                     title=get_record_title(record, self.raise_async_unsafe, debug=debug),
                 )
+
+        except ValidationError as e:
+            raise AdminAPIException(
+                APIError(code='validation_error', field_errors=e.data), status_code=400,
+            ) from e
 
         except AdminAPIException as e:
             raise e
@@ -108,6 +121,6 @@ class SQLAlchemyAdminCreate:
         result = schema.CreateResult(pk=pk_value, choice=choice)
         if history_change_provider is not None:
             await history_change_provider.save_create(
-                category=self, parent_category=parent_category, user=user, pk=pk_value, data=data,
+                category=self, parent_category=parent_category, user=user, pk=pk_value, data=deserialized_data,
             )
         return result

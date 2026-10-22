@@ -1,12 +1,12 @@
 from typing import Any
 
 from brilliance_admin import auth, schema
-from brilliance_admin.exceptions import AdminAPIException, APIError
+from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationError
 from brilliance_admin.integrations.sqlalchemy.utils import extract_integrity_detail
 from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.utils import get_logger
+from brilliance_admin.utils import DeserializeAction, get_logger
 
 logger = get_logger()
 
@@ -69,7 +69,21 @@ class SQLAlchemyAdminUpdate:
                         status_code=400,
                     )
 
-                await self.table_schema.update(record, user, data, session, admin_schema=admin_schema)
+                self.table_schema.validate_incoming_data(data)
+                deserialized_data = await self.table_schema.deserialize_fields(
+                    data,
+                    DeserializeAction.UPDATE,
+                    extra={'admin_schema': admin_schema, 'model': self.model, 'record': record, 'user': user},
+                )
+                await self.table_schema.update(
+                    record, deserialized_data, session, user,
+                )
+                await session.commit()
+
+        except ValidationError as e:
+            raise AdminAPIException(
+                APIError(code='validation_error', field_errors=e.data), status_code=400,
+            ) from e
 
         except AdminAPIException as e:
             raise e
@@ -125,8 +139,8 @@ class SQLAlchemyAdminUpdate:
                 parent_category=parent_category,
                 user=user,
                 pk=pk,
-                before=before.data,
-                data=data,
+                before=self.table_schema.normalize_history_data(before.data),
+                data=self.table_schema.normalize_history_data(deserialized_data),
                 language_context=language_context,
             )
         return result

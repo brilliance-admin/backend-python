@@ -40,7 +40,7 @@ class PermissionsManager(abc.ABC):
         data contains all available rules with deserialized form values
         and the submitted is_superuser flag.
 
-        data.is_superuser allows all actions at this permission level.
+        data.is_superuser allows all actions except those explicitly denied at this level.
         Higher priority permission settings may override these permissions.
 
         extra is the form deserialization context.

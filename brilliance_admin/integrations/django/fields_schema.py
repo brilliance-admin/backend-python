@@ -4,8 +4,7 @@ import re
 from asgiref.sync import sync_to_async
 from django.core.exceptions import FieldDoesNotExist
 from django.core.validators import MaxValueValidator, MinValueValidator
-from django.db import DataError, IntegrityError, connections, transaction
-from django.test.utils import CaptureQueriesContext
+from django.db import DataError, IntegrityError, transaction
 from django.utils import timezone
 
 from brilliance_admin import schema
@@ -542,115 +541,19 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                     status_code=400,
                 )
 
-    @staticmethod
-    def get_debug_info_from_context(ctx):
-        return schema.DebugInfo(
-            db_query_count=len(ctx),
-            queries=[
-                schema.DebugQuery(
-                    sql=query['sql'],
-                    time_ms=float(query['time']) * 1000 if query.get('time') else None,
-                )
-                for query in ctx.captured_queries
-            ],
-        )
-
-    def get_connection(self):
-        return connections[self.model.objects.db]
-
-    async def create(self, user, data, debug: bool = False, *, admin_schema):
-        self.validate_incoming_data(data)
-
+    async def create(self, deserialized_data: dict, *, user, admin_schema, debug: bool):
         try:
-            deserialized_data = await self.deserialize_fields(
-                data,
-                DeserializeAction.CREATE,
-                extra={'admin_schema': admin_schema, 'model': self.model, 'record': None, 'user': user},
-            )
-        except ValidationError as e:
-            raise AdminAPIException(
-                APIError(
-                    code='validation_error',
-                    field_errors=e.data,
-                ),
-                status_code=400,
-            ) from e
-
-        try:
-            if debug:
-                return await self.create_from_deserialized_with_debug(deserialized_data)
-            return await self.create_from_deserialized(deserialized_data), None
+            return await sync_to_async(self._create_record, thread_sensitive=True)(deserialized_data)
         except IntegrityError as e:
             raise AdminAPIException(
-                APIError(
-                    message=str(e),
-                    code='integrity_error',
-                ),
-                status_code=400,
+                APIError(message=str(e), code='integrity_error'), status_code=400,
             ) from e
         except DataError as e:
             raise AdminAPIException(
-                APIError(
-                    message=str(e),
-                    code='data_error',
-                ),
-                status_code=400,
+                APIError(message=str(e), code='data_error'), status_code=400,
             ) from e
 
-    async def create_from_deserialized(self, deserialized_data):
-        record = self.model()
-        many_to_many_values = {}
-        inline_values = {}
-
-        for field_slug, value in deserialized_data.items():
-            field = self.get_field(field_slug)
-
-            if isinstance(field, DjangoInlineField):
-                inline_values[field_slug] = value
-                continue
-
-            if isinstance(field, DjangoRelatedField):
-                model_field = self.model._meta.get_field(field_slug)
-                if value is None and self.should_skip_none_on_create(model_field):
-                    continue
-
-                if getattr(model_field, 'many_to_many', False):
-                    many_to_many_values[field_slug] = value
-                    continue
-
-                setattr(record, model_field.attname, value)
-                continue
-
-            model_field = self.model._meta.get_field(field_slug)
-            if value is None and self.should_skip_none_on_create(model_field):
-                continue
-
-            setattr(record, field_slug, value)
-
-        await record.asave()
-
-        for field_slug, value in many_to_many_values.items():
-            relation = getattr(record, field_slug)
-            await relation.aset([] if value is None else value)
-
-        for field_slug, value in inline_values.items():
-            field = self.get_field(field_slug)
-            await field.create_inline(record, field_slug, value, None)
-
-        return record
-
-    async def create_from_deserialized_with_debug(self, deserialized_data):
-        return await sync_to_async(
-            self.create_from_deserialized_with_debug_sync,
-            thread_sensitive=True,
-        )(deserialized_data)
-
-    def create_from_deserialized_with_debug_sync(self, deserialized_data):
-        with CaptureQueriesContext(self.get_connection()) as ctx:
-            record = self.create_from_deserialized_sync(deserialized_data)
-        return record, self.get_debug_info_from_context(ctx)
-
-    def create_from_deserialized_sync(self, deserialized_data):
+    def _create_record(self, deserialized_data: dict):
         record = self.model()
         many_to_many_values = {}
         inline_values = {}
@@ -691,92 +594,23 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 field = self.get_field(field_slug)
                 field.create_inline_sync(record, field_slug, value, None)
 
-        return record
+        return record, None
 
-    async def update(self, record, user, data, debug: bool = False, *, admin_schema):
-        self.validate_incoming_data(data)
-
+    async def update(self, record, deserialized_data: dict, *, user, admin_schema, debug: bool):
         try:
-            deserialized_data = await self.deserialize_fields(
-                data,
-                DeserializeAction.UPDATE,
-                extra={'admin_schema': admin_schema, 'model': self.model, 'record': record, 'user': user},
+            return await sync_to_async(self._update_record, thread_sensitive=True)(
+                record, deserialized_data, user,
             )
-            if debug:
-                return await self.update_from_deserialized_with_debug(record, deserialized_data)
-            return await self.update_from_deserialized(record, deserialized_data), None
-        except ValidationError as e:
-            raise AdminAPIException(
-                APIError(
-                    code='validation_error',
-                    field_errors=e.data,
-                ),
-                status_code=400,
-            ) from e
         except IntegrityError as e:
             raise AdminAPIException(
-                APIError(
-                    message=str(e),
-                    code='integrity_error',
-                ),
-                status_code=400,
+                APIError(message=str(e), code='integrity_error'), status_code=400,
             ) from e
         except DataError as e:
             raise AdminAPIException(
-                APIError(
-                    message=str(e),
-                    code='data_error',
-                ),
-                status_code=400,
+                APIError(message=str(e), code='data_error'), status_code=400,
             ) from e
 
-    async def update_from_deserialized(self, record, deserialized_data):
-        many_to_many_values = {}
-        inline_values = {}
-
-        for field_slug, value in deserialized_data.items():
-            field = self.get_field(field_slug)
-
-            if isinstance(field, DjangoInlineField):
-                inline_values[field_slug] = value
-                continue
-
-            if isinstance(field, DjangoRelatedField):
-                model_field = self.model._meta.get_field(field_slug)
-
-                if getattr(model_field, 'many_to_many', False):
-                    many_to_many_values[field_slug] = value
-                    continue
-
-                setattr(record, model_field.attname, value)
-                continue
-
-            setattr(record, field_slug, value)
-
-        await record.asave()
-
-        for field_slug, value in many_to_many_values.items():
-            relation = getattr(record, field_slug)
-            await relation.aset([] if value is None else value)
-
-        for field_slug, value in inline_values.items():
-            field = self.get_field(field_slug)
-            await field.update_inline(record, field_slug, value, None, None)
-
-        return record
-
-    async def update_from_deserialized_with_debug(self, record, deserialized_data):
-        return await sync_to_async(
-            self.update_from_deserialized_with_debug_sync,
-            thread_sensitive=True,
-        )(record, deserialized_data)
-
-    def update_from_deserialized_with_debug_sync(self, record, deserialized_data):
-        with CaptureQueriesContext(self.get_connection()) as ctx:
-            record = self.update_from_deserialized_sync(record, deserialized_data)
-        return record, self.get_debug_info_from_context(ctx)
-
-    def update_from_deserialized_sync(self, record, deserialized_data):
+    def _update_record(self, record, deserialized_data: dict, user):
         many_to_many_values = {}
         inline_values = {}
 
@@ -808,6 +642,6 @@ class DjangoFieldsSchema(schema.FieldsSchema):
 
             for field_slug, value in inline_values.items():
                 field = self.get_field(field_slug)
-                field.update_inline_sync(record, field_slug, value, None, None)
+                field.update_inline_sync(record, field_slug, value, None, user)
 
-        return record
+        return record, None

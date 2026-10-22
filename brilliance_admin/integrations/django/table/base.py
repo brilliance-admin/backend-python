@@ -163,7 +163,7 @@ class DjangoAdminBase(CategoryTable):
         )
         if self.search_fields and self.search_help is None:
             category_schema.table_info.search_help = language_context.get_text(
-                _('sqlalchemy_search_help') % {'fields': self.get_search_help_fields()}
+                _('django_search_help') % {'fields': self.get_search_help_fields()}
             )
         return category_schema
 

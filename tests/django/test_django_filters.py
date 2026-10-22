@@ -267,6 +267,89 @@ async def test_list_search_single_character_operator(language_context):
 
 
 @pytest.mark.asyncio
+async def test_list_search_text_field_contains_by_default(language_context):
+    category = DjangoAdmin(
+        search_fields=['title'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    example_1 = await DjangoExampleFactory(title='Test terminal')
+    example_2 = await DjangoExampleFactory(title='My TERMINAL second')
+    await DjangoExampleFactory(title='Other')
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='terminal'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': example_2.id}, {'id': example_1.id}],
+        total_count=2,
+    )
+
+
+@pytest.mark.asyncio
+async def test_list_search_text_field_contains_with_single_character_operator(language_context):
+    category = DjangoAdmin(
+        search_fields=['title'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    match = await DjangoExampleFactory(title='pix_in payment')
+    await DjangoExampleFactory(title='pix payment')
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='pix_in'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': match.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
+async def test_list_search_integer_field_exact_by_default(language_context):
+    category = DjangoAdmin(
+        search_fields=['count'],
+        model=DjangoExample,
+        table_schema=DjangoFieldsSchema(
+            model=DjangoExample,
+            fields=['id'],
+        ),
+    )
+    user = UserABC(username='test')
+
+    match = await DjangoExampleFactory(count=1)
+    await DjangoExampleFactory(count=12)
+    await DjangoExampleFactory(count=21)
+
+    list_result = await category.get_list(
+        list_data=schema.ListData(search='1'),
+        user=user,
+        language_context=language_context,
+        debug=False,
+    )
+    assert list_result == schema.TableListResult(
+        data=[{'id': match.id}],
+        total_count=1,
+    )
+
+
+@pytest.mark.asyncio
 async def test_list_search_uuid_invalid_value_returns_empty_result(language_context):
     category = DjangoAdmin(
         search_fields=['uuid'],

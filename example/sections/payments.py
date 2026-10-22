@@ -425,6 +425,7 @@ class LogsAdmin(schema.CategoryTable):
         debug: bool,
         parent_category=None,
         parent_pk=None,
+        *, admin_schema=None,
     ) -> schema.TableListResult:
         await asyncio.sleep(settings.fake_delay_seconds)
 
@@ -433,7 +434,9 @@ class LogsAdmin(schema.CategoryTable):
         offset = max(list_data.page - 1, 0) * list_data.limit
 
         for line_data in logs[offset : offset + list_data.limit]:
-            line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
+            line = await self.table_schema.serialize(
+                line_data, extra={'admin_schema': admin_schema, 'user': user, 'record': line_data},
+            )
             data.append(line)
 
         return schema.TableListResult(
@@ -609,6 +612,7 @@ class PaymentsAdmin(schema.CategoryTable):
         debug: bool,
         parent_category=None,
         parent_pk=None,
+        *, admin_schema=None,
     ) -> schema.TableListResult:
         await asyncio.sleep(settings.fake_delay_seconds)
 
@@ -621,7 +625,9 @@ class PaymentsAdmin(schema.CategoryTable):
                 continue
 
             line_data = self._get_data(pk)
-            line = await self.table_schema.serialize(line_data, extra={'user': user, 'record': line_data})
+            line = await self.table_schema.serialize(
+                line_data, extra={'admin_schema': admin_schema, 'user': user, 'record': line_data},
+            )
             data.append(line)
 
         return schema.TableListResult(

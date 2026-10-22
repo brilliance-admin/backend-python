@@ -168,6 +168,7 @@ class DjangoAdminListMixin:
         debug: bool,
         parent_category=None,
         parent_pk=None,
+        *, admin_schema=None,
     ):
         queryset = self.get_queryset(action=TableAction.LIST)
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
@@ -204,6 +205,7 @@ class DjangoAdminListMixin:
                 record,
                 extra={
                     "record": record,
+                    "admin_schema": admin_schema,
                     "user": user,
                     "debug": debug,
                     "raise_async_unsafe": self.raise_async_unsafe,

@@ -473,6 +473,7 @@ class CategoryTable(BaseCategory):
             debug: bool,
             parent_category: BaseCategory | None = None,
             parent_pk: Any | None = None,
+            *, admin_schema=None,
     ) -> TableListResult:
         raise NotImplementedError()
 

@@ -116,6 +116,7 @@ async def table_list(
             schema.debug,
             parent_category,
             parent_pk,
+            admin_schema=schema,
         )
     except AdminAPIException as e:
         return JSONResponse(e.get_error().model_dump(mode='json', context=context), status_code=e.status_code)

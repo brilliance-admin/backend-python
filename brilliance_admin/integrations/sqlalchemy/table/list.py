@@ -112,6 +112,7 @@ class SQLAlchemyAdminListMixin:
         debug: bool,
         parent_category=None,
         parent_pk=None,
+        *, admin_schema=None,
     ) -> schema.TableListResult:
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import exc
@@ -211,6 +212,7 @@ class SQLAlchemyAdminListMixin:
                     record,
                     extra={
                         "record": record,
+                        "admin_schema": admin_schema,
                         "user": user,
                         "debug": debug,
                         "db_async_session": self.db_async_session,

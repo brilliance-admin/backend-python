@@ -142,7 +142,8 @@ async def test_history_category_autocomplete_serializes_total_count():
     assert result.total_count == '12'
 
 
-def test_history_logs_category_skips_root_links(language_context):
+@pytest.mark.asyncio
+async def test_history_logs_category_skips_root_links(language_context):
     class TestDashboard(schema.CategoryDashboard):
         slug = 'dashboard'
         title = 'Dashboard'
@@ -183,7 +184,7 @@ def test_history_logs_category_skips_root_links(language_context):
     )
 
     user = UserABC(username='test')
-    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+    permissions = await admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
     result = logs.generate_category_schema(
         user,
         language_context,

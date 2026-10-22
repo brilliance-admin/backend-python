@@ -19,7 +19,7 @@ class AllowAllUserPermissions(UserPermissions):
 
 
 class AllowAllPermissionsManager(PermissionsManager):
-    def get_user_permissions(self, user: UserABC, for_schema_generation: bool) -> UserPermissions:
+    async def get_user_permissions(self, user: UserABC, for_schema_generation: bool) -> UserPermissions:
         return AllowAllUserPermissions(user)
 
     async def save_permissions(self, data: PermissionsData, extra: dict) -> None:

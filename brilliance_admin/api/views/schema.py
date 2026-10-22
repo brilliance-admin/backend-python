@@ -34,7 +34,7 @@ async def schema_handler(request: Request) -> AdminSchemaData:
     language_context: LanguageContext = schema.get_language_context(language_slug)
     context = {'language_context': language_context}
 
-    admin_schema = schema.generate_admin_schema(user, language_slug)
+    admin_schema = await schema.generate_admin_schema(user, language_slug)
 
     try:
         return JSONResponse(content=admin_schema.model_dump(mode='json', context=context))

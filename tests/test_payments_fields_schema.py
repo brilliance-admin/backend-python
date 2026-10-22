@@ -25,7 +25,7 @@ category_schema_data = {
 async def test_generate_category_schema(language_context):
     category = PaymentsAdmin()
     user = UserABC(username='test')
-    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+    permissions = await admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
     new_schema = category.generate_category_schema(
         user, language_context, admin_schema, user_permissions=permissions,
     )

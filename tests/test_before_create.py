@@ -26,7 +26,7 @@ class DenyAllUserPermissions(UserPermissions):
 
 
 class DenyAllPermissionsManager(PermissionsManager):
-    def get_user_permissions(self, user, for_schema_generation):
+    async def get_user_permissions(self, user, for_schema_generation):
         return DenyAllUserPermissions(user)
 
 

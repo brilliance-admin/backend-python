@@ -137,9 +137,9 @@ class AdminSchema:
     def get_language_context(self, language_slug: str | None) -> LanguageContext:
         return LanguageContext(language_slug, language_manager=self.language_manager)
 
-    def generate_admin_schema(self, user: UserABC, language_slug: str | None) -> AdminSchemaData:
+    async def generate_admin_schema(self, user: UserABC, language_slug: str | None) -> AdminSchemaData:
         language_context: LanguageContext = self.get_language_context(language_slug)
-        user_permissions = self.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+        user_permissions = await self.permissions_manager.get_user_permissions(user, for_schema_generation=True)
 
         result = AdminSchemaData(profile=user)
 

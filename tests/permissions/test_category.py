@@ -1,3 +1,5 @@
+import pytest
+
 from brilliance_admin.auth import UserABC
 from brilliance_admin.permissions.category import PermissionsSettingsCategory
 from brilliance_admin.schema.admin_schema import AdminSchema
@@ -8,7 +10,8 @@ from example.sections.user_session import UserSessionAdmin
 from example.sections.users import UserAdmin
 
 
-def test_permissions_category_generates_rules_on_startup(postgres_sessionmaker):
+@pytest.mark.asyncio
+async def test_permissions_category_generates_rules_on_startup(postgres_sessionmaker):
     permissions_category = PermissionsSettingsCategory()
     user_category = UserAdmin(
         db_async_session=postgres_sessionmaker,
@@ -49,6 +52,6 @@ def test_permissions_category_generates_rules_on_startup(postgres_sessionmaker):
         'Наследовать', 'Разрешить', 'Запретить',
     ]
 
-    result = test_schema.generate_admin_schema(UserABC(username='test_admin'), 'en')
+    result = await test_schema.generate_admin_schema(UserABC(username='test_admin'), 'en')
     category_data = result.categories['permissions']['categories']['permissions-settings']
     assert set(category_data['table_info']['table_schema']['fields']) == set(fields)

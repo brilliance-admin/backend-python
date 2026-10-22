@@ -32,7 +32,7 @@ class ApiPermissionsManager(PermissionsManager):
         self.denied_action = denied_action
         self.denied_action_name = denied_action_name
 
-    def get_user_permissions(self, user, for_schema_generation):
+    async def get_user_permissions(self, user, for_schema_generation):
         return ApiUserPermissions(user, self.denied_category, self.denied_action, self.denied_action_name)
 
 

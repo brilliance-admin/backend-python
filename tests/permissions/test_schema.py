@@ -29,11 +29,11 @@ class SchemaPermissionsManager(PermissionsManager):
         self.denied_category = denied_category
         self.denied_action = denied_action
 
-    def get_user_permissions(self, user, for_schema_generation):
+    async def get_user_permissions(self, user, for_schema_generation):
         return SchemaUserPermissions(user, self.denied_category, self.denied_action)
 
 
-def generate_schema_with_denied_action(mocker, denied_action, subcategory):
+async def generate_schema_with_denied_action(mocker, denied_action, subcategory):
     user = UserABC(username='test_admin')
     merchant = admin_schema.get_group('payments').get_category('merchant')
     category = merchant.get_subcategory('terminal') if subcategory else merchant
@@ -42,7 +42,7 @@ def generate_schema_with_denied_action(mocker, denied_action, subcategory):
     generate_category = mocker.spy(category, 'generate_category_schema')
     mocker.patch.object(admin_schema, 'permissions_manager', manager)
 
-    result = admin_schema.generate_admin_schema(user, 'en')
+    result = await admin_schema.generate_admin_schema(user, 'en')
 
     get_permissions.assert_called_once_with(user, for_schema_generation=True)
     categories = result.categories['payments']['categories']
@@ -57,16 +57,18 @@ def generate_schema_with_denied_action(mocker, denied_action, subcategory):
 
 
 @pytest.mark.parametrize('subcategory', [False, True])
-def test_schema_list_permission(subcategory, mocker):
-    categories, slug, generate_category = generate_schema_with_denied_action(mocker, TableAction.LIST, subcategory)
+@pytest.mark.asyncio
+async def test_schema_list_permission(subcategory, mocker):
+    categories, slug, generate_category = await generate_schema_with_denied_action(mocker, TableAction.LIST, subcategory)
 
     assert slug not in categories
     generate_category.assert_not_called()
 
 
 @pytest.mark.parametrize('subcategory', [False, True])
-def test_schema_retrieve_permission(subcategory, mocker):
-    categories, slug, generate_category = generate_schema_with_denied_action(mocker, TableAction.RETRIEVE, subcategory)
+@pytest.mark.asyncio
+async def test_schema_retrieve_permission(subcategory, mocker):
+    categories, slug, generate_category = await generate_schema_with_denied_action(mocker, TableAction.RETRIEVE, subcategory)
 
     table = categories[slug]['table_info']
     assert table['can_retrieve'] is False
@@ -77,8 +79,9 @@ def test_schema_retrieve_permission(subcategory, mocker):
 
 
 @pytest.mark.parametrize('subcategory', [False, True])
-def test_schema_create_permission(subcategory, mocker):
-    categories, slug, generate_category = generate_schema_with_denied_action(mocker, TableAction.CREATE, subcategory)
+@pytest.mark.asyncio
+async def test_schema_create_permission(subcategory, mocker):
+    categories, slug, generate_category = await generate_schema_with_denied_action(mocker, TableAction.CREATE, subcategory)
 
     table = categories[slug]['table_info']
     assert table['can_create'] is False
@@ -89,8 +92,9 @@ def test_schema_create_permission(subcategory, mocker):
 
 
 @pytest.mark.parametrize('subcategory', [False, True])
-def test_schema_update_permission(subcategory, mocker):
-    categories, slug, generate_category = generate_schema_with_denied_action(mocker, TableAction.UPDATE, subcategory)
+@pytest.mark.asyncio
+async def test_schema_update_permission(subcategory, mocker):
+    categories, slug, generate_category = await generate_schema_with_denied_action(mocker, TableAction.UPDATE, subcategory)
 
     table = categories[slug]['table_info']
     assert table['can_update'] is False
@@ -101,8 +105,9 @@ def test_schema_update_permission(subcategory, mocker):
 
 
 @pytest.mark.parametrize('subcategory', [False, True])
-def test_schema_admin_action_permission(subcategory, mocker):
-    categories, slug, generate_category = generate_schema_with_denied_action(mocker, TableAction.ADMIN_ACTION, subcategory)
+@pytest.mark.asyncio
+async def test_schema_admin_action_permission(subcategory, mocker):
+    categories, slug, generate_category = await generate_schema_with_denied_action(mocker, TableAction.ADMIN_ACTION, subcategory)
 
     table = categories[slug]['table_info']
     assert 'delete' not in table['actions']

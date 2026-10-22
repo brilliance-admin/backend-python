@@ -91,7 +91,7 @@ class PermissionsSettingsCategory(CategoryTable):
         return FormField(key, col_span=4)
 
     async def get_data(self, record, data: PermissionsData, extra: dict) -> None:
-        permissions = extra['admin_schema'].permissions_manager.get_user_permissions(
+        permissions = await extra['admin_schema'].permissions_manager.get_user_permissions(
             record, for_schema_generation=True,
         )
         stored_data = permissions.get_permissions_data()

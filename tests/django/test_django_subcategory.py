@@ -206,7 +206,8 @@ async def test_subcategory_update(language_context):
     assert exc_info.value.get_error().code == 'record_not_found'
 
 
-def test_subcategory_schema_removes_reverse_fk(language_context):
+@pytest.mark.asyncio
+async def test_subcategory_schema_removes_reverse_fk(language_context):
     example_category, another_subcategory = get_example_another_subcategory()
     user = UserABC(username='test')
     admin_schema = schema.AdminSchema(
@@ -215,7 +216,7 @@ def test_subcategory_schema_removes_reverse_fk(language_context):
         language_manager=language_context.language_manager,
     )
 
-    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+    permissions = await admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
     example_schema = example_category.generate_category_schema(
         user, language_context, admin_schema, user_permissions=permissions,
     )

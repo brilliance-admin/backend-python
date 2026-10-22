@@ -45,6 +45,10 @@ class CategoryTable(BaseCategory):
 
     def post_schema_generation(self, admin_schema):
         super().post_schema_generation(admin_schema)
+        if self.table_schema is not None:
+            for field in self.table_schema.get_fields().values():
+                if isinstance(field, InlineField) and field.category is not None:
+                    field.category.post_schema_generation(admin_schema)
         for category in self.subcategories:
             category.post_schema_generation(admin_schema)
 

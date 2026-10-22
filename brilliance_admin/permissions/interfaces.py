@@ -30,7 +30,7 @@ class UserPermissions(abc.ABC):
 
 
 class PermissionsManager(abc.ABC):
-    def get_user_permissions(self, user: UserABC, for_schema_generation: bool) -> UserPermissions:
+    async def get_user_permissions(self, user: UserABC, for_schema_generation: bool) -> UserPermissions:
         raise NotImplementedError()
 
     async def save_permissions(self, data: PermissionsData, extra: dict) -> None:

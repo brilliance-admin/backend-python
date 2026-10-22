@@ -29,10 +29,6 @@ class UserAdmin(sqlalchemy.SQLAlchemyAdmin):
     icon = 'mdi-account-details'
     permissions_category = PermissionsSettingsCategory()
 
-    def post_schema_generation(self, admin_schema):
-        self.permissions_category.post_schema_generation(admin_schema)
-        super().post_schema_generation(admin_schema)
-
     ordering_fields = [
         'id',
     ]

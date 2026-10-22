@@ -266,7 +266,8 @@ async def test_subcategory_update(
     }
 
 
-def test_subcategory_schema_removes_reverse_fk(postgres_sessionmaker, language_context):
+@pytest.mark.asyncio
+async def test_subcategory_schema_removes_reverse_fk(postgres_sessionmaker, language_context):
     """
     Проверяет, что при генерации schema сабкатегории reverse FK в родителя
     не попадает в table_schema.fields, а через обычный CategoryGroup
@@ -285,7 +286,7 @@ def test_subcategory_schema_removes_reverse_fk(postgres_sessionmaker, language_c
         'UserSessionAdmin must resolve user_id as the FK to UserAdmin parent'
     )
 
-    permissions = admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+    permissions = await admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
     user_schema = user_category.generate_category_schema(
         user, language_context, admin_schema, user_permissions=permissions,
     )

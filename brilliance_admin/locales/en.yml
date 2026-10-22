@@ -80,6 +80,17 @@ sqlalchemy_search_help: |
   <b>%%</b> - any sequence of characters
   <b>_</b> - any single character
 
+django_search_help: |
+  <b>Available search fields:</b>
+  %(fields)s
+
+  Text fields are searched by substring, other fields by exact value.
+
+  <b>Available operators:</b>
+  <b>""</b> - quotes for exact match
+  <b>%%</b> - any sequence of characters
+  <b>_</b> - any single character
+
 password:
   new_password: 'New password'
   change_password: 'Change password'

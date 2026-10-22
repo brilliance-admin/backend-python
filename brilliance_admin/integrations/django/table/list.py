@@ -17,6 +17,8 @@ ORDERING_NOT_ALLOWED = (
     ' default_ordering: {default_ordering}'
 )
 
+TEXT_SEARCH_FIELD_TYPES = {'CharField', 'TextField', 'SlugField', 'EmailField', 'URLField'}
+
 
 class DjangoAdminListMixin:
     table_filters: DjangoFieldsSchema | None
@@ -90,9 +92,12 @@ class DjangoAdminListMixin:
         return '^' + ''.join(parts) + '$'
 
     @staticmethod
-    def search_to_regex(value: str) -> str:
+    def search_to_regex(value: str, contains: bool = False) -> str:
         if len(value) >= 2 and value.startswith('"') and value.endswith('"'):
             return '^' + re.escape(value[1:-1]) + '$'
+
+        if contains and '%' not in value:
+            value = f'%{value}%'
 
         return DjangoAdminListMixin.like_to_regex(value)
 
@@ -119,13 +124,12 @@ class DjangoAdminListMixin:
         if not self.search_fields or not list_data.search:
             return queryset
 
-        regex = self.search_to_regex(list_data.search)
         query = Q()
         for index, field_slug in enumerate(self.search_fields):
             queryset, lookup, value = self.get_search_lookup(
                 queryset,
                 field_slug,
-                regex,
+                list_data.search,
                 CharField,
                 Cast,
                 alias=f'_search_text_{index}',
@@ -133,20 +137,21 @@ class DjangoAdminListMixin:
             query |= Q(**{lookup: value})
         return queryset.filter(query).distinct()
 
-    def get_search_lookup(self, queryset, field_slug, regex, char_field_cls, cast_cls, alias):
+    def get_search_lookup(self, queryset, field_slug, search, char_field_cls, cast_cls, alias):
         model_field, json_tail = self.resolve_lookup_path(field_slug)
 
+        # Text fields are searched by substring, other fields (numbers, uuid, dates) by exact value
         internal_type = model_field.get_internal_type()
-        if internal_type in {'CharField', 'TextField', 'SlugField', 'EmailField', 'URLField'}:
-            return queryset, f'{field_slug}__iregex', regex
+        if internal_type in TEXT_SEARCH_FIELD_TYPES:
+            return queryset, f'{field_slug}__iregex', self.search_to_regex(search, contains=True)
 
         if internal_type == 'JSONField' and json_tail:
-            return queryset, f'{field_slug}__iregex', regex
+            return queryset, f'{field_slug}__iregex', self.search_to_regex(search, contains=True)
 
         queryset = queryset.alias(**{
             alias: cast_cls(field_slug, output_field=char_field_cls()),
         })
-        return queryset, f'{alias}__iregex', regex
+        return queryset, f'{alias}__iregex', self.search_to_regex(search)
 
     async def apply_filters(self, queryset, list_data):
         if not self.table_filters or not list_data.filters:

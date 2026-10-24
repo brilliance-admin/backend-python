@@ -1,5 +1,6 @@
 from .auth import DjangoJWTAdminAuthentication
 from .fields_schema import DjangoFieldsSchema
+from .permissions.fields_schema import DjangoPermissionsFieldsSchema
 from .inline_field import DjangoInlineField
 from .related_field import DjangoRelatedField
 from .history_changes.provider import DjangoLogsProvider

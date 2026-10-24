@@ -32,9 +32,9 @@ async def autocomplete(
     schema_category, parent_category = get_category(schema, group, category, subcategory)
 
     # Permissions
-    permissions = await schema.permissions_manager.get_user_permissions(user, for_schema_generation=False)
+    permissions = await schema.permissions_manager.get_permissions(user, for_schema_generation=False)
     action_type = TableAction.ADMIN_ACTION if data.action_name is not None else TableAction.LIST
-    if not permissions.has_action_permission(schema_category, action_type, data.action_name):
+    if not permissions.has_action_permission(group, category, action_type, subcategory=subcategory, action_name=data.action_name):
         raise HTTPException(status_code=403, detail='Permission denied')
 
     language_slug = request.headers.get('Accept-Language')

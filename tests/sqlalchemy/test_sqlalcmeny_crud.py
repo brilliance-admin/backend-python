@@ -380,7 +380,6 @@ async def test_retrieve(postgres_sessionmaker, language_context):
     assert retrieve_result.model_dump(context={'language_context': language_context}) == {
         'data': expected_data,
         'tab_counts': {},
-        'debug_info': None,
     }
 
 

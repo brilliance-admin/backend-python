@@ -114,9 +114,6 @@ async def test_create(language_context):
     )
 
     assert result.pk == 1
-    assert result.debug_info is not None
-    assert result.debug_info.db_query_count > 0
-    assert result.debug_info.queries
 
     record = await DjangoExample.objects.aget(pk=result.pk)
 
@@ -215,9 +212,6 @@ async def test_update(language_context):
     )
 
     assert result.pk == record.pk
-    assert result.debug_info is not None
-    assert result.debug_info.db_query_count > 0
-    assert result.debug_info.queries
 
     updated = await DjangoExample.objects.aget(pk=record.pk)
 
@@ -293,7 +287,6 @@ async def test_retrieve(language_context):
             'title': 'retrieve title',
         },
         'tab_counts': {},
-        'debug_info': None,
     }
 
 
@@ -312,10 +305,6 @@ async def test_list(language_context, tmp_path):
         language_context=language_context,
         debug=True,
     )
-
-    assert result.debug_info is not None
-    assert result.debug_info.queries
-    assert result.debug_info.serialize_ms is not None
 
     assert result == schema.TableListResult(
         data=[
@@ -363,11 +352,6 @@ async def test_list(language_context, tmp_path):
             },
         ],
         total_count=2,
-        debug_info=schema.DebugInfo(
-            db_query_count=2,
-            queries=result.debug_info.queries,
-            serialize_ms=result.debug_info.serialize_ms,
-        ),
     )
 
 
@@ -436,10 +420,6 @@ async def test_list_uses_list_display_fields_only(language_context):
         debug=True,
     )
 
-    assert result.debug_info is not None
-    assert result.debug_info.queries
-    assert result.debug_info.serialize_ms is not None
-
     assert result == schema.TableListResult(
         data=[
             {
@@ -454,11 +434,6 @@ async def test_list_uses_list_display_fields_only(language_context):
             },
         ],
         total_count=2,
-        debug_info=schema.DebugInfo(
-            db_query_count=2,
-            queries=result.debug_info.queries,
-            serialize_ms=result.debug_info.serialize_ms,
-        ),
     )
 
     queryset = category.optimize_list_queryset(category.get_queryset(action='list'))

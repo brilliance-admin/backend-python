@@ -1,89 +1,95 @@
-from brilliance_admin.permissions.interfaces import PermissionsManager, UserPermissions
+from brilliance_admin.permissions.interfaces import PermissionsManager, PermissionsContainer
 from brilliance_admin.permissions.settings import PermissionRule, PermissionsData, PermissionValue
-from brilliance_admin.schema.category import BaseCategory, CategoryGroup
 from brilliance_admin.schema.table.table_action import TableAction
 
 from .models import PermissionsGroup, UserPermissionsSettings
 
 
-class DjangoUserPermissions(UserPermissions):
-    def __init__(self, user, settings, groups, category_paths):
-        super().__init__(user)
-        self.settings = settings
-        self.category_paths = category_paths
-        self.rules = {}
-        self.default_value = PermissionValue.DENY
+class DjangoPermissionsContainer(PermissionsContainer):
+    settings: UserPermissionsSettings | PermissionsGroup | None
+    groups: list[PermissionsGroup]
 
-        for level in [*groups, settings]:
-            is_superuser = user.is_superuser if level is settings else level.is_superuser
-            if is_superuser:
-                self.default_value = PermissionValue.ALLOW
-                self.rules.clear()
-            for name, value in level.rules.items():
-                value = PermissionValue(value)
-                if value != PermissionValue.INHERIT:
-                    self.rules[name] = value
+    @classmethod
+    async def load(cls, user_or_group) -> 'DjangoPermissionsContainer':
+        container = cls(user_or_group)
+        if isinstance(user_or_group, PermissionsGroup):
+            container.settings = user_or_group
+            container.groups = []
+        else:
+            container.settings = await UserPermissionsSettings.objects.filter(user=user_or_group).afirst()
+            container.groups = [
+                group
+                async for group in PermissionsGroup.objects.filter(users=user_or_group).order_by('priority', 'pk')
+            ]
+        return container
 
     def get_permissions_data(self) -> PermissionsData:
         rules = []
-        for name, value in self.settings.rules.items():
-            rule = PermissionRule(name)
-            rule.set_value(value)
-            rules.append(rule)
-        return PermissionsData(rules, is_superuser=self.user.is_superuser)
+        if self.settings is not None:
+            for name, value in self.settings.rules.items():
+                rule = PermissionRule(name)
+                rule.set_value(value)
+                rules.append(rule)
+        return PermissionsData(rules, is_superuser=self.user_or_group.is_superuser)
 
+    # Only for users
     def has_action_permission(
-        self, category: BaseCategory, action_type: TableAction, action_name: str | None = None,
+        self,
+        group: str | None,
+        category: str,
+        action_type: TableAction,
+        subcategory: str | None = None,
+        action_name: str | None = None,
     ) -> bool:
-        if isinstance(category, CategoryGroup):
-            return any(
-                self.has_action_permission(child, action_type, action_name)
-                for child in category.subcategories
-            )
+        if isinstance(self.user_or_group, PermissionsGroup):
+            raise TypeError('Action permissions can only be checked for a user')
 
-        key = f'{self.category_paths[id(category)]}.{action_type.value}'
+        key = f'{group}.{category}' if group is not None else category
+        if subcategory is not None:
+            key = f'{key}.{subcategory}'
+
+        key = f'{key}.{action_type.value}'
         if action_name is not None:
             key = f'{key}.{action_name}'
-        return self.rules.get(key, self.default_value) == PermissionValue.ALLOW
+
+        result = PermissionValue.DENY
+        for group in self.groups:
+            if group.is_superuser:
+                result = PermissionValue.ALLOW
+            value = PermissionValue(group.rules.get(key, PermissionValue.INHERIT))
+            if value != PermissionValue.INHERIT:
+                result = value
+
+        if self.user_or_group.is_superuser:
+            result = PermissionValue.ALLOW
+        if self.settings is not None:
+            value = PermissionValue(self.settings.rules.get(key, PermissionValue.INHERIT))
+            if value != PermissionValue.INHERIT:
+                result = value
+
+        return result == PermissionValue.ALLOW
 
 
 class DjangoPermissionsManager(PermissionsManager):
-    def __init__(self, categories: list[BaseCategory]):
-        self.category_paths = {}
-        for category in categories:
-            self._register_category(category, '')
+    async def get_permissions(self, user_or_group, for_schema_generation: bool) -> DjangoPermissionsContainer:
+        return await DjangoPermissionsContainer.load(user_or_group)
 
-    def _register_category(self, category: BaseCategory, parent_path: str):
-        path = f'{parent_path}.{category.slug}' if parent_path else category.slug
-        self.category_paths[id(category)] = path
-        for child in getattr(category, 'subcategories', []):
-            self._register_category(child, path)
-
-    async def get_user_permissions(self, user, for_schema_generation: bool) -> DjangoUserPermissions:
-        if isinstance(user, PermissionsGroup):
-            return DjangoUserPermissions(user, user, [], self.category_paths)
-
-        settings, _ = await UserPermissionsSettings.objects.aget_or_create(user=user)
-        groups = [
-            group async for group in PermissionsGroup.objects.filter(users=user).order_by('priority', 'pk')
-        ]
-        return DjangoUserPermissions(user, settings, groups, self.category_paths)
-
-    async def save_permissions(self, data: PermissionsData, extra: dict) -> None:
+    async def save_permissions(self, data: dict, extra: dict) -> None:
         record = extra['record']
+        is_superuser = data['is_superuser']
         rules = {
-            rule.name: rule.value.value
-            for rule in data.iter_rules()
-            if rule.value != PermissionValue.INHERIT
+            name: value
+            for name, value in data.items()
+            if name != 'is_superuser'
         }
         if isinstance(record, PermissionsGroup):
             record.rules = rules
-            record.is_superuser = data.is_superuser
+            record.is_superuser = is_superuser
             await record.asave(update_fields=['rules', 'is_superuser'])
         else:
             await UserPermissionsSettings.objects.aupdate_or_create(
                 user=record,
                 defaults={'rules': rules},
             )
-            record.is_superuser = data.is_superuser
+            record.is_superuser = is_superuser
             await record.asave(update_fields=['is_superuser'])

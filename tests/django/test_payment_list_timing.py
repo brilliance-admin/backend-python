@@ -115,13 +115,11 @@ async def test_payment_list_timing(payment_benchmark_schema, language_context):
 
     print(
         'Payment Django list 50 records: '
-        f'total={total_ms}ms, '
-        f'serialize={result.debug_info.serialize_ms}ms, '
-        f'debug_queries={result.debug_info.db_query_count}'
+        f'total={total_ms}ms'
     )
     print_yappi_stats(yappi.get_func_stats())
 
-    assert result.total_count == 50
+    assert result.total_count == '50'
     assert len(result.data) == 50
 
 

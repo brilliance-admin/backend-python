@@ -94,7 +94,6 @@ async def test_subcategory_list(language_context):
         'tab_counts': {
             'djangoanotherexample': '2',
         },
-        'debug_info': None,
     }
 
 
@@ -216,7 +215,7 @@ async def test_subcategory_schema_removes_reverse_fk(language_context):
         language_manager=language_context.language_manager,
     )
 
-    permissions = await admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+    permissions = await admin_schema.permissions_manager.get_permissions(user, for_schema_generation=True)
     example_schema = example_category.generate_category_schema(
         user, language_context, admin_schema, user_permissions=permissions,
     )

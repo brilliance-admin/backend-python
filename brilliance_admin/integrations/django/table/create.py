@@ -44,8 +44,8 @@ class DjangoAdminCreate:
             raise AdminAPIException(
                 APIError(code='validation_error', field_errors=e.data), status_code=400,
             ) from e
-        record, debug_info = await self.table_schema.create(
-            deserialized_data, user=user, debug=debug, admin_schema=admin_schema,
+        record = await self.table_schema.create(
+            deserialized_data, user=user, admin_schema=admin_schema,
         )
         pk_value = getattr(record, self.pk_name, None)
         choice = Record(
@@ -53,9 +53,19 @@ class DjangoAdminCreate:
             title=await get_record_title(record, self.raise_async_unsafe, debug=debug),
         )
 
-        result = schema.CreateResult(pk=pk_value, choice=choice, debug_info=debug_info)
+        result = schema.CreateResult(pk=pk_value, choice=choice)
         if history_change_provider is not None:
+            history_data = await self.table_schema.serialize(
+                record,
+                extra={
+                    'admin_schema': admin_schema,
+                    'record': record,
+                    'user': user,
+                    'debug': debug,
+                    'raise_async_unsafe': self.raise_async_unsafe,
+                },
+            )
             await history_change_provider.save_create(
-                category=self, parent_category=parent_category, user=user, pk=pk_value, data=deserialized_data,
+                category=self, parent_category=parent_category, user=user, pk=pk_value, data=history_data,
             )
         return result

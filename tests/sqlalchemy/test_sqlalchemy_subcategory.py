@@ -89,7 +89,6 @@ async def test_subcategory_list(
         'tab_counts': {
             'terminal': '2',
         },
-        'debug_info': None,
     }
 
 
@@ -286,7 +285,7 @@ async def test_subcategory_schema_removes_reverse_fk(postgres_sessionmaker, lang
         'UserSessionAdmin must resolve user_id as the FK to UserAdmin parent'
     )
 
-    permissions = await admin_schema.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+    permissions = await admin_schema.permissions_manager.get_permissions(user, for_schema_generation=True)
     user_schema = user_category.generate_category_schema(
         user, language_context, admin_schema, user_permissions=permissions,
     )

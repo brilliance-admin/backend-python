@@ -10,5 +10,5 @@ from .history_change_provider import HistoryChangeDefaultLogs, HistoryLogsProvid
 from .history_logs_category import HistoryLogsAdmin
 from .table_action import TableAction
 from .table_models import (
-    AutocompleteData, AutocompleteResult, CreateResult, DebugInfo, DebugQuery, FilterSubtableData,
+    AutocompleteData, AutocompleteResult, CreateResult, FilterSubtableData,
     FilterSubtableResult, FilterSubtableUnitSize, ListData, RetrieveResult, TableListResult, UpdateResult)

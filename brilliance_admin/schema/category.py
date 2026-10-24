@@ -159,9 +159,6 @@ class BaseCategory(KwargsInitMixin, abc.ABC):
 
     _type_slug: ClassVar[str]
 
-    def post_schema_generation(self, admin_schema):
-        pass
-
     def run_debug_startup_checks(self):
         pass
 
@@ -239,11 +236,6 @@ class CategoryGroup(BaseCategory):
 
     subcategories: list = Field(default_factory=list)
 
-    def post_schema_generation(self, admin_schema):
-        super().post_schema_generation(admin_schema)
-        for category in self.subcategories:
-            category.post_schema_generation(admin_schema)
-
     def run_debug_startup_checks(self):
         super().run_debug_startup_checks()
         for category in self.subcategories:
@@ -288,7 +280,7 @@ class CategoryGroup(BaseCategory):
                 msg = f'Category {type(category).__name__}.slug "{self.slug}" already registered by "{exists.title}"'
                 raise KeyError(msg)
 
-            if not user_permissions.has_action_permission(category, TableAction.LIST):
+            if not user_permissions.has_action_permission(self.slug, category.slug, TableAction.LIST):
                 continue
 
             try:

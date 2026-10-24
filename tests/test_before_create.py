@@ -7,26 +7,30 @@ from fastapi.testclient import TestClient
 
 from brilliance_admin.api.views.table import router
 from brilliance_admin.auth import UserABC
-from brilliance_admin.permissions.interfaces import PermissionsManager, UserPermissions
+from brilliance_admin.permissions.interfaces import PermissionsManager, PermissionsContainer
 from brilliance_admin.permissions.settings import PermissionsData
 from brilliance_admin.schema.category import CategoryGroup
 from brilliance_admin.schema.table.admin_action import admin_action
 from brilliance_admin.schema.table.category_table import CategoryTable
 from brilliance_admin.schema.table.fields.base import IntegerField
 from brilliance_admin.schema.table.fields_schema import FieldsSchema
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import LanguageContext, LanguageManager
 
 
-class DenyAllUserPermissions(UserPermissions):
+class DenyAllUserPermissions(PermissionsContainer):
     def get_permissions_data(self):
         return PermissionsData([])
 
-    def has_action_permission(self, category, action_type, action_name=None):
+    def has_action_permission(
+        self, group: str | None, category: str, action_type: TableAction,
+        subcategory: str | None = None, action_name: str | None = None,
+    ):
         return False
 
 
 class DenyAllPermissionsManager(PermissionsManager):
-    async def get_user_permissions(self, user, for_schema_generation):
+    async def get_permissions(self, user, for_schema_generation):
         return DenyAllUserPermissions(user)
 
 

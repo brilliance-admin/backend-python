@@ -1,7 +1,6 @@
 import pytest
 
 from brilliance_admin.auth import UserABC
-from brilliance_admin.permissions.category import PermissionsSettingsCategory
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.category import CategoryGroup
 from brilliance_admin.schema.table.fields.base import BooleanField, ChoiceField
@@ -11,8 +10,7 @@ from example.sections.users import UserAdmin
 
 
 @pytest.mark.asyncio
-async def test_permissions_category_generates_rules_on_startup(postgres_sessionmaker):
-    permissions_category = PermissionsSettingsCategory()
+async def test_permissions_inline_generates_rules_with_form_schema(postgres_sessionmaker):
     user_category = UserAdmin(
         db_async_session=postgres_sessionmaker,
         subcategories=[UserSessionAdmin(db_async_session=postgres_sessionmaker)],
@@ -22,11 +20,12 @@ async def test_permissions_category_generates_rules_on_startup(postgres_sessionm
         auth=admin_schema.auth,
         categories=[
             CategoryGroup(slug='users', subcategories=[user_category]),
-            CategoryGroup(slug='permissions', subcategories=[permissions_category]),
         ],
     )
 
-    fields = permissions_category.table_schema.get_fields()
+    result = await test_schema.generate_admin_schema(UserABC(username='test_admin'), 'en')
+    inline_field = user_category.table_schema.get_field('permissions_settings')
+    fields = inline_field.table_schema.get_fields()
     assert set(fields) == {
         'is_superuser',
         'users.user.list',
@@ -52,6 +51,6 @@ async def test_permissions_category_generates_rules_on_startup(postgres_sessionm
         'Наследовать', 'Разрешить', 'Запретить',
     ]
 
-    result = await test_schema.generate_admin_schema(UserABC(username='test_admin'), 'en')
-    category_data = result.categories['permissions']['categories']['permissions-settings']
-    assert set(category_data['table_info']['table_schema']['fields']) == set(fields)
+    category_data = result.categories['users']['categories']['user']
+    inline_schema = category_data['table_info']['table_schema']['fields']['permissions_settings']
+    assert set(inline_schema['inline_field_schema']['fields']) == set(fields)

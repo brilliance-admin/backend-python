@@ -49,9 +49,9 @@ async def before_create(
     )
 
     # Permissions
-    permissions = await schema.permissions_manager.get_user_permissions(user, for_schema_generation=False)
+    permissions = await schema.permissions_manager.get_permissions(user, for_schema_generation=False)
     action_type = TableAction.ADMIN_ACTION if action_name is not None else TableAction.CREATE
-    if not permissions.has_action_permission(schema_category, action_type, action_name):
+    if not permissions.has_action_permission(group, category, action_type, subcategory=subcategory, action_name=action_name):
         raise HTTPException(status_code=403, detail='Permission denied')
 
     language_slug = request.headers.get('Accept-Language')
@@ -100,8 +100,8 @@ async def table_list(
     )
 
     # Permissions
-    permissions = await schema.permissions_manager.get_user_permissions(user, for_schema_generation=False)
-    if not permissions.has_action_permission(schema_category, TableAction.LIST):
+    permissions = await schema.permissions_manager.get_permissions(user, for_schema_generation=False)
+    if not permissions.has_action_permission(group, category, TableAction.LIST, subcategory=subcategory):
         raise HTTPException(status_code=403, detail='Permission denied')
 
     language_slug = request.headers.get('Accept-Language')
@@ -150,8 +150,8 @@ async def table_retrieve(
     )
 
     # Permissions
-    permissions = await schema.permissions_manager.get_user_permissions(user, for_schema_generation=False)
-    if not permissions.has_action_permission(schema_category, TableAction.RETRIEVE):
+    permissions = await schema.permissions_manager.get_permissions(user, for_schema_generation=False)
+    if not permissions.has_action_permission(group, category, TableAction.RETRIEVE, subcategory=subcategory):
         raise HTTPException(status_code=403, detail='Permission denied')
 
     if not schema_category.has_retrieve:
@@ -201,8 +201,8 @@ async def table_create(
     )
 
     # Permissions
-    permissions = await schema.permissions_manager.get_user_permissions(user, for_schema_generation=False)
-    if not permissions.has_action_permission(schema_category, TableAction.CREATE):
+    permissions = await schema.permissions_manager.get_permissions(user, for_schema_generation=False)
+    if not permissions.has_action_permission(group, category, TableAction.CREATE, subcategory=subcategory):
         raise HTTPException(status_code=403, detail='Permission denied')
 
     if not schema_category.has_create:
@@ -254,8 +254,8 @@ async def table_update(
     )
 
     # Permissions
-    permissions = await schema.permissions_manager.get_user_permissions(user, for_schema_generation=False)
-    if not permissions.has_action_permission(schema_category, TableAction.UPDATE):
+    permissions = await schema.permissions_manager.get_permissions(user, for_schema_generation=False)
+    if not permissions.has_action_permission(group, category, TableAction.UPDATE, subcategory=subcategory):
         raise HTTPException(status_code=403, detail='Permission denied')
 
     if not schema_category.has_update:
@@ -309,8 +309,8 @@ async def table_action(
     )
 
     # Permissions
-    permissions = await schema.permissions_manager.get_user_permissions(user, for_schema_generation=False)
-    if not permissions.has_action_permission(schema_category, TableAction.ADMIN_ACTION, action):
+    permissions = await schema.permissions_manager.get_permissions(user, for_schema_generation=False)
+    if not permissions.has_action_permission(group, category, TableAction.ADMIN_ACTION, subcategory=subcategory, action_name=action):
         raise HTTPException(status_code=403, detail='Permission denied')
 
     action_data.group_slug = group
@@ -374,8 +374,8 @@ async def filter_subtable(
     )
 
     # Permissions
-    permissions = await schema.permissions_manager.get_user_permissions(user, for_schema_generation=False)
-    if not permissions.has_action_permission(schema_category, TableAction.LIST):
+    permissions = await schema.permissions_manager.get_permissions(user, for_schema_generation=False)
+    if not permissions.has_action_permission(group, category, TableAction.LIST, subcategory=subcategory):
         raise HTTPException(status_code=403, detail='Permission denied')
 
     subtable_data.field_slug = field_slug

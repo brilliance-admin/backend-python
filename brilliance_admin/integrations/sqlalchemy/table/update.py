@@ -139,8 +139,8 @@ class SQLAlchemyAdminUpdate:
                 parent_category=parent_category,
                 user=user,
                 pk=pk,
-                before=self.table_schema.normalize_history_data(before.data),
-                data=self.table_schema.normalize_history_data(deserialized_data),
+                before=before.data,
+                data=deserialized_data,
                 language_context=language_context,
             )
         return result

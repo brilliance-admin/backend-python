@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from brilliance_admin.permissions.interfaces import PermissionsManager, UserPermissions
+from brilliance_admin.permissions.interfaces import PermissionsManager, PermissionsContainer
 from brilliance_admin.permissions.settings import PermissionsData
 from brilliance_admin.schema.table.table_action import TableAction
 from example.main import admin_schema, app
@@ -8,19 +8,31 @@ from example.main import admin_schema, app
 client = TestClient(app)
 
 
-class ApiUserPermissions(UserPermissions):
+class ApiUserPermissions(PermissionsContainer):
     def get_permissions_data(self):
         return PermissionsData([])
 
     def __init__(self, user, denied_category, denied_action, denied_action_name):
         super().__init__(user)
-        self.denied_category = denied_category
+        group = admin_schema.get_group(denied_category._group_slug)
+        parent = next(
+            (category for category in group.subcategories if denied_category in getattr(category, 'subcategories', [])),
+            None,
+        )
+        self.denied_group = group.slug
+        self.denied_category = parent.slug if parent is not None else denied_category.slug
+        self.denied_subcategory = denied_category.slug if parent is not None else None
         self.denied_action = denied_action
         self.denied_action_name = denied_action_name
 
-    def has_action_permission(self, category, action_type, action_name=None):
+    def has_action_permission(
+        self, group: str | None, category: str, action_type: TableAction,
+        subcategory: str | None = None, action_name: str | None = None,
+    ):
         return not (
-            category is self.denied_category
+            group == self.denied_group
+            and category == self.denied_category
+            and subcategory == self.denied_subcategory
             and action_type == self.denied_action
             and action_name == self.denied_action_name
         )
@@ -32,13 +44,13 @@ class ApiPermissionsManager(PermissionsManager):
         self.denied_action = denied_action
         self.denied_action_name = denied_action_name
 
-    async def get_user_permissions(self, user, for_schema_generation):
+    async def get_permissions(self, user, for_schema_generation):
         return ApiUserPermissions(user, self.denied_category, self.denied_action, self.denied_action_name)
 
 
 def deny_permission(mocker, category, action_type, action_name=None):
     manager = ApiPermissionsManager(category, action_type, action_name)
-    get_permissions = mocker.spy(manager, 'get_user_permissions')
+    get_permissions = mocker.spy(manager, 'get_permissions')
     mocker.patch.object(admin_schema, 'permissions_manager', manager)
     return get_permissions
 

@@ -1,9 +1,4 @@
 import re
-import time
-
-from asgiref.sync import async_to_sync, sync_to_async
-from django.db import connections
-from django.test.utils import CaptureQueriesContext
 
 from brilliance_admin import schema
 from brilliance_admin.exceptions import FieldError
@@ -50,32 +45,6 @@ class DjangoAdminListMixin:
                 only_fields.add(field_slug)
 
         return queryset.only(*sorted(only_fields))
-
-    @staticmethod
-    def get_debug_info_from_context(ctx):
-        return schema.DebugInfo(
-            db_query_count=len(ctx),
-            queries=[
-                schema.DebugQuery(
-                    sql=query['sql'],
-                    time_ms=float(query['time']) * 1000 if query.get('time') else None,
-                )
-                for query in ctx.captured_queries
-            ],
-        )
-
-    def _load_page_with_query_count(self, queryset, has_filters, offset, limit):
-        connection = connections[queryset.db]
-        with CaptureQueriesContext(connection) as ctx:
-            count_result = async_to_sync(self.count_provider.get_count)(
-                queryset,
-                category=self,
-                has_filters=has_filters,
-                limit=limit,
-            )
-            records = list(queryset[offset:offset + limit])
-
-        return count_result, records, self.get_debug_info_from_context(ctx)
 
     @staticmethod
     def like_to_regex(value: str) -> str:
@@ -183,22 +152,13 @@ class DjangoAdminListMixin:
         offset = (page - 1) * limit
         list_field_slugs = self.get_list_field_slugs()
 
-        debug_info = None
-        if debug:
-            count_result, records, debug_info = await sync_to_async(
-                self._load_page_with_query_count,
-                thread_sensitive=True,
-            )(queryset, has_filters, offset, limit)
-        else:
-            count_result = await self.count_provider.get_count(
-                queryset,
-                category=self,
-                has_filters=has_filters,
-                limit=limit,
-            )
-            records = [record async for record in queryset[offset:offset + limit]]
-
-        serialize_started_at = time.perf_counter()
+        count_result = await self.count_provider.get_count(
+            queryset,
+            category=self,
+            has_filters=has_filters,
+            limit=limit,
+        )
+        records = [record async for record in queryset[offset:offset + limit]]
         data = []
         for record in records:
             line = await self.table_schema.serialize(
@@ -214,12 +174,8 @@ class DjangoAdminListMixin:
             )
             data.append(line)
 
-        if debug_info is not None:
-            debug_info.serialize_ms = round((time.perf_counter() - serialize_started_at) * 1000, 2)
-
         return schema.TableListResult(
             data=data,
             total_count=count_result.total_count,
             pages_count=count_result.pages_count,
-            debug_info=debug_info,
         )

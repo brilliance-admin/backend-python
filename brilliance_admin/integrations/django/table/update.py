@@ -62,19 +62,29 @@ class DjangoAdminUpdate:
             raise AdminAPIException(
                 APIError(code='validation_error', field_errors=e.data), status_code=400,
             ) from e
-        record, debug_info = await self.table_schema.update(
-            record, deserialized_data, user=user, debug=debug, admin_schema=admin_schema,
+        record = await self.table_schema.update(
+            record, deserialized_data, user=user, admin_schema=admin_schema,
         )
 
-        result = schema.UpdateResult(pk=pk, debug_info=debug_info)
+        result = schema.UpdateResult(pk=pk)
         if history_change_provider is not None:
+            history_data = await self.table_schema.serialize(
+                record,
+                extra={
+                    'admin_schema': admin_schema,
+                    'record': record,
+                    'user': user,
+                    'debug': debug,
+                    'raise_async_unsafe': self.raise_async_unsafe,
+                },
+            )
             await history_change_provider.save_update(
                 category=self,
                 parent_category=parent_category,
                 user=user,
                 pk=pk,
-                before=self.table_schema.normalize_history_data(before.data),
-                data=self.table_schema.normalize_history_data(deserialized_data),
+                before=before.data,
+                data=history_data,
                 language_context=language_context,
             )
         return result

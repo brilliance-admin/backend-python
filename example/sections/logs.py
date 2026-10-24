@@ -197,5 +197,4 @@ LOGS = {
         },
     ],
     "total_count": 40,
-    "debug_info": None,
 }

@@ -9,19 +9,6 @@ from brilliance_admin.schema.chart import ChartData
 from brilliance_admin.utils import DataclassBase
 
 
-@dataclass
-class DebugQuery(DataclassBase):
-    sql: str
-    time_ms: float | None = None
-
-
-@dataclass
-class DebugInfo(DataclassBase):
-    db_query_count: int
-    queries: List[DebugQuery]
-    serialize_ms: float | None = None
-
-
 def serialize_total_count(value):
     if value is None or isinstance(value, str):
         return value
@@ -33,7 +20,6 @@ class TableListResult(DataclassBase):
     data: List[dict]
     total_count: str | None
     pages_count: int | None = field(default=None, compare=False)
-    debug_info: DebugInfo | None = None
 
     @field_validator('total_count', mode='before')
     @classmethod
@@ -114,15 +100,12 @@ class ListData(BaseModel):
 class RetrieveResult(BaseModel):
     data: dict
     tab_counts: Dict[str, str | None] = Field(default_factory=dict)
-    debug_info: DebugInfo | None = None
 
 
 class CreateResult(BaseModel):
     pk: Any
     choice: Record | None = None
-    debug_info: DebugInfo | None = None
 
 
 class UpdateResult(BaseModel):
     pk: Any
-    debug_info: DebugInfo | None = None

@@ -36,8 +36,8 @@ async def dashboard_data(
     )
 
     # Permissions
-    permissions = await schema.permissions_manager.get_user_permissions(user, for_schema_generation=False)
-    if not permissions.has_action_permission(schema_category, TableAction.LIST):
+    permissions = await schema.permissions_manager.get_permissions(user, for_schema_generation=False)
+    if not permissions.has_action_permission(group, category, TableAction.LIST, subcategory=subcategory):
         raise HTTPException(status_code=403, detail='Permission denied')
 
     result: DashboardContainer = await schema_category.get_data(

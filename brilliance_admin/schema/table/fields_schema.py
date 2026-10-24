@@ -11,7 +11,7 @@ from pydantic_core import core_schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import APIError, AdminAPIException, AsyncUnsafeTitleLoad, FieldError, ValidationError
 from brilliance_admin.schema.category import BaseCategory, FieldSchemaData, FieldsSchemaData
-from brilliance_admin.schema.table.fields.base import ChoiceField, InlineField, MultipleChoiceField, TableField
+from brilliance_admin.schema.table.fields.base import TableField
 from brilliance_admin.schema.table.fields.function_field import FunctionField
 from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_models import BeforeCreateResult
@@ -525,22 +525,6 @@ class FieldsSchema:
                     status_code=500,
                 ) from e
 
-        return result
-
-    def normalize_history_data(self, data: dict) -> dict:
-        result = {}
-        for field_slug, value in data.items():
-            field = self.get_field(field_slug)
-            if field is None:
-                raise AttributeError(f'{type(self).__name__}: field "{field_slug}" not found for history')
-            if value is not None:
-                if isinstance(field, InlineField):
-                    value = [field.table_schema.normalize_history_data(line) for line in value]
-                elif isinstance(field, MultipleChoiceField):
-                    value = [item['value'] if isinstance(item, dict) else item for item in value]
-                elif isinstance(field, ChoiceField) and isinstance(value, dict):
-                    value = value['value']
-            result[field_slug] = value
         return result
 
     async def deserialize_fields(self, data: dict, action: DeserializeAction, extra) -> dict:

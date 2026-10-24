@@ -12,7 +12,7 @@ from pydantic import ConfigDict
 from pydantic.dataclasses import dataclass
 
 from brilliance_admin.exceptions import FieldError, ValidationError
-from brilliance_admin.schema.category import BaseCategory, FieldSchemaData
+from brilliance_admin.schema.category import FieldSchemaData
 from brilliance_admin.schema.table.filter_subtable import FilterSubtable
 from brilliance_admin.schema.table.schema_type import SchemaType
 from brilliance_admin.schema.table.table_models import AutocompleteResult
@@ -882,8 +882,6 @@ class RelatedField(TableField):
 @dataclass
 class InlineField(TableField):
     _type = 'inline'
-
-    category: BaseCategory | None = None
 
     many: bool = False
     table_view: bool = False

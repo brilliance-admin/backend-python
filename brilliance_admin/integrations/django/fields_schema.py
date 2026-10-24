@@ -541,7 +541,7 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                     status_code=400,
                 )
 
-    async def create(self, deserialized_data: dict, *, user, admin_schema, debug: bool):
+    async def create(self, deserialized_data: dict, *, user, admin_schema):
         try:
             return await sync_to_async(self._create_record, thread_sensitive=True)(deserialized_data)
         except IntegrityError as e:
@@ -594,9 +594,9 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 field = self.get_field(field_slug)
                 field.create_inline_sync(record, field_slug, value, None)
 
-        return record, None
+        return record
 
-    async def update(self, record, deserialized_data: dict, *, user, admin_schema, debug: bool):
+    async def update(self, record, deserialized_data: dict, *, user, admin_schema):
         try:
             return await sync_to_async(self._update_record, thread_sensitive=True)(
                 record, deserialized_data, user,
@@ -644,4 +644,4 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                 field = self.get_field(field_slug)
                 field.update_inline_sync(record, field_slug, value, None, user)
 
-        return record, None
+        return record

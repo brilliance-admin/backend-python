@@ -19,7 +19,7 @@ from brilliance_admin.auth import UserABC
 from brilliance_admin.docs import build_redoc_docs, build_scalar_docs
 from brilliance_admin.permissions.allow_all import AllowAllPermissionsManager
 from brilliance_admin.permissions.interfaces import PermissionsManager
-from brilliance_admin.schema.category import BaseCategory, TableOptions
+from brilliance_admin.schema.category import BaseCategory, CategoryGroup, TableOptions
 from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.schema.table.history_change_provider import HistoryChangeDefaultLogs, HistoryLogsProvider
 from brilliance_admin.translations import LanguageContext, LanguageManager
@@ -124,9 +124,6 @@ class AdminSchema:
         if not self.language_manager:
             self.language_manager = LanguageManager(DEFAULT_LANGUAGES)
 
-        for category in self.categories:
-            category.post_schema_generation(self)
-
     def _apply_default_table_options(self, category: BaseCategory) -> None:
         if getattr(category, '_type_slug', None) == 'table' and category.options is None:
             category.options = deepcopy(self.default_table_options)
@@ -139,7 +136,7 @@ class AdminSchema:
 
     async def generate_admin_schema(self, user: UserABC, language_slug: str | None) -> AdminSchemaData:
         language_context: LanguageContext = self.get_language_context(language_slug)
-        user_permissions = await self.permissions_manager.get_user_permissions(user, for_schema_generation=True)
+        user_permissions = await self.permissions_manager.get_permissions(user, for_schema_generation=True)
 
         result = AdminSchemaData(profile=user)
 
@@ -148,7 +145,16 @@ class AdminSchema:
                 msg = f'Category {type(category).__name__}.slug is empty'
                 raise AttributeError(msg)
 
-            if not user_permissions.has_action_permission(category, TableAction.LIST):
+            # Groups have no permission rule of their own; show them if any child section is accessible.
+            if isinstance(category, CategoryGroup):
+                has_list_permission = any(
+                    user_permissions.has_action_permission(category.slug, child.slug, TableAction.LIST)
+                    for child in category.subcategories
+                )
+            else:
+                has_list_permission = user_permissions.has_action_permission(None, category.slug, TableAction.LIST)
+
+            if not has_list_permission:
                 continue
 
             try:

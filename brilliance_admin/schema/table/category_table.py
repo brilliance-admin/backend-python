@@ -43,15 +43,6 @@ class CategoryTable(BaseCategory):
 
     pk_name: str | None = None
 
-    def post_schema_generation(self, admin_schema):
-        super().post_schema_generation(admin_schema)
-        if self.table_schema is not None:
-            for field in self.table_schema.get_fields().values():
-                if isinstance(field, InlineField) and field.category is not None:
-                    field.category.post_schema_generation(admin_schema)
-        for category in self.subcategories:
-            category.post_schema_generation(admin_schema)
-
     def run_debug_startup_checks(self):
         super().run_debug_startup_checks()
         for category in self.subcategories:
@@ -173,6 +164,22 @@ class CategoryTable(BaseCategory):
             msg = f'Admin category {type(self).__name__} must have table_schema instance of FieldsSchema'
             raise AttributeError(msg)
 
+        category_slug = self.slug
+        subcategory_slug = None
+        if isinstance(parent_category, CategoryTable):
+            category_slug = parent_category.slug
+            subcategory_slug = self.slug
+
+        has_retrieve_permission = user_permissions.has_action_permission(
+            self._group_slug, category_slug, TableAction.RETRIEVE, subcategory_slug,
+        )
+        has_create_permission = user_permissions.has_action_permission(
+            self._group_slug, category_slug, TableAction.CREATE, subcategory_slug,
+        )
+        has_update_permission = user_permissions.has_action_permission(
+            self._group_slug, category_slug, TableAction.UPDATE, subcategory_slug,
+        )
+
         table = TableInfoSchemaData(
             table_schema=self._get_form_schema(
                 user,
@@ -188,10 +195,10 @@ class CategoryTable(BaseCategory):
             search_help=language_context.get_text(self.search_help),
 
             pk_name=self.pk_name,
-            can_retrieve=self.has_retrieve and user_permissions.has_action_permission(self, TableAction.RETRIEVE),
+            can_retrieve=self.has_retrieve and has_retrieve_permission,
 
-            can_create=self.has_create and user_permissions.has_action_permission(self, TableAction.CREATE),
-            can_update=self.has_update and user_permissions.has_action_permission(self, TableAction.UPDATE),
+            can_create=self.has_create and has_create_permission,
+            can_update=self.has_update and has_update_permission,
         )
 
         if self.table_filters:
@@ -204,7 +211,10 @@ class CategoryTable(BaseCategory):
 
         actions = {}
         for action_slug, action in self.get_actions().items():
-            if not user_permissions.has_action_permission(self, TableAction.ADMIN_ACTION, action_slug):
+            has_action_permission = user_permissions.has_action_permission(
+                self._group_slug, category_slug, TableAction.ADMIN_ACTION, subcategory_slug, action_slug,
+            )
+            if not has_action_permission:
                 continue
 
             action = copy.copy(action.action_info)
@@ -237,7 +247,10 @@ class CategoryTable(BaseCategory):
                 msg = f'{type(self).__name__}.slug subcategory {type(category).__name__}.slug is empty'
                 raise AttributeError(msg)
 
-            if not user_permissions.has_action_permission(category, TableAction.LIST):
+            has_list_permission = user_permissions.has_action_permission(
+                self._group_slug, self.slug, TableAction.LIST, category.slug,
+            )
+            if not has_list_permission:
                 continue
 
             category_schema = category.generate_category_schema(

@@ -50,10 +50,10 @@ cr.exception_formatter = RichTracebackFormatter(
 
 
 LOGIN_GREETINGS_MESSAGE = '''
-<div class="text-title-large font-weight-medium mb-1">
+<div class="text-h6 mb-1">
   Demo mode
 </div>
-<div class="text-body-small">
+<div class="text-caption">
   Login: admin<br>
   Password: admin
 </div>

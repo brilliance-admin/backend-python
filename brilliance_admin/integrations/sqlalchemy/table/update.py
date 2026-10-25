@@ -134,13 +134,22 @@ class SQLAlchemyAdminUpdate:
 
         result = schema.UpdateResult(pk=pk)
         if history_change_provider is not None:
+            after = await self._retrieve(
+                pk,
+                user,
+                language_context,
+                debug,
+                parent_category,
+                parent_pk,
+                admin_schema=admin_schema,
+            )
             await history_change_provider.save_update(
                 category=self,
                 parent_category=parent_category,
                 user=user,
                 pk=pk,
                 before=before.data,
-                data=deserialized_data,
+                data=after.data,
                 language_context=language_context,
             )
         return result

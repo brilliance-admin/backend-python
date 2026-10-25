@@ -130,6 +130,9 @@ class SQLAlchemyAdminListMixin:
             stmt = self.apply_pagination(stmt, list_data)
             stmt = self.apply_ordering(stmt, list_data)
 
+        except AdminAPIException:
+            raise
+
         except FieldError as e:
             logger.exception(
                 'SQLAlchemy %s list filters for %s field error: %s',

@@ -7,10 +7,10 @@ admin_description: |
   Данные и действия в этом режиме не влияют на рабочее окружение и периодически сбрасываются.
 
 login_greetings_message: |
-  <div class="text-h6 mb-1">
+  <div class="text-title-large font-weight-medium mb-1">
     Демо режим
   </div>
-  <div class="text-caption">
+  <div class="text-body-small">
     Логин: admin<br>
     Пароль: admin
   </div>

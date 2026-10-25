@@ -7,10 +7,10 @@ admin_description: |
   Data and actions in this mode do not affect the production environment and are periodically reset.
 
 login_greetings_message: |
-  <div class="text-h6 mb-1">
+  <div class="text-title-large font-weight-medium mb-1">
     Demo mode
   </div>
-  <div class="text-caption">
+  <div class="text-body-small">
     Login: admin<br>
     Password: admin
   </div>

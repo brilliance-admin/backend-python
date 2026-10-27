@@ -1,9 +1,9 @@
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
 
-from brilliance_admin.api.utils import get_category, get_user
+from brilliance_admin.api.utils import get_category, get_user, validate_subcategory_parent
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.dashboard.category_dashboard import CategoryDashboard, DashboardContainer, DashboardData
@@ -11,7 +11,9 @@ from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
 
-router = APIRouter(prefix="/dashboard", tags=["Category - Dashboard"])
+router = APIRouter(
+    prefix="/dashboard", tags=["Category - Dashboard"], dependencies=[Depends(validate_subcategory_parent)],
+)
 
 logger = get_logger()
 

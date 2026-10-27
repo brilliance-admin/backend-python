@@ -1,14 +1,27 @@
 from asgiref.sync import sync_to_async
+from django.db import transaction
 from django.db.models.deletion import ProtectedError
 
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult, admin_action
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import SupportsStr, format_limited_items
 
 
 class DjangoDeleteAction:
     has_delete: bool = True
+
+    def _delete_queryset(self, queryset, typed_pks):
+        with transaction.atomic(using=queryset.db):
+            found_ids = set(queryset.select_for_update(of=('self',)).values_list(self.pk_name, flat=True))
+            missing = [pk for pk in typed_pks if pk not in found_ids]
+            if missing:
+                raise AdminAPIException(
+                    APIError(message=_('errors.items_not_found') % {'ids': format_limited_items(missing)}),
+                    status_code=404,
+                )
+            queryset.delete()
 
     def _format_protected_delete_error(self, action_data: ActionData, error: ProtectedError) -> SupportsStr:
         deleted_model = self.model._meta.verbose_name
@@ -42,15 +55,25 @@ class DjangoDeleteAction:
         icon='mdi-delete-outline',
         variant='outlined',
     )
-    async def delete(self, *args, action_data: ActionData, **kwargs):
+    async def delete(self, *args, action_data: ActionData, parent_category=None, parent_pk=None, **kwargs):
         if not self.has_delete:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
         assert action_data.pks
 
-        queryset = self.model.objects.filter(**{f'{self.pk_name}__in': action_data.pks})
+        if parent_category is not None and parent_pk is None:
+            raise AdminAPIException(
+                APIError(message='parent_pk is required for subcategory deletion', code='parent_pk_required'),
+                status_code=400,
+            )
+
+        pk_field = self.model._meta.get_field(self.pk_name)
+        typed_pks = [pk_field.to_python(pk) for pk in action_data.pks]
+        queryset = self.get_queryset(action=TableAction.ADMIN_ACTION, action_slug='delete')
+        queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
+        queryset = queryset.filter(**{f'{self.pk_name}__in': typed_pks})
         try:
-            await queryset.adelete()
+            await sync_to_async(self._delete_queryset, thread_sensitive=True)(queryset, typed_pks)
         except ProtectedError as e:
             error_message = await sync_to_async(
                 self._format_protected_delete_error,

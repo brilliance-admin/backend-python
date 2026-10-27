@@ -297,7 +297,16 @@ class CategoryTable(BaseCategory):
                 action_data.form_data = deserialized_data
 
             action_data.user = user
-            result: ActionResult | None = await action_fn(action_data=action_data, user=user)
+            action_kwargs = {'action_data': action_data, 'user': user}
+            parameters = inspect.signature(action_fn).parameters
+            accepts_kwargs = any(
+                parameter.kind == inspect.Parameter.VAR_KEYWORD
+                for parameter in parameters.values()
+            )
+            for name, value in (('parent_category', parent_category), ('parent_pk', parent_pk)):
+                if accepts_kwargs or name in parameters:
+                    action_kwargs[name] = value
+            result: ActionResult | None = await action_fn(**action_kwargs)
             if result is None:
                 result = ActionResult()
 

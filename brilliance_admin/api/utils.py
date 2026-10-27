@@ -1,12 +1,26 @@
 from fastapi import HTTPException
 
 from brilliance_admin.auth import AdminAuthentication
+from brilliance_admin.exceptions import AdminAPIException
+
+
+def validate_subcategory_parent(subcategory: str | None = None, parent_pk: str | None = None):
+    if (subcategory is None) != (parent_pk is None) or subcategory == '' or parent_pk == '':
+        raise HTTPException(
+            status_code=400,
+            detail='subcategory and parent_pk must be provided together and must not be empty',
+        )
 
 
 async def get_user(request):
     auth: AdminAuthentication = request.app.state.schema.auth
-    user = await auth.authenticate(request.headers)
-    return user
+    try:
+        return await auth.authenticate(request.headers)
+    except AdminAPIException as exc:
+        raise HTTPException(
+            status_code=exc.status_code,
+            detail=exc.get_error().model_dump(mode='json'),
+        ) from exc
 
 
 def get_category(admin_schema, group: str, category: str, subcategory: str | None, check_type=None):

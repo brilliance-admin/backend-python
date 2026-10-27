@@ -1,6 +1,8 @@
+import jwt
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
+from sqlalchemy import delete, update
 
 from brilliance_admin.auth import AuthData
 from brilliance_admin.exceptions import AdminAPIException
@@ -10,6 +12,79 @@ from example.main import app
 from example.sections.models import User, UserFactory
 
 client = TestClient(app)
+
+
+@pytest.mark.asyncio
+async def test_auth_no_token(postgres_sessionmaker):
+    auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
+        secret='test-secret-for-authentication-tests', db_async_session=postgres_sessionmaker, user_model=User
+    )
+    with pytest.raises(AdminAPIException) as exc_info:
+        await auth.authenticate(headers={})
+    assert exc_info.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_auth_empty_token(postgres_sessionmaker):
+    auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
+        secret='test-secret-for-authentication-tests', db_async_session=postgres_sessionmaker, user_model=User
+    )
+    with pytest.raises(AdminAPIException) as exc_info:
+        await auth.authenticate(headers={'Authorization': ''})
+    assert exc_info.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_auth_expired_token(postgres_sessionmaker):
+    auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
+        secret='test-secret-for-authentication-tests',
+        db_async_session=postgres_sessionmaker,
+        user_model=User,
+    )
+    user = await UserFactory(is_admin=True)
+    token = jwt.encode({'user_pk': str(user.id), 'exp': 0}, auth.secret, algorithm='HS256')
+
+    with pytest.raises(AdminAPIException) as exc_info:
+        await auth.authenticate(headers={'Authorization': f'Token {token}'})
+
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.get_error().code == 'token_error'
+
+
+@pytest.mark.asyncio
+async def test_auth_deleted_user(postgres_sessionmaker):
+    auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
+        secret='test-secret-for-authentication-tests', db_async_session=postgres_sessionmaker, user_model=User
+    )
+    user = await UserFactory(is_admin=True)
+    token = auth.get_token(user)
+    headers = {'Authorization': f'Token {token}'}
+    assert (await auth.authenticate(headers=headers)).id == user.id
+    async with postgres_sessionmaker() as session:
+        await session.execute(delete(User).where(User.id == user.id))
+        await session.commit()
+    with pytest.raises(AdminAPIException) as exc_info:
+        await auth.authenticate(headers=headers)
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.get_error().code == 'user_not_found'
+
+
+@pytest.mark.asyncio
+async def test_auth_revoked_access(postgres_sessionmaker):
+    auth = sqlalchemy.SQLAlchemyJWTAdminAuthentication(
+        secret='test-secret-for-authentication-tests', db_async_session=postgres_sessionmaker, user_model=User
+    )
+    user = await UserFactory(is_admin=True)
+    token = auth.get_token(user)
+    headers = {'Authorization': f'Token {token}'}
+    assert (await auth.authenticate(headers=headers)).id == user.id
+    async with postgres_sessionmaker() as session:
+        await session.execute(update(User).where(User.id == user.id).values(is_admin=False))
+        await session.commit()
+    with pytest.raises(AdminAPIException) as exc_info:
+        await auth.authenticate(headers=headers)
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.get_error().code == 'user_not_found'
 
 
 @pytest.mark.asyncio
@@ -213,10 +288,13 @@ def test_username_validation_valid():
 
 
 def test_login_api_invalid_username():
-    response = client.post('/admin/auth/login/', json={
-        'username': '../../../../../../Windows/win.iniadmin',
-        'password': 'test',
-    })
+    response = client.post(
+        '/admin/auth/login/',
+        json={
+            'username': '../../../../../../Windows/win.iniadmin',
+            'password': 'test',
+        },
+    )
     assert response.status_code == 400
     assert response.json() == {
         'code': 'validation_error',
@@ -232,9 +310,12 @@ def test_login_api_invalid_username():
 
 
 def test_login_api_valid_username():
-    response = client.post('/admin/auth/login/', json={
-        'username': 'admin',
-        'password': 'admin',
-    })
+    response = client.post(
+        '/admin/auth/login/',
+        json={
+            'username': 'admin',
+            'password': 'admin',
+        },
+    )
     assert response.status_code == 200
     assert response.json()['user']['username'] == 'test_admin'

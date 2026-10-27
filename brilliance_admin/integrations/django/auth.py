@@ -99,7 +99,7 @@ class DjangoJWTAdminAuthentication(AdminAuthentication):
 
         try:
             payload = jwt.decode(token, self.secret, algorithms=["HS256"])
-        except jwt.exceptions.DecodeError as e:
+        except jwt.exceptions.InvalidTokenError as e:
             raise AdminAPIException(
                 APIError(message="Token decoding error", code="token_error"),
                 status_code=401,

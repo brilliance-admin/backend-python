@@ -101,7 +101,7 @@ class DjangoPostgresExportAction:
         icon='mdi-database-export-outline',
         form_schema=ExportFieldsSchema(),
     )
-    async def django_export(self, *args, action_data: ActionData, **kwargs):
+    async def django_export(self, *args, action_data: ActionData, parent_pk=None, **kwargs):
         if not self.export_fields:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
@@ -109,6 +109,7 @@ class DjangoPostgresExportAction:
             'group_slug': action_data.group_slug,
             'category_slug': action_data.category_slug,
             'subcategory_slug': action_data.subcategory_slug,
+            'parent_pk': parent_pk,
             'export_fields': action_data.form_data['export_fields'],
             'pks': action_data.pks,
             'send_to_all': action_data.send_to_all,

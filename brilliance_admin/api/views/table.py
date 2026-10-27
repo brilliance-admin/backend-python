@@ -2,10 +2,10 @@ from html import escape
 from typing import Any
 
 from django.core.files.storage import default_storage
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from brilliance_admin.api.utils import get_category, get_user
+from brilliance_admin.api.utils import get_category, get_user, validate_subcategory_parent
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult
@@ -17,7 +17,9 @@ from brilliance_admin.schema.table.table_models import (
 from brilliance_admin.translations import LanguageContext
 from brilliance_admin.utils import get_logger
 
-router = APIRouter(prefix="/table", tags=["Category - Table"])
+router = APIRouter(
+    prefix="/table", tags=["Category - Table"], dependencies=[Depends(validate_subcategory_parent)],
+)
 
 logger = get_logger()
 

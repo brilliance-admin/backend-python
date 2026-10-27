@@ -1,9 +1,67 @@
+import jwt
 import pytest
 
 from brilliance_admin.auth import AuthData
 from brilliance_admin.exceptions import AdminAPIException
 from brilliance_admin.integrations.django import DjangoJWTAdminAuthentication
 from example.sections.django_models import DjangoUser, DjangoUserFactory
+
+
+@pytest.mark.asyncio
+async def test_auth_no_token():
+    auth = DjangoJWTAdminAuthentication(secret='test-secret-for-authentication-tests', user_model=DjangoUser)
+    with pytest.raises(AdminAPIException) as exc_info:
+        await auth.authenticate(headers={})
+    assert exc_info.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_auth_empty_token():
+    auth = DjangoJWTAdminAuthentication(secret='test-secret-for-authentication-tests', user_model=DjangoUser)
+    with pytest.raises(AdminAPIException) as exc_info:
+        await auth.authenticate(headers={'Authorization': ''})
+    assert exc_info.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_auth_expired_token():
+    auth = DjangoJWTAdminAuthentication(secret='test-secret-for-authentication-tests', user_model=DjangoUser)
+    user = await DjangoUserFactory(is_admin=True)
+    token = jwt.encode({'user_pk': str(user.pk), 'exp': 0}, auth.secret, algorithm='HS256')
+
+    with pytest.raises(AdminAPIException) as exc_info:
+        await auth.authenticate(headers={'Authorization': f'Token {token}'})
+
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.get_error().code == 'token_error'
+
+
+@pytest.mark.asyncio
+async def test_auth_deleted_user():
+    auth = DjangoJWTAdminAuthentication(secret='test-secret-for-authentication-tests', user_model=DjangoUser)
+    user = await DjangoUserFactory(is_admin=True)
+    token = auth.get_token(user)
+    headers = {'Authorization': f'Token {token}'}
+    assert (await auth.authenticate(headers=headers)).pk == user.pk
+    await DjangoUser.objects.filter(pk=user.pk).adelete()
+    with pytest.raises(AdminAPIException) as exc_info:
+        await auth.authenticate(headers=headers)
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.get_error().code == 'user_not_found'
+
+
+@pytest.mark.asyncio
+async def test_auth_revoked_access():
+    auth = DjangoJWTAdminAuthentication(secret='test-secret-for-authentication-tests', user_model=DjangoUser)
+    user = await DjangoUserFactory(is_admin=True)
+    token = auth.get_token(user)
+    headers = {'Authorization': f'Token {token}'}
+    assert (await auth.authenticate(headers=headers)).pk == user.pk
+    await DjangoUser.objects.filter(pk=user.pk).aupdate(is_admin=False)
+    with pytest.raises(AdminAPIException) as exc_info:
+        await auth.authenticate(headers=headers)
+    assert exc_info.value.status_code == 401
+    assert exc_info.value.get_error().code == 'user_not_found'
 
 
 @pytest.mark.asyncio

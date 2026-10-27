@@ -111,9 +111,10 @@ async def django_export(
     send_to_all,
     search,
     filters,
+    parent_pk=None,
 ):
     started_at = perf_counter()
-    category, _ = get_category(
+    category, parent_category = get_category(
         _get_admin_schema(),
         group_slug,
         category_slug,
@@ -122,6 +123,7 @@ async def django_export(
     )
 
     queryset = category.get_export_queryset(export_fields)
+    queryset = category.apply_parent_filter(queryset, parent_category, parent_pk)
     queryset = await category.apply_filters(
         queryset,
         ListData(search=search, filters=filters),

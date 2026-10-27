@@ -1,6 +1,7 @@
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.integrations.sqlalchemy.utils import extract_integrity_detail
 from brilliance_admin.schema.table.admin_action import ActionData, ActionResult, admin_action
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import format_limited_items
 
@@ -21,14 +22,20 @@ class SQLAlchemyDeleteAction:
         icon='mdi-delete-outline',
         variant='outlined',
     )
-    async def delete(self, *args, action_data: ActionData, **kwargs):
+    async def delete(self, *args, action_data: ActionData, parent_category=None, parent_pk=None, **kwargs):
         if not self.has_delete:
             raise AdminAPIException(APIError(message=_('errors.method_not_allowed')), status_code=500)
 
         assert action_data.pks
 
+        if parent_category is not None and parent_pk is None:
+            raise AdminAPIException(
+                APIError(message='parent_pk is required for subcategory deletion', code='parent_pk_required'),
+                status_code=400,
+            )
+
         # pylint: disable=import-outside-toplevel
-        from sqlalchemy import inspect, select
+        from sqlalchemy import inspect
         from sqlalchemy.exc import IntegrityError
 
         col = inspect(self.model).mapper.columns[self.pk_name]
@@ -37,12 +44,14 @@ class SQLAlchemyDeleteAction:
 
         try:
             async with self.db_async_session() as session:
-                stmt = select(self.model).where(getattr(self.model, self.pk_name).in_(typed_pks))
-                results = (await session.execute(stmt)).scalars().all()
+                stmt = self.get_queryset(action=TableAction.ADMIN_ACTION, action_slug='delete')
+                stmt = self.apply_parent_filter(stmt, parent_category, parent_pk)
+                stmt = stmt.where(getattr(self.model, self.pk_name).in_(typed_pks))
+                results = (await session.execute(stmt)).unique().scalars().all()
 
-                if len(results) != len(typed_pks):
-                    found_ids = {str(getattr(obj, self.pk_name)) for obj in results}
-                    missing = [pk for pk in typed_pks if str(pk) not in found_ids]
+                found_ids = {getattr(obj, self.pk_name) for obj in results}
+                missing = [pk for pk in typed_pks if pk not in found_ids]
+                if missing:
                     raise AdminAPIException(
                         APIError(message=_('errors.items_not_found') % {'ids': format_limited_items(missing)}),
                         status_code=404,

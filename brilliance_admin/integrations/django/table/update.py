@@ -1,5 +1,6 @@
 from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationError
+from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import TranslateText as _
 from brilliance_admin.utils import DeserializeAction
 
@@ -37,7 +38,7 @@ class DjangoAdminUpdate:
                 admin_schema=admin_schema,
             )
 
-        queryset = self.model.objects.filter(**{self.pk_name: pk})
+        queryset = self.get_queryset(action=TableAction.UPDATE).filter(**{self.pk_name: pk})
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
         record = await queryset.afirst()
         if record is None:
@@ -50,6 +51,16 @@ class DjangoAdminUpdate:
                 status_code=400,
             )
         self.table_schema.validate_incoming_data(data)
+        if parent_category is not None:
+            fk_field_name = self.get_parent_fk_field_name(parent_category)
+            if fk_field_name in data:
+                raise AdminAPIException(
+                    APIError(
+                        message='Changing parent through a subcategory is forbidden',
+                        code='parent_change_forbidden',
+                    ),
+                    status_code=400,
+                )
         try:
             deserialized_data = await self.table_schema.deserialize_fields(
                 data,

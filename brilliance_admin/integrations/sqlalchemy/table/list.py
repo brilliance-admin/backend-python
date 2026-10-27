@@ -109,10 +109,10 @@ class SQLAlchemyAdminListMixin:
         list_data: schema.ListData,
         user: auth.UserABC,
         language_context: LanguageContext,
-        debug: bool,
         parent_category=None,
         parent_pk=None,
-        *, admin_schema=None,
+        *,
+        admin_schema,
     ) -> schema.TableListResult:
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import exc
@@ -153,7 +153,7 @@ class SQLAlchemyAdminListMixin:
                 }
             )
             msg = _('errors.filters_exception') % {
-                'error_type': str(e) if debug else type(e).__name__,
+                'error_type': str(e) if admin_schema.debug else type(e).__name__,
             }
             raise AdminAPIException(APIError(message=msg, code='filters_exception'), status_code=400) from e
 
@@ -202,7 +202,7 @@ class SQLAlchemyAdminListMixin:
                 }
             )
             msg = _('errors.db_error_list') % {
-                'error_type': str(e) if debug else type(e).__name__,
+                'error_type': str(e) if admin_schema.debug else type(e).__name__,
             }
             raise AdminAPIException(
                 APIError(message=msg, code='db_error_list'), status_code=500,
@@ -217,7 +217,7 @@ class SQLAlchemyAdminListMixin:
                         "record": record,
                         "admin_schema": admin_schema,
                         "user": user,
-                        "debug": debug,
+                        "debug": admin_schema.debug,
                         "db_async_session": self.db_async_session,
                         "raise_async_unsafe": self.raise_async_unsafe,
                     },
@@ -241,7 +241,7 @@ class SQLAlchemyAdminListMixin:
                 type(self).__name__, self.model.__name__, e,
             )
             msg = _('serialize_error.unexpected_error') % {
-                'error': str(e) if debug else type(e).__name__,
+                'error': str(e) if admin_schema.debug else type(e).__name__,
             }
             raise AdminAPIException(APIError(message=msg, code='unexpected_error'), status_code=500) from e
 

@@ -65,7 +65,7 @@ async def test_subcategory_list(
         schema.ListData(page=1, limit=25),
         user,
         language_context,
-        debug=True,
+        admin_schema=admin_schema,
         parent_category=merchant_category,
         parent_pk=merchant_1.id,
     )
@@ -78,7 +78,6 @@ async def test_subcategory_list(
         pk=merchant_1.id,
         user=user,
         language_context=language_context,
-        debug=False,
     )
 
     assert retrieve_result.model_dump(context={'language_context': language_context}) == {
@@ -117,7 +116,6 @@ async def test_subcategory_retrieve(
         pk=fee_1.id,
         user=user,
         language_context=language_context,
-        debug=True,
         parent_category=terminal_category,
         parent_pk=terminal_1.id,
     )
@@ -135,7 +133,6 @@ async def test_subcategory_retrieve(
             pk=fee_2.id,
             user=user,
             language_context=language_context,
-            debug=True,
             parent_category=terminal_category,
             parent_pk=terminal_1.id,
         )
@@ -182,7 +179,6 @@ async def test_subcategory_create(
         },
         user=user,
         language_context=language_context,
-        debug=True,
         parent_category=terminal_category,
         parent_pk=terminal.id,
     )
@@ -228,7 +224,6 @@ async def test_subcategory_update(
         },
         user=user,
         language_context=language_context,
-        debug=True,
         parent_category=terminal_category,
         parent_pk=terminal_1.id,
     )
@@ -252,7 +247,6 @@ async def test_subcategory_update(
             },
             user=user,
             language_context=language_context,
-            debug=True,
             parent_category=terminal_category,
             parent_pk=terminal_1.id,
         )

@@ -110,7 +110,6 @@ async def test_create(language_context):
         },
         user=user,
         language_context=language_context,
-        debug=True,
     )
 
     assert result.pk == 1
@@ -144,7 +143,6 @@ async def test_create_validates_required_related_field(language_context):
                 },
             user=user,
             language_context=language_context,
-            debug=True,
         )
 
     assert exc.value.status_code == 400
@@ -169,7 +167,6 @@ async def test_create_with_callable_fk_default(callable_default_schema, language
         },
         user=user,
         language_context=language_context,
-        debug=True,
     )
 
     record = await CallableDefaultOwner.objects.aget(pk=result.pk)
@@ -208,7 +205,6 @@ async def test_update(language_context):
         },
         user=user,
         language_context=language_context,
-        debug=True,
     )
 
     assert result.pk == record.pk
@@ -246,7 +242,6 @@ async def test_update_file_from_base64_payload(language_context, tmp_path):
         },
         user=user,
         language_context=language_context,
-        debug=True,
     )
 
     updated = await DjangoExample.objects.aget(pk=result.pk)
@@ -278,7 +273,6 @@ async def test_retrieve(language_context):
         pk=record.pk,
         user=user,
         language_context=language_context,
-        debug=False,
     )
 
     assert result.model_dump() == {
@@ -303,7 +297,7 @@ async def test_list(language_context, tmp_path):
         list_data=schema.ListData(),
         user=user,
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
 
     assert result == schema.TableListResult(
@@ -417,7 +411,7 @@ async def test_list_uses_list_display_fields_only(language_context):
         list_data=schema.ListData(),
         user=user,
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
 
     assert result == schema.TableListResult(

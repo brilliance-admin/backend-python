@@ -23,7 +23,6 @@ class DjangoAdminCreate:
         data: dict,
         user,
         language_context,
-        debug: bool,
         parent_category=None,
         parent_pk=None,
         history_change_provider=None,
@@ -50,7 +49,7 @@ class DjangoAdminCreate:
         pk_value = getattr(record, self.pk_name, None)
         choice = Record(
             key=pk_value,
-            title=await get_record_title(record, self.raise_async_unsafe, debug=debug),
+            title=await get_record_title(record, self.raise_async_unsafe, debug=admin_schema.debug),
         )
 
         result = schema.CreateResult(pk=pk_value, choice=choice)
@@ -61,7 +60,7 @@ class DjangoAdminCreate:
                     'admin_schema': admin_schema,
                     'record': record,
                     'user': user,
-                    'debug': debug,
+                    'debug': admin_schema.debug,
                     'raise_async_unsafe': self.raise_async_unsafe,
                 },
             )

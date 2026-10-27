@@ -4,6 +4,7 @@ from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import APIError, AdminAPIException
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema, DjangoRelatedField
 from brilliance_admin.schema.table.table_models import AutocompleteData
+from example.main import admin_schema
 from example.sections.django_models import DjangoAnotherExample, DjangoExample, DjangoExampleFactory, DjangoUserFactory
 
 
@@ -36,7 +37,7 @@ async def test_django_related_autocomplete(language_context):
         ),
         user=user,
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
 
     assert result.model_dump() == {
@@ -76,7 +77,7 @@ async def test_django_related_autocomplete_keeps_existing_choices_and_other_resu
         ),
         user=user,
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
 
     assert result.model_dump() == {
@@ -114,7 +115,7 @@ async def test_django_related_autocomplete_title_error_shows_field(language_cont
             ),
             user=user,
             language_context=language_context,
-            debug=True,
+            admin_schema=admin_schema,
         )
 
     assert exc.value.error == APIError(
@@ -155,7 +156,7 @@ async def test_django_related_autocomplete_uses_select_related(language_context)
         ),
         user=user,
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
 
     assert result.model_dump() == {
@@ -194,7 +195,7 @@ async def test_django_related_autocomplete_uses_get_queryset(language_context):
         ),
         user=user,
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
 
     assert result.model_dump() == {

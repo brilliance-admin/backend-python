@@ -422,10 +422,9 @@ class LogsAdmin(schema.CategoryTable):
         list_data: schema.ListData,
         user: auth.UserABC,
         language_context: LanguageContext,
-        debug: bool,
         parent_category=None,
         parent_pk=None,
-        *, admin_schema=None,
+        *, admin_schema,
     ) -> schema.TableListResult:
         await asyncio.sleep(settings.fake_delay_seconds)
 
@@ -609,10 +608,9 @@ class PaymentsAdmin(schema.CategoryTable):
         list_data: schema.ListData,
         user: auth.UserABC,
         language_context: LanguageContext,
-        debug: bool,
         parent_category=None,
         parent_pk=None,
-        *, admin_schema=None,
+        *, admin_schema,
     ) -> schema.TableListResult:
         await asyncio.sleep(settings.fake_delay_seconds)
 
@@ -641,7 +639,6 @@ class PaymentsAdmin(schema.CategoryTable):
         pk: Any,
         user: auth.UserABC,
         language_context: LanguageContext,
-        debug: bool,
         parent_category=None,
         parent_pk=None,
         history_change_provider=None,
@@ -659,7 +656,6 @@ class PaymentsAdmin(schema.CategoryTable):
         data: dict,
         user: auth.UserABC,
         language_context: LanguageContext,
-        debug: bool,
         parent_category=None,
         parent_pk=None,
         *, admin_schema,
@@ -673,7 +669,6 @@ class PaymentsAdmin(schema.CategoryTable):
         data: dict,
         user: auth.UserABC,
         language_context: LanguageContext,
-        debug: bool,
         parent_category=None,
         parent_pk=None,
         *, admin_schema,

@@ -21,7 +21,6 @@ class SQLAlchemyAdminUpdate:
             data: dict,
             user: auth.UserABC,
             language_context: LanguageContext,
-            debug: bool,
             parent_category=None,
             parent_pk=None,
             history_change_provider=None,
@@ -46,7 +45,6 @@ class SQLAlchemyAdminUpdate:
                 pk,
                 user,
                 language_context,
-                debug,
                 parent_category,
                 parent_pk,
                 admin_schema=admin_schema,
@@ -126,7 +124,7 @@ class SQLAlchemyAdminUpdate:
                 extra={'data': data}
             )
             msg = _('errors.db_error_update') % {
-                'error_type': str(e) if debug else type(e).__name__,
+                'error_type': str(e) if admin_schema.debug else type(e).__name__,
             }
             raise AdminAPIException(
                 APIError(message=msg, code='db_error_update'), status_code=500,
@@ -138,7 +136,6 @@ class SQLAlchemyAdminUpdate:
                 pk,
                 user,
                 language_context,
-                debug,
                 parent_category,
                 parent_pk,
                 admin_schema=admin_schema,

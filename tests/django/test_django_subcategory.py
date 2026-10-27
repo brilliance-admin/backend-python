@@ -71,7 +71,7 @@ async def test_subcategory_list(language_context):
         schema.ListData(page=1, limit=25),
         user,
         language_context,
-        debug=True,
+        admin_schema=admin_schema,
         parent_category=example_category,
         parent_pk=example_1.id,
     )
@@ -83,7 +83,6 @@ async def test_subcategory_list(language_context):
         pk=example_1.id,
         user=user,
         language_context=language_context,
-        debug=False,
     )
 
     assert retrieve_result.model_dump() == {
@@ -113,7 +112,6 @@ async def test_subcategory_retrieve(language_context):
         pk=another_1.id,
         user=user,
         language_context=language_context,
-        debug=True,
         parent_category=example_category,
         parent_pk=example_1.id,
     )
@@ -127,7 +125,6 @@ async def test_subcategory_retrieve(language_context):
             pk=another_2.id,
             user=user,
             language_context=language_context,
-            debug=True,
             parent_category=example_category,
             parent_pk=example_1.id,
         )
@@ -149,7 +146,6 @@ async def test_subcategory_create(language_context):
         },
         user=user,
         language_context=language_context,
-        debug=True,
         parent_category=example_category,
         parent_pk=example.id,
     )
@@ -179,7 +175,6 @@ async def test_subcategory_update(language_context):
         },
         user=user,
         language_context=language_context,
-        debug=True,
         parent_category=example_category,
         parent_pk=example_1.id,
     )
@@ -197,7 +192,6 @@ async def test_subcategory_update(language_context):
             data={'title': 'must fail'},
             user=user,
             language_context=language_context,
-            debug=True,
             parent_category=example_category,
             parent_pk=example_1.id,
         )

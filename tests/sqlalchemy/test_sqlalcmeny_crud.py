@@ -83,7 +83,6 @@ async def test_create(postgres_sessionmaker, language_context):
         data=create_data,
         user=user,
         language_context=language_context,
-        debug=False,
     )
 
     assert create_result.pk == 1
@@ -145,7 +144,6 @@ async def test_create_bad_fk(postgres_sessionmaker, language_context):
             data=create_data,
             user=user,
             language_context=language_context,
-            debug=True,
         )
     expected = {
         'code': 'related_not_found',
@@ -204,7 +202,6 @@ async def test_create_bad_inline_fk_rollbacks_all(postgres_sessionmaker, languag
             data=create_data,
             user=user,
             language_context=language_context,
-            debug=True,
         )
 
     context = {'language_context': language_context}
@@ -254,7 +251,6 @@ async def test_create_inline_validation_error(postgres_sessionmaker, language_co
             },
             user=user,
             language_context=language_context,
-            debug=True,
         )
 
     context = {'language_context': language_context}
@@ -325,7 +321,6 @@ async def test_retrieve(postgres_sessionmaker, language_context):
         pk=terminal.id,
         user=user,
         language_context=language_context,
-        debug=False,
     )
     expected_data = {
         'manager_id': mock.ANY,
@@ -420,7 +415,6 @@ async def test_retrieve_currency(postgres_sessionmaker, language_context):
         pk=currency.id,
         user=user,
         language_context=language_context,
-        debug=True,
     )
     expected_data = {
         'id': currency.id,
@@ -456,7 +450,6 @@ async def test_create_bad_json(postgres_sessionmaker, language_context):
             data=create_data,
             user=user,
             language_context=language_context,
-            debug=True,
         )
     context = {'language_context': language_context}
     errors = {
@@ -495,7 +488,7 @@ async def test_list(postgres_sessionmaker, language_context):
         ),
         user=user,
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
     data = [
         {
@@ -579,7 +572,6 @@ async def test_update_related_one(postgres_sessionmaker, language_context):
         data=update_data,
         user=user,
         language_context=language_context,
-        debug=True,
     )
     assert update_result == schema.UpdateResult(pk=terminal.id)
 
@@ -665,7 +657,6 @@ async def test_update_inline_existing_and_create_new(postgres_sessionmaker, lang
         data=update_data,
         user=user,
         language_context=language_context,
-        debug=True,
     )
     assert update_result == schema.UpdateResult(pk=terminal.id)
 
@@ -783,7 +774,6 @@ async def test_update_inline_retrieve_and_list_show_actual_state(postgres_sessio
         },
         user=user,
         language_context=language_context,
-        debug=True,
     )
 
     retrieve_result = await category.retrieve(
@@ -791,13 +781,12 @@ async def test_update_inline_retrieve_and_list_show_actual_state(postgres_sessio
         pk=terminal.id,
         user=user,
         language_context=language_context,
-        debug=True,
     )
     list_result = await category.get_list(
         list_data=schema.ListData(filters={'id': terminal.id}),
         user=user,
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
 
     retrieved_fees = retrieve_result.data['fees']
@@ -863,7 +852,6 @@ async def test_update_inline_validation_error(postgres_sessionmaker, language_co
             data={'fees': [{'fix_amount': 0}]},
             user=user,
             language_context=language_context,
-            debug=True,
         )
 
     context = {'language_context': language_context}
@@ -936,7 +924,6 @@ async def test_update_related_many(postgres_sessionmaker, language_context):
         data=update_data,
         user=user,
         language_context=language_context,
-        debug=True,
     )
     assert update_result == schema.UpdateResult(pk=currency_rub.id)
 
@@ -983,7 +970,6 @@ async def test_update_bad_value_int16(postgres_sessionmaker, language_context):
             data=update_data,
             user=user,
             language_context=language_context,
-            debug=True,
         )
     context = {'language_context': language_context}
     assert e.value.get_error().model_dump(context=context) == {
@@ -1011,7 +997,7 @@ async def test_autocomplete(postgres_sessionmaker, language_context):
         ),
         user=user,
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
     assert autocomplete_result == schema.AutocompleteResult(records=[], current_count=0, total_count='0')
 
@@ -1036,7 +1022,7 @@ async def test_city_autocomplete_casts_country_key(postgres_sessionmaker, langua
         ),
         user=auth.UserABC(username='test'),
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
 
     assert [record.key for record in result.records] == [city.id]
@@ -1056,7 +1042,7 @@ async def test_autocomplete_existing_choice_does_not_exclude_other_choices(postg
         ),
         user=user,
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
 
     assert {choice.key for choice in result.records} == {existing.id, other.id}
@@ -1078,7 +1064,7 @@ async def test_autocomplete_combines_existing_choice_with_search_results(postgre
         ),
         user=user,
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
 
     assert {choice.key for choice in result.records} == {existing.id, matched.id}

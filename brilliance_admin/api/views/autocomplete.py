@@ -46,7 +46,6 @@ async def autocomplete(
             data,
             user,
             language_context,
-            schema.debug,
             parent_category,
             parent_pk,
             admin_schema=schema,

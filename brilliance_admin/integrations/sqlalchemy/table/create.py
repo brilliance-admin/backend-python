@@ -34,7 +34,6 @@ class SQLAlchemyAdminCreate:
             data: dict,
             user: UserABC,
             language_context: LanguageContext,
-            debug: bool,
             parent_category=None,
             parent_pk=None,
             history_change_provider=None,
@@ -63,7 +62,7 @@ class SQLAlchemyAdminCreate:
                 pk_value = getattr(record, self.pk_name, None)
                 choice = Record(
                     key=pk_value,
-                    title=get_record_title(record, self.raise_async_unsafe, debug=debug),
+                    title=get_record_title(record, self.raise_async_unsafe, debug=admin_schema.debug),
                 )
 
         except ValidationError as e:
@@ -112,7 +111,7 @@ class SQLAlchemyAdminCreate:
                 extra={'data': data},
             )
             msg = _('errors.db_error_create') % {
-                'error_type': str(e) if debug else type(e).__name__,
+                'error_type': str(e) if admin_schema.debug else type(e).__name__,
             }
             raise AdminAPIException(
                 APIError(message=msg, code='db_error_create'), status_code=500,

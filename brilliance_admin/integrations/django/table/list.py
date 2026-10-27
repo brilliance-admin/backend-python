@@ -139,10 +139,10 @@ class DjangoAdminListMixin:
         list_data,
         user,
         language_context,
-        debug: bool,
         parent_category=None,
         parent_pk=None,
-        *, admin_schema=None,
+        *,
+        admin_schema,
     ):
         queryset = self.get_queryset(action=TableAction.LIST)
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
@@ -172,7 +172,7 @@ class DjangoAdminListMixin:
                     "record": record,
                     "admin_schema": admin_schema,
                     "user": user,
-                    "debug": debug,
+                    "debug": admin_schema.debug,
                     "raise_async_unsafe": self.raise_async_unsafe,
                 },
                 field_slugs=list_field_slugs,

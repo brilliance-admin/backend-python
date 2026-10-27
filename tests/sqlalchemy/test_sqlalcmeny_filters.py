@@ -3,6 +3,7 @@ from datetime import datetime
 import pytest
 
 from brilliance_admin import auth, schema, sqlalchemy
+from example.main import admin_schema
 from example.sections.models import Currency, CurrencyFactory, MerchantFactory, Terminal, TerminalFactory
 
 
@@ -33,7 +34,7 @@ async def test_list_filter(postgres_sessionmaker, language_context):
         list_data=schema.ListData(filters={'id': terminal_1.id}),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_1.id}], total_count=1
@@ -43,7 +44,7 @@ async def test_list_filter(postgres_sessionmaker, language_context):
         list_data=schema.ListData(filters={'title': 'Test terminal second'}),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_2.id}], total_count=1
@@ -53,7 +54,7 @@ async def test_list_filter(postgres_sessionmaker, language_context):
         list_data=schema.ListData(filters={'title': 'Test%'}),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_2.id}, {'id': terminal_1.id}], total_count=2
@@ -69,7 +70,7 @@ async def test_list_filter(postgres_sessionmaker, language_context):
         list_data=schema.ListData(filters={'created_at': {'from': '2022-12-04T18:55:00', 'to': '2023-12-17T18:55:00'}}),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_old.id}], total_count=1
@@ -100,7 +101,7 @@ async def test_list_search(postgres_sessionmaker, language_context):
         list_data=schema.ListData(search='Test%'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_2.id}, {'id': terminal_1.id}], total_count=2,
@@ -138,7 +139,7 @@ async def test_filter_related_one(postgres_sessionmaker, language_context):
         }),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': currency_rub.id}], total_count=1
@@ -175,7 +176,7 @@ async def test_filter_related_many(postgres_sessionmaker, language_context):
         }),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(data=[{'id': terminal_2.id}], total_count=1), 'Фильтр по related'
 
@@ -214,7 +215,7 @@ async def test_filter_scalar_related_as_many(postgres_sessionmaker, language_con
         }),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
 
     assert list_result == schema.TableListResult(
@@ -257,7 +258,7 @@ async def test_ordering(postgres_sessionmaker, language_context):
         list_data=schema.ListData(ordering='id'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_1.id}, {'id': terminal_2.id, }], total_count=2
@@ -267,7 +268,7 @@ async def test_ordering(postgres_sessionmaker, language_context):
         list_data=schema.ListData(ordering='-id'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': terminal_2.id}, {'id': terminal_1.id, }], total_count=2

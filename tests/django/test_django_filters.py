@@ -8,6 +8,7 @@ from django.utils import timezone as django_timezone
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
+from example.main import admin_schema
 from example.sections.django_models import (
     DjangoAnotherExample,
     DjangoAnotherExampleFactory,
@@ -42,7 +43,7 @@ async def test_list_filter(language_context):
         list_data=schema.ListData(filters={'id': example_1.id}),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(data=[{'id': example_1.id}], total_count=1)
 
@@ -50,7 +51,7 @@ async def test_list_filter(language_context):
         list_data=schema.ListData(filters={'title': 'Test terminal second'}),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(data=[{'id': example_2.id}], total_count=1)
 
@@ -58,7 +59,7 @@ async def test_list_filter(language_context):
         list_data=schema.ListData(filters={'title': 'Test%'}),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': example_2.id}, {'id': example_1.id}],
@@ -79,7 +80,7 @@ async def test_list_filter(language_context):
         }),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(data=[{'id': example_old.id}], total_count=1)
 
@@ -107,7 +108,7 @@ async def test_list_filter_reverse_relation_with_explicit_fields(language_contex
         list_data=schema.ListData(filters={'another_examples': child.pk}),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
 
     assert list_result == schema.TableListResult(data=[{'id': example.id}], total_count=1)
@@ -144,7 +145,7 @@ async def test_list_filter_related_lookup_terminal_foreign_key(language_context)
         list_data=schema.ListData(filters={'example__owner': owner.pk}),
         user=UserABC(username='test'),
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
 
     assert list_result == schema.TableListResult(
@@ -175,7 +176,7 @@ async def test_list_search(language_context):
         list_data=schema.ListData(search='Test%'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': example_2.id}, {'id': example_1.id}],
@@ -202,7 +203,7 @@ async def test_list_search_exact_operator(language_context):
         list_data=schema.ListData(search='"Test terminal"'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': exact.id}],
@@ -230,7 +231,7 @@ async def test_list_search_sequence_operator(language_context):
         list_data=schema.ListData(search='Test%second'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': match.id}],
@@ -258,7 +259,7 @@ async def test_list_search_single_character_operator(language_context):
         list_data=schema.ListData(search='A_CD'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': match.id}],
@@ -286,7 +287,7 @@ async def test_list_search_text_field_contains_by_default(language_context):
         list_data=schema.ListData(search='terminal'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': example_2.id}, {'id': example_1.id}],
@@ -313,7 +314,7 @@ async def test_list_search_text_field_contains_with_single_character_operator(la
         list_data=schema.ListData(search='pix_in'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': match.id}],
@@ -341,7 +342,7 @@ async def test_list_search_integer_field_exact_by_default(language_context):
         list_data=schema.ListData(search='1'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': match.id}],
@@ -367,7 +368,7 @@ async def test_list_search_uuid_invalid_value_returns_empty_result(language_cont
         list_data=schema.ListData(search='5'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(data=[], total_count=0)
 
@@ -391,7 +392,7 @@ async def test_list_search_uuid_with_integer_id_field(language_context):
         list_data=schema.ListData(search=str(uuid)),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
 
     assert list_result == schema.TableListResult(
@@ -419,7 +420,7 @@ async def test_list_search_uuid_partial_operator(language_context):
         list_data=schema.ListData(search='%5678-1234%'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': match.id}],
@@ -447,7 +448,7 @@ async def test_list_search_uuid_exact_operator(language_context):
         list_data=schema.ListData(search=f'"{uuid}"'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': match.id}],
@@ -474,7 +475,7 @@ async def test_list_search_uuid_single_character_operator(language_context):
         list_data=schema.ListData(search='12345678-1234-5678-1234-56781234567_'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': match.id}],
@@ -502,7 +503,7 @@ async def test_list_search_related_field(language_context):
         list_data=schema.ListData(search='john_search'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': example.id}],
@@ -530,7 +531,7 @@ async def test_list_search_reverse_related_id(language_context):
         list_data=schema.ListData(search=str(another.id)),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': example.id}],
@@ -558,7 +559,7 @@ async def test_list_search_reverse_related_duplicates(language_context):
         list_data=schema.ListData(search='django'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
 
     assert list_result == schema.TableListResult(
@@ -586,7 +587,7 @@ async def test_list_search_json_field(language_context):
         list_data=schema.ListData(search='79990001122'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': example.id}],
@@ -621,7 +622,7 @@ async def test_filter_related_many(language_context):
         }),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(data=[{'id': another_2.id}], total_count=1)
 
@@ -653,7 +654,7 @@ async def test_filter_related_many_empty_list(language_context):
         list_data=schema.ListData(filters={'example': []}),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
 
     assert list_result == schema.TableListResult(
@@ -691,7 +692,7 @@ async def test_ordering(language_context):
         list_data=schema.ListData(ordering='id'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': example_1.id}, {'id': example_2.id}],
@@ -702,7 +703,7 @@ async def test_ordering(language_context):
         list_data=schema.ListData(ordering='-id'),
         user=user,
         language_context=language_context,
-        debug=False,
+        admin_schema=admin_schema,
     )
     assert list_result == schema.TableListResult(
         data=[{'id': example_2.id}, {'id': example_1.id}],

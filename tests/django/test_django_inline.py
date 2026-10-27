@@ -151,7 +151,6 @@ async def test_inline_retrieve(language_context):
         pk=example.id,
         user=user,
         language_context=language_context,
-        debug=True,
     )
 
     assert result.data['another_examples'] == [
@@ -180,7 +179,6 @@ async def test_inline_get_data_sync_uses_async_unsafe_fallback(language_context,
         pk=example.pk,
         user=user,
         language_context=language_context,
-        debug=True,
     )
 
     assert result.data['virtual_another_examples'] == [
@@ -208,7 +206,6 @@ async def test_inline_create(language_context):
         },
         user=user,
         language_context=language_context,
-        debug=True,
     )
 
     created = await DjangoExample.objects.aget(pk=result.pk)
@@ -242,7 +239,6 @@ async def test_inline_update(language_context):
         },
         user=user,
         language_context=language_context,
-        debug=True,
     )
 
     assert update_result.pk == example.id
@@ -276,7 +272,6 @@ async def test_inline_update_accepts_related_field_payload(language_context, inl
         },
         user=user,
         language_context=language_context,
-        debug=True,
     )
 
     row = await InlineBugRow.objects.aget(parent=parent)
@@ -297,7 +292,6 @@ async def test_inline_update_accepts_related_field_payload(language_context, inl
             },
             user=user,
             language_context=language_context,
-            debug=True,
         )
 
     assert exc.value.status_code == 400
@@ -345,7 +339,6 @@ async def test_inline_update_accepts_many_to_many_related_field(language_context
         },
         user=user,
         language_context=language_context,
-        debug=True,
     )
 
     row = await InlineBugRow.objects.aget(parent=parent)
@@ -373,7 +366,6 @@ async def test_inline_create_rolls_back_parent_if_inline_save_fails(language_con
             },
             user=user,
             language_context=language_context,
-            debug=True,
         )
 
     assert await InlineBugParent.objects.acount() == 0

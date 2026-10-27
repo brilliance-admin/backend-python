@@ -6,6 +6,7 @@ from django.db import connection
 from brilliance_admin import schema
 from brilliance_admin.auth import UserABC
 from brilliance_admin.integrations.django import DjangoAdmin, DjangoFieldsSchema
+from example.main import admin_schema
 from example.sections.models_payment import (
     PaymentBenchmark, PaymentBenchmarkFactory, PaymentBuyerFactory, PaymentCurrency, PaymentCurrencyFactory,
     PaymentEndpoint, PaymentEndpointFactory, PaymentMeansOfPayment, PaymentMeansOfPaymentFactory,
@@ -108,7 +109,7 @@ async def test_payment_list_timing(payment_benchmark_schema, language_context):
         list_data=schema.ListData(limit=50),
         user=UserABC(username='benchmark'),
         language_context=language_context,
-        debug=True,
+        admin_schema=admin_schema,
     )
     total_ms = round((time.perf_counter() - started_at) * 1000, 2)
     yappi.stop()

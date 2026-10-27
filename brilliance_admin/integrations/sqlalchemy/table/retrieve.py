@@ -21,7 +21,6 @@ class SQLAlchemyAdminRetrieveMixin:
             pk: Any,
             user: auth.UserABC,
             language_context: LanguageContext,
-            debug: bool,
             parent_category=None,
             parent_pk=None,
             *, admin_schema,
@@ -50,7 +49,7 @@ class SQLAlchemyAdminRetrieveMixin:
                 type(self).__name__, self.model.__name__, pk, e,
             )
             msg = _('errors.db_error_retrieve') % {
-                'error_type': str(e) if debug else type(e).__name__,
+                'error_type': str(e) if admin_schema.debug else type(e).__name__,
             }
             raise AdminAPIException(
                 APIError(message=msg, code='db_error_retrieve'), status_code=500,
@@ -70,7 +69,7 @@ class SQLAlchemyAdminRetrieveMixin:
                     'admin_schema': admin_schema,
                     "record": record,
                     "user": user,
-                    "debug": debug,
+                    "debug": admin_schema.debug,
                     "db_async_session": self.db_async_session,
                     "raise_async_unsafe": self.raise_async_unsafe,
                 },
@@ -92,7 +91,7 @@ class SQLAlchemyAdminRetrieveMixin:
                 type(self).__name__, self.model.__name__, pk, e,
             )
             msg = _('serialize_error.unexpected_error') % {
-                'error': str(e) if debug else type(e).__name__,
+                'error': str(e) if admin_schema.debug else type(e).__name__,
             }
             raise AdminAPIException(APIError(message=msg, code='unexpected_error'), status_code=500) from e
 
@@ -104,7 +103,6 @@ class SQLAlchemyAdminRetrieveMixin:
             pk: Any,
             user: auth.UserABC,
             language_context: LanguageContext,
-            debug: bool,
             parent_category=None,
             parent_pk=None,
             history_change_provider=None,
@@ -114,7 +112,6 @@ class SQLAlchemyAdminRetrieveMixin:
             pk,
             user,
             language_context,
-            debug,
             parent_category,
             parent_pk,
             admin_schema=admin_schema,

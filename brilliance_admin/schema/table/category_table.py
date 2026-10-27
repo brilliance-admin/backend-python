@@ -374,10 +374,10 @@ class CategoryTable(BaseCategory):
             data: AutocompleteData,
             user: UserABC,
             language_context: LanguageContext,
-            debug: bool,
             parent_category: BaseCategory | None = None,
             parent_pk: Any | None = None,
-            admin_schema=None,
+            *,
+            admin_schema,
     ) -> AutocompleteResult:
         form_schema = None
 
@@ -435,7 +435,7 @@ class CategoryTable(BaseCategory):
             },
             parent_category=parent_category,
             parent_pk=parent_pk if parent_pk is not None else data.parent_pk,
-            debug=debug,
+            debug=admin_schema.debug,
         )
 
     async def _get_subtable_data(
@@ -482,10 +482,10 @@ class CategoryTable(BaseCategory):
             list_data: ListData,
             user: UserABC,
             language_context: LanguageContext,
-            debug: bool,
             parent_category: BaseCategory | None = None,
             parent_pk: Any | None = None,
-            *, admin_schema=None,
+            *,
+            admin_schema,
     ) -> TableListResult:
         raise NotImplementedError()
 

@@ -1,3 +1,6 @@
+from copy import deepcopy
+from functools import wraps
+
 from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, FieldError, ValidationError
 from brilliance_admin.schema.table.admin_action import ActionData, ActionFileResult, ActionResult, admin_action
@@ -64,7 +67,14 @@ class DjangoPostgresExportAction:
             actions.pop('django_export', None)
             return actions
 
-        django_export_field = actions['django_export']
+        original_action = actions['django_export']
+
+        @wraps(original_action)
+        async def django_export_field(*args, **kwargs):
+            return await original_action(*args, **kwargs)
+
+        django_export_field.action_info = deepcopy(original_action.action_info)
+        actions['django_export'] = django_export_field
         fields_field = django_export_field.action_info['form_schema'].get_field('export_fields')
 
         annotations = self.get_export_queryset(self.export_fields).query.annotations

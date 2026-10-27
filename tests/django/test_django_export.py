@@ -76,6 +76,35 @@ def test_export_rejects_unknown_field():
         category.get_actions()
 
 
+def test_export_choices_are_isolated_between_categories():
+    first = DjangoExportTestAdmin(
+        model=DjangoExample,
+        export_fields=['title'],
+    )
+    second = DjangoExportTestAdmin(
+        model=DjangoExample,
+        export_fields=['count'],
+    )
+
+    first_action = first.get_actions()['django_export']
+    first_schema = first_action.action_info['form_schema']
+
+    second_action = second.get_actions()['django_export']
+    second_schema = second_action.action_info['form_schema']
+
+    assert [
+        choice['value']
+        for choice in first_schema.get_field('export_fields').choices
+    ] == ['title']
+    assert [
+        choice['value']
+        for choice in second_schema.get_field('export_fields').choices
+    ] == ['count']
+
+    assert first_action.action_info is not second_action.action_info
+    assert first_schema is not second_schema
+
+
 def test_export_fields_support_model_related_and_json_paths():
     category = DjangoExportTestAdmin(
         model=DjangoExample,

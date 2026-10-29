@@ -1,0 +1,420 @@
+html[data-admin-theme='aqua'] {
+  --aqua-frame-inset: 6px;
+  --aqua-page-inset: 10px;
+  --aqua-chrome-base: #094b8d;
+  --aqua-chrome-highlight: rgb(147 212 255 / 42%);
+  --aqua-border: #93c6e3;
+  --aqua-shadow: inset 0 1px 0 rgb(255 255 255 / 95%), inset 0 0 0 1px rgb(255 255 255 / 45%), 0 3px 10px rgb(25 94 146 / 14%);
+  --aqua-toolbar: linear-gradient(180deg, rgb(245 253 255 / 90%), rgb(186 225 248 / 72%));
+  --aqua-glass: radial-gradient(ellipse at 12% 0%, rgb(255 255 255 / 85%), transparent 65%), linear-gradient(135deg, rgb(231 249 255 / 70%), rgb(182 227 251 / 48%) 55%, rgb(224 253 248 / 62%));
+  --aqua-selection: linear-gradient(180deg, #86d6ff, #3babf4 46%, #1289e0 52%, #0875c9);
+  --aqua-button: linear-gradient(180deg, #79ceff, #32a4f4 46%, #0b8aeb 52%, #0876d0);
+}
+
+html[data-admin-theme='aqua'] body {
+  background: #cce8f8 !important;
+}
+
+html[data-admin-theme='aqua'] .v-layout {
+  background:
+    radial-gradient(ellipse at 75% 12%, rgb(224 247 255 / 85%), transparent 55%),
+    radial-gradient(ellipse at 15% 80%, rgb(116 214 213 / 45%), transparent 60%),
+    linear-gradient(160deg, #82b9e4, #c6e7f7 48%, #a8dfdf);
+}
+
+html[data-admin-theme='aqua'] .v-app-bar {
+  right: 0 !important;
+  width: auto !important;
+  margin: var(--aqua-frame-inset) var(--aqua-page-inset);
+  background:
+    radial-gradient(ellipse at 25% 0%, var(--aqua-chrome-highlight), transparent 65%),
+    linear-gradient(180deg, rgb(255 255 255 / 16%), transparent 70%),
+    rgb(9 75 141 / 88%) !important;
+  border: 1px solid #80bfec;
+  border-top-color: #d1efff;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 2px rgb(219 246 255 / 60%), 0 2px 7px rgb(31 105 159 / 14%) !important;
+  backdrop-filter: blur(16px);
+  color: #edf7ff !important;
+}
+
+html[data-admin-theme='aqua'] .v-app-bar .v-breadcrumbs-divider,
+html[data-admin-theme='aqua'] .v-app-bar .v-btn {
+  color: #edf7ff !important;
+}
+
+html[data-admin-theme='aqua'] .v-app-bar .v-breadcrumbs-item {
+  color: #c5def0 !important;
+}
+
+html[data-admin-theme='aqua'] .v-app-bar .v-breadcrumbs-item--disabled {
+  color: white !important;
+  opacity: 1;
+}
+
+html[data-admin-theme='aqua'] .navbar-container {
+  top: 6px !important;
+  left: 6px !important;
+  width: 248px !important;
+  height: calc(100% - 12px) !important;
+  background:
+    radial-gradient(ellipse at 25% 0%, var(--aqua-chrome-highlight), transparent 35%),
+    radial-gradient(ellipse at 100% 65%, rgb(50 153 217 / 18%), transparent 58%),
+    radial-gradient(ellipse at 25% 100%, rgb(85 211 218 / 25%), transparent 45%),
+    linear-gradient(180deg, transparent, rgb(0 18 40 / 25%) 48%, rgb(0 18 40 / 12%)),
+    var(--aqua-chrome-base) !important;
+  border: 1px solid #80bfec !important;
+  border-radius: 16px;
+  box-shadow: inset 0 1px 2px rgb(219 246 255 / 60%), 0 2px 8px rgb(31 102 167 / 18%);
+  color: #edf7ff !important;
+  scrollbar-color: #4c86b1 transparent;
+}
+
+html[data-admin-theme='aqua'] .navbar-container::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 13px;
+  pointer-events: none;
+}
+
+html[data-admin-theme='aqua'] .navbar-container::before {
+  z-index: 0;
+  background: radial-gradient(ellipse at 35% 0%, rgb(205 239 255 / 16%), transparent 38%);
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-navigation-drawer__content {
+  position: relative;
+  z-index: 1;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list {
+  background: transparent;
+  color: inherit;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-item {
+  min-height: 48px;
+  margin: 1px 8px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  border: 1px solid transparent;
+  border-radius: 5px !important;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-item-title {
+  font-size: 1rem;
+  line-height: 1.5;
+  text-shadow: 0 1px 1px rgb(0 32 72 / 45%);
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-group__header {
+  background: linear-gradient(180deg, rgb(3 34 83 / 8%), rgb(3 34 83 / 22%));
+  border-bottom-color: rgb(141 199 239 / 12%);
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-group__header .v-list-item-title {
+  color: #dfedff;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-group__header .v-icon {
+  color: #b4d4eb;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-group__items {
+  --list-indent-size: 6px !important;
+  padding-bottom: 4px;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .logo-item {
+  min-height: 48px;
+  margin: 0 0 4px;
+  padding: 6px 12px;
+  border: 0;
+  border-bottom: 1px solid rgb(176 224 255 / 30%);
+  border-radius: 16px 16px 0 0 !important;
+  background: linear-gradient(180deg, rgb(138 201 255 / 12%), rgb(0 32 92 / 12%));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 35%);
+  color: white;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .logo-item + .v-divider {
+  display: none;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .navbar-link:not(.v-list-item--active) {
+  background: transparent !important;
+  border-color: transparent;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-item:not(.v-list-item--active):hover {
+  background: rgb(135 207 255 / 15%) !important;
+  border-color: rgb(174 225 255 / 25%);
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-item--active:not(.v-list-group__header) {
+  background:
+    radial-gradient(ellipse at 12% 0%, rgb(237 252 255 / 75%), transparent 62%),
+    linear-gradient(180deg, #82d5ff, #39aefa 40%, #1593ee 48%, #087de0 75%, #168ad9) !important;
+  border-color: #b4e8ff;
+  border-radius: 8px !important;
+  box-shadow: inset 0 1px 1px white, inset 0 0 0 1px rgb(219 245 255 / 40%), inset 0 -2px 3px rgb(1 75 173 / 22%), 0 1px 4px rgb(0 29 80 / 35%), 0 0 5px rgb(79 188 255 / 22%);
+  color: white !important;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-item--active:not(.v-list-group__header) .v-list-item-title,
+html[data-admin-theme='aqua'] .navbar-container .v-list-item--active:not(.v-list-group__header) .v-icon {
+  color: white !important;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-item-subtitle {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  opacity: 0.85;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-item--active:not(.v-list-group__header) .v-list-item-subtitle {
+  color: #e4f5ff !important;
+  opacity: 1;
+}
+
+html[data-admin-theme='aqua'] .navbar-container .v-list-item__prepend .v-icon {
+  opacity: 0.9;
+}
+
+html[data-admin-theme='aqua'] .v-card {
+  border: 1px solid var(--aqua-border);
+  border-radius: 14px !important;
+  box-shadow: var(--aqua-shadow) !important;
+}
+
+html[data-admin-theme='aqua'] .page-container {
+  padding-top: calc(var(--v-layout-top, 0px) + var(--aqua-frame-inset) + 8px);
+  padding-right: calc(var(--v-layout-right, 0px) + var(--aqua-page-inset));
+  padding-bottom: calc(var(--v-layout-bottom, 0px) + var(--aqua-page-inset));
+  padding-left: calc(var(--v-layout-left, 0px) + var(--aqua-page-inset));
+}
+
+html[data-admin-theme='aqua'] .page-container > .navigation-page {
+  margin: 0;
+}
+
+html[data-admin-theme='aqua'] .dashboard-container {
+  width: 100%;
+  max-width: none;
+  padding: 0;
+}
+
+html[data-admin-theme='aqua'] .dashboard-container .v-row {
+  --v-col-gap-x: 12px;
+  --v-col-gap-y: 12px;
+}
+
+html[data-admin-theme='aqua'] .dashboard-card,
+html[data-admin-theme='aqua'] .dashboard-container .chart-component {
+  padding: 20px;
+  background: linear-gradient(180deg, #f4fcff, #fff 64px) !important;
+  border: 1px solid var(--aqua-border);
+  border-radius: 14px !important;
+  box-shadow: var(--aqua-shadow) !important;
+}
+
+html[data-admin-theme='aqua'] .dashboard-card .chart-component {
+  padding: 0;
+  background: transparent !important;
+  border: 0;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+html[data-admin-theme='aqua'] .dashboard-card .dashboard-value {
+  color: #285c80;
+}
+
+html[data-admin-theme='aqua'] .dashboard-card .bar-subtag {
+  background: #f3f6f9 !important;
+  border: 1px solid #dce4eb;
+  border-radius: 5px !important;
+  box-shadow: inset 0 1px 0 white !important;
+}
+
+html[data-admin-theme='aqua'] .dashboard-card .dashboard-label,
+html[data-admin-theme='aqua'] .dashboard-card .dashboard-caption,
+html[data-admin-theme='aqua'] .dashboard-card .chart-y-axis,
+html[data-admin-theme='aqua'] .dashboard-card .day-label {
+  color: #526576 !important;
+}
+
+html[data-admin-theme='aqua'] .list-above-block {
+  margin: 0 0 12px !important;
+  padding: 10px;
+  border: 1px solid var(--aqua-border);
+  border-radius: 12px;
+  background: var(--aqua-glass) !important;
+  box-shadow: var(--aqua-shadow);
+  backdrop-filter: blur(12px);
+}
+
+html[data-admin-theme='aqua'] .filters-container .filter-element {
+  background: linear-gradient(180deg, #effbff, #daf2ff);
+  border: 1px solid #b0d7ef;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 white, 0 1px 2px rgb(37 114 164 / 9%);
+}
+
+html[data-admin-theme='aqua'] .filters-container .filter-label {
+  background: transparent;
+  border-right: 1px solid rgb(157 203 232 / 40%);
+  color: #2c5474;
+}
+
+html[data-admin-theme='aqua'] .filters-container .filter-label > span {
+  opacity: 1;
+}
+
+html[data-admin-theme='aqua'] .filters-container .v-field {
+  background: linear-gradient(180deg, #f6fcff, #e6f6ff);
+  border-radius: 0 !important;
+  box-shadow: inset 0 1px 3px rgb(58 132 178 / 12%) !important;
+}
+
+html[data-admin-theme='aqua'] .v-field {
+  border-radius: 5px;
+}
+
+html[data-admin-theme='aqua'] .v-field--variant-solo {
+  background: linear-gradient(180deg, #f8fdff, #eaf7ff);
+  box-shadow: inset 0 1px 3px rgb(35 114 166 / 12%), 0 0 0 1px #a9cee5;
+}
+
+html[data-admin-theme='aqua'] .v-field--focused {
+  box-shadow: 0 0 0 2px rgb(56 139 194 / 18%);
+}
+
+html[data-admin-theme='aqua'] .v-btn {
+  border-radius: 6px;
+}
+
+html[data-admin-theme='aqua'] .v-btn--icon {
+  border-radius: 50%;
+}
+
+html[data-admin-theme='aqua'] .v-btn.bg-primary {
+  background: var(--aqua-button) !important;
+  border: 1px solid #7ac6fa;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 85%), inset 0 0 0 1px rgb(255 255 255 / 20%), 0 2px 5px rgb(25 104 166 / 24%);
+}
+
+html[data-admin-theme='aqua'] .model-table {
+  background: var(--aqua-glass);
+  border: 1px solid var(--aqua-border);
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+  box-shadow: inset 0 1px 0 white, inset 0 0 0 1px rgb(255 255 255 / 55%), 0 0 0 1px rgb(255 255 255 / 45%);
+  overflow: hidden;
+  backdrop-filter: blur(16px) saturate(115%);
+}
+
+html[data-admin-theme='aqua'] .model-table .v-table__wrapper,
+html[data-admin-theme='aqua'] .model-table table,
+html[data-admin-theme='aqua'] .model-table tbody,
+html[data-admin-theme='aqua'] .model-table tbody tr {
+  background: transparent;
+}
+
+html[data-admin-theme='aqua'] .model-table thead th {
+  background: var(--aqua-toolbar) !important;
+  border-bottom: 1px solid #9cc9e4 !important;
+  box-shadow: inset 0 1px 0 white;
+  color: #244f70;
+}
+
+html[data-admin-theme='aqua'] .model-table tbody tr:nth-child(odd) > td {
+  background: rgb(249 254 255 / 72%);
+}
+
+html[data-admin-theme='aqua'] .model-table tbody tr:nth-child(even) > td {
+  background: rgb(211 237 251 / 50%);
+}
+
+html[data-admin-theme='aqua'] .model-table tbody td {
+  border-bottom-color: #d3e9f5 !important;
+}
+
+html[data-admin-theme='aqua'] .model-table tbody .v-data-table__tr:hover .v-data-table__td {
+  background: #cdeaff;
+}
+
+html[data-admin-theme='aqua'] .model-table tbody tr[aria-selected='true'] > td {
+  background: #bce1fa;
+}
+
+html[data-admin-theme='aqua'] .model-table .related-chip-link {
+  background: linear-gradient(180deg, #f6fcff, #cfe6f5);
+  border: 1px solid #b1d3e9;
+  box-shadow: inset 0 1px 0 white;
+  color: #285474;
+}
+
+html[data-admin-theme='aqua'] .table-bottom {
+  padding: 6px 10px;
+  border: 1px solid var(--aqua-border);
+  border-top-color: #b2d8ec;
+  border-radius: 0 0 14px 14px;
+  background: var(--aqua-glass);
+  backdrop-filter: blur(12px) saturate(115%);
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 90%), 0 3px 8px rgb(25 94 146 / 12%);
+}
+
+html[data-admin-theme='aqua'] .filters-container .filter-button .v-btn:not(.v-btn--disabled),
+html[data-admin-theme='aqua'] .table-bottom .v-pagination__prev .v-btn,
+html[data-admin-theme='aqua'] .table-bottom .v-pagination__next .v-btn {
+  background: var(--aqua-toolbar) !important;
+  border: 1px solid #a3cfe9;
+  box-shadow: inset 0 1px 0 white, 0 1px 3px rgb(25 94 146 / 12%);
+  color: #245475 !important;
+}
+
+html[data-admin-theme='aqua'] .table-bottom .v-pagination__item--is-active .v-btn {
+  background: var(--aqua-button);
+  border: 1px solid #7ac6fa;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 80%);
+  color: white;
+}
+
+html[data-admin-theme='aqua'] .edit-tabs-container {
+  background: #fff;
+  border: 1px solid var(--aqua-border);
+  border-radius: 14px;
+  box-shadow: var(--aqua-shadow);
+}
+
+html[data-admin-theme='aqua'] .v-tabs {
+  border-radius: 4px;
+}
+
+html[data-admin-theme='aqua'] .v-tab--selected {
+  background: #e4eff7;
+  color: #285c80;
+}
+
+html[data-admin-theme='aqua'] .v-overlay__content > .v-list {
+  background: #fff;
+  border: 1px solid #b8c9d7;
+  border-radius: 5px;
+  box-shadow: 0 4px 14px rgb(32 55 78 / 16%);
+}
+
+html[data-admin-theme='aqua'] .login-page .gradient-bg {
+  background:
+    radial-gradient(ellipse at 50% 20%, var(--aqua-chrome-highlight), transparent 65%),
+    var(--aqua-chrome-base) !important;
+}
+
+html[data-admin-theme='aqua'] .theme-switch-active {
+  box-shadow: 0 0 0 3px rgb(56 139 194 / 20%);
+}

@@ -14,6 +14,7 @@ from brilliance_admin.auth import AdminAuthentication, AuthData, AuthResult, Use
 from brilliance_admin.exceptions import AdminAPIException, APIError
 from brilliance_admin.translations import LanguageManager
 from brilliance_admin.translations import TranslateText as _
+from example.custom_themes import custom_themes
 from example.database import async_sessionmaker_, lifespan
 from example.sections.currency import CurrencyAdmin
 from example.sections.dashboard import DasbhoardExample
@@ -69,49 +70,6 @@ class FakeAdminAuthentication(AdminAuthentication):
 
     async def authenticate(self, headers: dict) -> UserABC:
         return UserABC(username='test_admin')
-
-
-custom_themes = [
-    {
-        "name": "pinkLight",
-        "dark": False,
-        "colors": {
-            "light2": "#FBF5F7",
-            "light3": "#E8D0D8",
-            "secondary": "#C4A0AE",
-            "darken1": "#A88392",
-            "primary": "#D46B8A",
-            "darken3": "#6B4458",
-            "darken4": "#4A2E3D",
-            "accent": "#D4A9B8",
-            "error": "#C26161",
-            "info": "#7BA4C9",
-            "success": "#7BAF7F",
-            "warning": "#C9A84E",
-        },
-    },
-    {
-        "name": "pinkDark",
-        "dark": True,
-        "colors": {
-            "surface": "#160D12",
-            "on-surface": "#F0E0E8",
-            "light2": "#2E1825",
-            "light3": "#E8A0B8",
-            "secondary": "#5C3350",
-            "darken1": "#D4789A",
-            "primary": "#D46B8A",
-            "on-primary": "#FFFFFF",
-            "darken3": "#421E35",
-            "darken4": "#0E0609",
-            "accent": "#D4A9B8",
-            "error": "#C26161",
-            "info": "#7BA4C9",
-            "success": "#7BAF7F",
-            "warning": "#C9A84E",
-        },
-    },
-]
 
 
 admin_schema = schema.AdminSchema(

@@ -110,12 +110,16 @@ class AdminSchema:
     language_manager: LanguageManager | None = None
 
     default_theme: str | None = None
+    exclude_default_themes: bool = False
     custom_themes: List[dict] = Field(default_factory=list)
     default_table_options: TableOptions = Field(default_factory=TableOptions)
 
     history_change_provider: HistoryLogsProvider | None = Field(default_factory=HistoryChangeDefaultLogs)
 
     def __post_init__(self):
+        if self.exclude_default_themes and not self.custom_themes:
+            raise ValueError('custom_themes must not be empty when exclude_default_themes is True')
+
         for category in self.categories:
             if not issubclass(category.__class__, BaseCategory):
                 raise TypeError(f'Root category "{category}" is not subclass of BaseCategory')
@@ -298,6 +302,7 @@ class AdminSchema:
             'backend_debug': self.debug,
             'logo_image': logo_image,
             'default_theme': self.default_theme,
+            'exclude_default_themes': self.exclude_default_themes,
             'custom_themes': self.custom_themes,
         }
         data = AdminIndexContextData(

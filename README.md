@@ -23,7 +23,4 @@ Old repo: https://github.com/Innova-Group-LLC/custom_admin
 > [!TIP]
 > If you found a bug or have a feature request, feel free to open an issue.
 
-> [!WARNING]
->Not production ready, work in progress.
-
 Full documentation including project overview, getting started guide, configuration reference, API examples, and component usage is available inside [Documentation](https://docs.brilliance-admin.com/) (GitHub Pages hosted)

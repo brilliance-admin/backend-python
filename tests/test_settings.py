@@ -37,7 +37,7 @@ async def test_index_context_data():
         f'"static_prefix": "/admin/static/", "version": "{version}", '
         '"api_timeout_ms": 5000, "backend_debug": true, '
         '"logo_image": "/static/logo-outline.png", '
-        '"default_theme": null, "custom_themes": []}',
+        '"default_theme": null, "exclude_default_themes": false, "custom_themes": []}',
         'title': 'Brilliance Admin Demo',
     }
 

@@ -6,11 +6,11 @@
 [![PyPI](https://img.shields.io/pypi/v/brilliance-admin)](https://pypi.org/project/brilliance-admin/)
 [![CI](https://github.com/brilliance-admin/backend-python/actions/workflows/deploy.yml/badge.svg)](https://github.com/brilliance-admin/backend-python/actions)
 
-Simple and lightweight data managment framework, powered by Python and Vue3 Vuetify all-in-one. \
+Simple and lightweight data management framework, powered by Python and Vue3 Vuetify all-in-one. \
 Integrated with `SQLAlchemy` and `Django ORM`.\
 _Some call it heavenly in its brilliance._
 
-### [Live Demo](https://brilliance-admin.com/admin/payments/payments/?page=1&limit=25&f-created_at__from=2026-09-09T00:00:00.000&f-created_at__to=2026-09-15T23:59:59.999&filter_subtable=created_at&filter_subtable_unit=1hour) | [Demo Sources](https://github.com/brilliance-admin/backend-python/tree/main/example) | [Schowcase + Documentation](https://docs.brilliance-admin.com/)
+### [Live Demo](https://brilliance-admin.com/admin/payments/payments/?page=1&limit=25&f-created_at__from=2026-09-09T00:00:00.000&f-created_at__to=2026-09-15T23:59:59.999&filter_subtable=created_at&filter_subtable_unit=1hour) | [Demo Sources](https://github.com/brilliance-admin/backend-python/tree/main/example) | [Showcase + Documentation](https://docs.brilliance-admin.com/)
 
 Old repo: https://github.com/Innova-Group-LLC/custom_admin
 

@@ -10,7 +10,7 @@ from django.utils import timezone
 from brilliance_admin import schema
 from brilliance_admin.exceptions import APIError, AdminAPIException, ValidationError
 from brilliance_admin.schema.table.fields_schema import FORMSET_EXTRA_FIELDS, FORMSET_MISSING_FIELDS
-from brilliance_admin.schema.table.fields.base import DateTimeField, InlineField, RelatedField
+from brilliance_admin.schema.table.fields.base import InlineField, RelatedField
 from brilliance_admin.integrations.django.inline_field import DjangoInlineField
 from brilliance_admin.integrations.django.related_field import DjangoRelatedField
 from brilliance_admin.utils import DeserializeAction
@@ -174,11 +174,13 @@ class DjangoFieldsSchema(schema.FieldsSchema):
                     queryset = queryset.filter(**{field_slug: value})
                 continue
 
-            if isinstance(field, DateTimeField) and field.range and isinstance(value, dict):
+            if getattr(field, 'range', False) and isinstance(value, dict):
                 if value.get('from') is not None:
                     queryset = queryset.filter(**{f'{field_slug}__gte': value['from']})
+
                 if value.get('to') is not None:
                     queryset = queryset.filter(**{f'{field_slug}__lte': value['to']})
+
                 continue
 
             if isinstance(value, str):

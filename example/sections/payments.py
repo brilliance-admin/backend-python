@@ -59,6 +59,8 @@ ROUTING_ERRORS = [
 ]
 
 class PaymentFiltersSchema(schema.FieldsSchema):
+    amount = schema.IntegerField(label=_('amount'), range=True)
+
     created_at = schema.DateTimeField(
         label=_('created_at'),
         range=True,
@@ -80,6 +82,7 @@ class PaymentFiltersSchema(schema.FieldsSchema):
     test_mode = schema.BooleanField(label=_('test_mode'))
 
     fields = [
+        'amount',
         'created_at',
         'status',
         'endpoint',

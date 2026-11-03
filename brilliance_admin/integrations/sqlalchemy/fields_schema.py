@@ -266,6 +266,13 @@ class SQLAlchemyFieldsSchema(schema.FieldsSchema):
             if apply_filter and callable(apply_filter):
                 stmt = await apply_filter(stmt, value, self.model, column)
 
+            elif isinstance(field, (schema.IntegerField, schema.DecimalField)) and field.range:
+                if value.get('from') is not None:
+                    stmt = stmt.where(column >= value['from'])
+
+                if value.get('to') is not None:
+                    stmt = stmt.where(column <= value['to'])
+
             elif issubclass(type(field), DateTimeField) and field.range:
                 stmt = stmt.where(column >= value['from'])
                 stmt = stmt.where(column <= value['to'])

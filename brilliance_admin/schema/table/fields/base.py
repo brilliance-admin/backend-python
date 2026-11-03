@@ -123,9 +123,37 @@ class TableField(abc.ABC, FieldSchemaData):
         result[field_slug] = deserialized_value
 
 
+async def deserialize_numeric_range(field, value, extra):
+    if not isinstance(value, dict) or set(value) - {'from', 'to'}:
+        raise FieldError('Expected a numeric range', 'invalid_range')
+
+    bounds = {}
+
+    for key in ('from', 'to'):
+        bound = value.get(key)
+
+        if bound is None or bound == '':
+            continue
+
+        if isinstance(field, IntegerField) and (isinstance(bound, bool) or not isinstance(bound, int)):
+            raise FieldError('Expected an integer range boundary', 'invalid_range')
+
+        bounds[key] = await field.deserialize_field(bound, DeserializeAction.UPDATE, extra)
+
+        if isinstance(bounds[key], Decimal) and not bounds[key].is_finite():
+            raise FieldError('Expected a finite range boundary', 'invalid_range')
+
+    if 'from' in bounds and 'to' in bounds and bounds['from'] > bounds['to']:
+        raise FieldError('Range start must not exceed range end', 'invalid_range')
+
+    return bounds
+
+
 @dataclass
 class IntegerField(TableField):
     _type = 'integer'
+
+    range: bool | None = None
 
     choices: Any | None = None
     variant: str = 'elevated'
@@ -164,6 +192,7 @@ class IntegerField(TableField):
         if self.min_value is not None:
             schema.min_value = self.min_value
 
+        schema.range = self.range
         schema.inputmode = self.inputmode
         schema.precision = self.precision
         schema.scale = self.scale
@@ -175,6 +204,9 @@ class IntegerField(TableField):
         return schema
 
     async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        if action == DeserializeAction.FILTERS and self.range:
+            return await deserialize_numeric_range(self, value, extra)
+
         value = await super().deserialize_field(value, action, extra, *args, **kwargs)
         if value and not isinstance(value, int):
             raise FieldError(_('validation.bad_type_error') % {'type': type(value).__name__, 'expected': 'init'})
@@ -194,6 +226,8 @@ class IntegerField(TableField):
 @dataclass
 class DecimalField(TableField):
     _type = 'decimal'
+
+    range: bool | None = None
 
     max_value: Decimal | int | float | None = None
     min_value: Decimal | int | float | None = None
@@ -220,6 +254,7 @@ class DecimalField(TableField):
         if self.min_value is not None:
             schema.min_value = float(self.min_value)
 
+        schema.range = self.range
         schema.inputmode = self.inputmode
         schema.precision = self.precision
         schema.scale = self.scale
@@ -227,6 +262,9 @@ class DecimalField(TableField):
         return schema
 
     async def deserialize_field(self, value, action: DeserializeAction, extra: dict, *args, **kwargs) -> Any:
+        if action == DeserializeAction.FILTERS and self.range:
+            return await deserialize_numeric_range(self, value, extra)
+
         value = await super().deserialize_field(value, action, extra, *args, **kwargs)
 
         if value is None:

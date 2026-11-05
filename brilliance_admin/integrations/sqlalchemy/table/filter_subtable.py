@@ -15,7 +15,9 @@ class PostgreSQLFilterSubtable(FilterSubtable):
         list_data = ListData(filters=subtable_data.filters, search=subtable_data.search)
         queryset = view.get_queryset(action=TableAction.LIST)
         queryset = await view.apply_filters(queryset, list_data)
-        return view.apply_search(queryset, list_data).order_by(None)
+        queryset = await view.apply_search(queryset, list_data)
+
+        return queryset.order_by(None)
 
     async def get_data(
             self,

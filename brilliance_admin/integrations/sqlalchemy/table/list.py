@@ -56,7 +56,7 @@ class SQLAlchemyAdminListMixin:
 
         return stmt.order_by(direction(column))
 
-    def apply_search(self, stmt, list_data: schema.ListData):
+    async def apply_search(self, stmt, list_data: schema.ListData):
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import String, cast, or_
         from sqlalchemy.orm import InstrumentedAttribute
@@ -124,7 +124,7 @@ class SQLAlchemyAdminListMixin:
             stmt = self.get_queryset(action=TableAction.LIST)
             stmt = self.apply_parent_filter(stmt, parent_category, parent_pk)
             stmt = await self.apply_filters(stmt, list_data)
-            stmt = self.apply_search(stmt, list_data)
+            stmt = await self.apply_search(stmt, list_data)
 
             count_query = stmt
             stmt = self.apply_pagination(stmt, list_data)

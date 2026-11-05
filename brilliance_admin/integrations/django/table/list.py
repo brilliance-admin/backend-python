@@ -86,7 +86,7 @@ class DjangoAdminListMixin:
 
         return queryset.order_by(ordering)
 
-    def apply_search(self, queryset, list_data):
+    async def apply_search(self, queryset, list_data):
         from django.db.models import CharField, Q
         from django.db.models.functions import Cast
 
@@ -147,7 +147,7 @@ class DjangoAdminListMixin:
         queryset = self.get_queryset(action=TableAction.LIST)
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
         queryset = await self.apply_filters(queryset, list_data)
-        queryset = self.apply_search(queryset, list_data)
+        queryset = await self.apply_search(queryset, list_data)
         queryset = self.apply_ordering(queryset, list_data)
         queryset = self.optimize_list_queryset(queryset)
 

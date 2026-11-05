@@ -129,7 +129,7 @@ async def django_export(
         ListData(search=search, filters=filters),
     )
     queryset = await category.apply_search(queryset, ListData(search=search, filters=filters))
-    queryset = category.apply_ordering(queryset, ListData())
+    queryset = await category.apply_ordering(queryset, ListData())
 
     if not send_to_all:
         queryset = queryset.filter(pk__in=pks)

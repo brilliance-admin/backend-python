@@ -23,7 +23,7 @@ class SQLAlchemyAdminListMixin:
     table_schema: SQLAlchemyFieldsSchema
     table_filters: SQLAlchemyFieldsSchema | None
 
-    def apply_ordering(self, stmt, list_data):
+    async def apply_ordering(self, stmt, list_data):
         # pylint: disable=import-outside-toplevel
         from sqlalchemy import asc, desc
         from sqlalchemy.orm import InstrumentedAttribute
@@ -128,7 +128,7 @@ class SQLAlchemyAdminListMixin:
 
             count_query = stmt
             stmt = self.apply_pagination(stmt, list_data)
-            stmt = self.apply_ordering(stmt, list_data)
+            stmt = await self.apply_ordering(stmt, list_data)
 
         except AdminAPIException:
             raise

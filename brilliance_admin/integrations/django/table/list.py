@@ -70,7 +70,7 @@ class DjangoAdminListMixin:
 
         return DjangoAdminListMixin.like_to_regex(value)
 
-    def apply_ordering(self, queryset, list_data):
+    async def apply_ordering(self, queryset, list_data):
         ordering = list_data.ordering or self.default_ordering
         if not ordering:
             return queryset
@@ -148,7 +148,7 @@ class DjangoAdminListMixin:
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
         queryset = await self.apply_filters(queryset, list_data)
         queryset = await self.apply_search(queryset, list_data)
-        queryset = self.apply_ordering(queryset, list_data)
+        queryset = await self.apply_ordering(queryset, list_data)
         queryset = self.optimize_list_queryset(queryset)
 
         page = max(1, list_data.page or 1)

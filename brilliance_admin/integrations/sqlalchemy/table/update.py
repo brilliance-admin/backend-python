@@ -40,15 +40,22 @@ class SQLAlchemyAdminUpdate:
                 status_code=400,
             )
 
+        before = None
         if history_change_provider is not None:
-            before = await self._retrieve(
-                pk,
-                user,
-                language_context,
-                parent_category,
-                parent_pk,
-                admin_schema=admin_schema,
-            )
+            try:
+                before = await self._retrieve(
+                    pk,
+                    user,
+                    language_context,
+                    parent_category,
+                    parent_pk,
+                    admin_schema=admin_schema,
+                )
+            except Exception:
+                logger.exception(
+                    '%s #%s change history snapshot failed before update for user %s',
+                    type(self).__name__, pk, user.username,
+                )
 
         col = inspect(self.table_schema.model).mapper.columns[self.pk_name]
         python_type = col.type.python_type
@@ -131,22 +138,29 @@ class SQLAlchemyAdminUpdate:
             ) from e
 
         result = schema.UpdateResult(pk=pk)
-        if history_change_provider is not None:
-            after = await self._retrieve(
-                pk,
-                user,
-                language_context,
-                parent_category,
-                parent_pk,
-                admin_schema=admin_schema,
-            )
-            await history_change_provider.save_update(
-                category=self,
-                parent_category=parent_category,
-                user=user,
-                pk=pk,
-                before=before.data,
-                data=after.data,
-                language_context=language_context,
-            )
+        if history_change_provider is not None and before is not None:
+            try:
+                after = await self._retrieve(
+                    pk,
+                    user,
+                    language_context,
+                    parent_category,
+                    parent_pk,
+                    admin_schema=admin_schema,
+                )
+                await history_change_provider.save_update(
+                    category=self,
+                    parent_category=parent_category,
+                    user=user,
+                    pk=pk,
+                    before=before.data,
+                    data=after.data,
+                    language_context=language_context,
+                )
+            except Exception:
+                logger.exception(
+                    '%s #%s change history update failed for user %s',
+                    type(self).__name__, pk, user.username,
+                )
+
         return result

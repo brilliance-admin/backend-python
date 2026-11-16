@@ -1,5 +1,7 @@
 from typing import Any
 
+from pydantic_core import to_jsonable_python
+
 from brilliance_admin.schema.table.history_change_provider import HistoryChangeDefaultLogs
 
 from .models import HistoryChange, LogType
@@ -39,7 +41,7 @@ class SQLAlchemyLogsProvider(HistoryChangeDefaultLogs):
             log_type=log_type.value,
             action_slug=action_slug,
             category_path=self.get_category_path(category, parent_category),
-            data=data,
+            data=to_jsonable_python(data),
         )
         async with self.db_async_session() as session:
             session.add(record)

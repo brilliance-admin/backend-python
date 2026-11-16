@@ -8,6 +8,7 @@ from django.db.models import Model
 from pydantic import BaseModel
 from pydantic.dataclasses import dataclass
 
+from brilliance_admin.auth import UserABC
 from brilliance_admin.exceptions import AdminAPIException, APIError, AsyncUnsafeTitleLoad, FieldError
 from brilliance_admin.schema.admin_schema import AdminSchema
 from brilliance_admin.schema.table.count_providers import CountProvider
@@ -65,6 +66,7 @@ async def get_record_title(
     record,
     raise_async_unsafe,
     *,
+    user: UserABC,
     parent_record=None,
     field_slug: str | None = None,
     rel_name: str | None = None,
@@ -106,7 +108,7 @@ async def get_record_title(
         )
         raise AttributeError(msg)
 
-    return await admin_title()
+    return await admin_title(user=user)
 
 
 @dataclass
@@ -322,6 +324,7 @@ class DjangoRelatedField(RelatedField):
                 title = await get_record_title(
                     record,
                     extra.get('raise_async_unsafe'),
+                    user=user,
                     field_slug=data.field_slug,
                     rel_name=self.rel_name,
                     debug=debug,
@@ -398,6 +401,7 @@ class DjangoRelatedField(RelatedField):
                     title = await get_record_title(
                         obj,
                         extra.get('raise_async_unsafe'),
+                        user=extra['user'],
                         parent_record=record,
                         field_slug=field_slug,
                         rel_name=self.rel_name,
@@ -459,6 +463,7 @@ class DjangoRelatedField(RelatedField):
             title = await get_record_title(
                 related,
                 extra.get('raise_async_unsafe'),
+                user=extra['user'],
                 parent_record=record,
                 field_slug=field_slug,
                 rel_name=self.rel_name,

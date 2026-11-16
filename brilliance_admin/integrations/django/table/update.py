@@ -2,7 +2,9 @@ from brilliance_admin import schema
 from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationError
 from brilliance_admin.schema.table.table_action import TableAction
 from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.utils import DeserializeAction
+from brilliance_admin.utils import DeserializeAction, get_logger
+
+logger = get_logger()
 
 
 class DjangoAdminUpdate:
@@ -28,15 +30,22 @@ class DjangoAdminUpdate:
                 status_code=400,
             )
 
+        before = None
         if history_change_provider is not None:
-            before = await self._retrieve(
-                pk,
-                user,
-                language_context,
-                parent_category,
-                parent_pk,
-                admin_schema=admin_schema,
-            )
+            try:
+                before = await self._retrieve(
+                    pk,
+                    user,
+                    language_context,
+                    parent_category,
+                    parent_pk,
+                    admin_schema=admin_schema,
+                )
+            except Exception:
+                logger.exception(
+                    '%s #%s change history snapshot failed before update for user %s',
+                    type(self).__name__, pk, user.username,
+                )
 
         queryset = self.get_queryset(action=TableAction.UPDATE).filter(**{self.pk_name: pk})
         queryset = self.apply_parent_filter(queryset, parent_category, parent_pk)
@@ -76,24 +85,31 @@ class DjangoAdminUpdate:
         )
 
         result = schema.UpdateResult(pk=pk)
-        if history_change_provider is not None:
-            history_data = await self.table_schema.serialize(
-                record,
-                extra={
-                    'admin_schema': admin_schema,
-                    'record': record,
-                    'user': user,
-                    'debug': admin_schema.debug,
-                    'raise_async_unsafe': self.raise_async_unsafe,
-                },
-            )
-            await history_change_provider.save_update(
-                category=self,
-                parent_category=parent_category,
-                user=user,
-                pk=pk,
-                before=before.data,
-                data=history_data,
-                language_context=language_context,
-            )
+        if history_change_provider is not None and before is not None:
+            try:
+                history_data = await self.table_schema.serialize(
+                    record,
+                    extra={
+                        'admin_schema': admin_schema,
+                        'record': record,
+                        'user': user,
+                        'debug': admin_schema.debug,
+                        'raise_async_unsafe': self.raise_async_unsafe,
+                    },
+                )
+                await history_change_provider.save_update(
+                    category=self,
+                    parent_category=parent_category,
+                    user=user,
+                    pk=pk,
+                    before=before.data,
+                    data=history_data,
+                    language_context=language_context,
+                )
+            except Exception:
+                logger.exception(
+                    '%s #%s change history update failed for user %s',
+                    type(self).__name__, pk, user.username,
+                )
+
         return result

@@ -9,6 +9,7 @@ if not settings.configured:
         INSTALLED_APPS=[
             "django.contrib.contenttypes",
             "example.sections",
+            "brilliance_admin.integrations.django.history_changes",
         ],
         DATABASES={
             "default": {
@@ -21,6 +22,7 @@ if not settings.configured:
             }
         },
         SECRET_KEY="test-secret-key",
+        AUTH_USER_MODEL="sections.DjangoUser",
         USE_TZ=True,
         DEFAULT_AUTO_FIELD="django.db.models.AutoField",
     )
@@ -30,15 +32,18 @@ if not settings.configured:
 @pytest.fixture(scope="session", autouse=True)
 def django_test_schema():
     from example.sections.django_models import DjangoAnotherExample, DjangoExample, DjangoUser
+    from brilliance_admin.integrations.django.history_changes.models import HistoryChange
 
     with connection.schema_editor() as schema_editor:
         schema_editor.create_model(DjangoExample)
         schema_editor.create_model(DjangoAnotherExample)
         schema_editor.create_model(DjangoUser)
+        schema_editor.create_model(HistoryChange)
 
     yield
 
     with connection.schema_editor() as schema_editor:
+        schema_editor.delete_model(HistoryChange)
         schema_editor.delete_model(DjangoUser)
         schema_editor.delete_model(DjangoAnotherExample)
         schema_editor.delete_model(DjangoExample)

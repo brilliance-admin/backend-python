@@ -1,3 +1,5 @@
+from pydantic_core import to_jsonable_python
+
 from brilliance_admin.schema.table.history_change_provider import HistoryChangeDefaultLogs, LogType
 
 
@@ -43,7 +45,7 @@ class DjangoLogsProvider(HistoryChangeDefaultLogs):
             object_id=str(pk),
             log_type=log_type.value,
             category_path=self.get_category_path(category, parent_category),
-            data=data,
+            data=to_jsonable_python(data),
         )
 
     async def save_admin_action(self, *, category, parent_category, user, action_slug, action_data, **kwargs) -> None:

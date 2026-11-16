@@ -3,7 +3,9 @@ from brilliance_admin.exceptions import AdminAPIException, APIError, ValidationE
 from brilliance_admin.integrations.django.related_field import get_record_title
 from brilliance_admin.schema.table.table_models import Record
 from brilliance_admin.translations import TranslateText as _
-from brilliance_admin.utils import DeserializeAction
+from brilliance_admin.utils import DeserializeAction, get_logger
+
+logger = get_logger()
 
 
 class DjangoAdminCreate:
@@ -49,22 +51,29 @@ class DjangoAdminCreate:
         pk_value = getattr(record, self.pk_name, None)
         choice = Record(
             key=pk_value,
-            title=await get_record_title(record, self.raise_async_unsafe, debug=admin_schema.debug),
+            title=await get_record_title(record, self.raise_async_unsafe, user=user, debug=admin_schema.debug),
         )
 
         result = schema.CreateResult(pk=pk_value, choice=choice)
         if history_change_provider is not None:
-            history_data = await self.table_schema.serialize(
-                record,
-                extra={
-                    'admin_schema': admin_schema,
-                    'record': record,
-                    'user': user,
-                    'debug': admin_schema.debug,
-                    'raise_async_unsafe': self.raise_async_unsafe,
-                },
-            )
-            await history_change_provider.save_create(
-                category=self, parent_category=parent_category, user=user, pk=pk_value, data=history_data,
-            )
+            try:
+                history_data = await self.table_schema.serialize(
+                    record,
+                    extra={
+                        'admin_schema': admin_schema,
+                        'record': record,
+                        'user': user,
+                        'debug': admin_schema.debug,
+                        'raise_async_unsafe': self.raise_async_unsafe,
+                    },
+                )
+                await history_change_provider.save_create(
+                    category=self, parent_category=parent_category, user=user, pk=pk_value, data=history_data,
+                )
+            except Exception:
+                logger.exception(
+                    '%s #%s change history creation failed for user %s',
+                    type(self).__name__, pk_value, user.username,
+                )
+
         return result

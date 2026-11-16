@@ -311,13 +311,19 @@ class CategoryTable(BaseCategory):
                 result = ActionResult()
 
             if history_change_provider is not None:
-                await history_change_provider.save_admin_action(
-                    category=self,
-                    parent_category=parent_category,
-                    user=user,
-                    action_slug=action,
-                    action_data=action_data,
-                )
+                try:
+                    await history_change_provider.save_admin_action(
+                        category=self,
+                        parent_category=parent_category,
+                        user=user,
+                        action_slug=action,
+                        action_data=action_data,
+                    )
+                except Exception:
+                    logger.exception(
+                        '%s action %s change history failed for user %s',
+                        type(self).__name__, action, user.username,
+                    )
 
         except ValidationError as e:
             raise AdminAPIException(

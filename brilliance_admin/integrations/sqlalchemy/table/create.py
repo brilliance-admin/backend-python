@@ -119,7 +119,14 @@ class SQLAlchemyAdminCreate:
 
         result = schema.CreateResult(pk=pk_value, choice=choice)
         if history_change_provider is not None:
-            await history_change_provider.save_create(
-                category=self, parent_category=parent_category, user=user, pk=pk_value, data=deserialized_data,
-            )
+            try:
+                await history_change_provider.save_create(
+                    category=self, parent_category=parent_category, user=user, pk=pk_value, data=deserialized_data,
+                )
+            except Exception:
+                logger.exception(
+                    '%s #%s change history creation failed for user %s',
+                    type(self).__name__, pk_value, user.username,
+                )
+
         return result

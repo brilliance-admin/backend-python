@@ -133,6 +133,38 @@ async def test_django_related_autocomplete_title_error_shows_field(language_cont
 
 
 @pytest.mark.asyncio
+async def test_django_related_autocomplete_async_admin_title_error_shows_field(language_context, monkeypatch):
+    user = UserABC(username='test')
+
+    async def admin_title(self, user: UserABC) -> str:
+        assert user is current_user
+        return self.owner.username
+
+    current_user = user
+    monkeypatch.setattr(DjangoExample, 'admin_title', admin_title, raising=False)
+    example = await DjangoExampleFactory(title='title match')
+    category = DjangoAdmin(
+        model=DjangoAnotherExample,
+        raise_async_unsafe=True,
+        table_schema=DjangoFieldsSchema(model=DjangoAnotherExample, fields=['example']),
+    )
+
+    with pytest.raises(AdminAPIException) as exc:
+        await category.autocomplete(
+            data=AutocompleteData(search_string='title', field_slug='example'),
+            user=user,
+            language_context=language_context,
+            admin_schema=admin_schema,
+        )
+
+    assert exc.value.error.code == 'async_unsafe_title_load'
+    assert 'field="example"' in exc.value.error.message
+    assert f'model="DjangoExample" pk={example.pk}' in exc.value.error.message
+    assert 'admin_title source:' in exc.value.error.message
+    assert 'return self.owner.username' in exc.value.error.message
+
+
+@pytest.mark.asyncio
 async def test_django_related_autocomplete_uses_select_related(language_context):
     category = DjangoAdmin(
         model=DjangoAnotherExample,

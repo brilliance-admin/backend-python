@@ -73,42 +73,46 @@ async def get_record_title(
     debug: bool = False,
 ) -> str:
     admin_title = getattr(record, 'admin_title', None)
-    if admin_title is None:
-        try:
-            return record.__str__()
-        except SynchronousOnlyOperation as e:
-            error = AsyncUnsafeTitleLoad(
-                record,
-                get_str_source(record),
-                backend='django',
-                hint=TITLE_ASYNC_UNSAFE_HINT,
-            )
-            if raise_async_unsafe:
-                raise error from e
-            if debug:
-                logger.warning(
-                    'Async unsafe title load: field="%s" rel_name="%s" '
-                    'parent_model="%s" parent_pk=%s '
-                    'model="%s" pk=%s. %s%s',
-                    field_slug,
-                    rel_name,
-                    type(parent_record).__name__ if parent_record is not None else None,
-                    getattr(parent_record, 'pk', None),
-                    type(error.record).__name__,
-                    getattr(error.record, 'pk', None),
-                    error.hint,
-                    error.source,
-                )
-            return await sync_to_async(str, thread_sensitive=True)(record)
-
-    if not inspect.iscoroutinefunction(admin_title):
+    if admin_title is not None and not inspect.iscoroutinefunction(admin_title):
         msg = ADMIN_TITLE_MUST_BE_ASYNC.format(
             model=type(record).__name__,
             value_type=type(admin_title).__name__,
         )
         raise AttributeError(msg)
 
-    return await admin_title(user=user)
+    try:
+        if admin_title is not None:
+            return await admin_title(user=user)
+        return record.__str__()
+    except SynchronousOnlyOperation as e:
+        if admin_title is not None:
+            try:
+                source = f'\nadmin_title source:\n{inspect.getsource(admin_title)}'
+            except (OSError, TypeError):
+                source = ''
+            hint = 'Use async ORM or sync_to_async inside admin_title().'
+        else:
+            source = get_str_source(record)
+            hint = TITLE_ASYNC_UNSAFE_HINT
+
+        error = AsyncUnsafeTitleLoad(record, source, backend='django', hint=hint)
+        if raise_async_unsafe:
+            raise error from e
+        if debug:
+            logger.warning(
+                'Async unsafe title load: field="%s" rel_name="%s" '
+                'parent_model="%s" parent_pk=%s '
+                'model="%s" pk=%s. %s%s',
+                field_slug,
+                rel_name,
+                type(parent_record).__name__ if parent_record is not None else None,
+                getattr(parent_record, 'pk', None),
+                type(record).__name__,
+                getattr(record, 'pk', None),
+                error.hint,
+                error.source,
+            )
+        return await sync_to_async(str, thread_sensitive=True)(record)
 
 
 @dataclass

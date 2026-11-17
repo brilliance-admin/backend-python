@@ -937,6 +937,7 @@ class InlineField(TableField):
     ) -> FieldSchemaData:
         schema = super().generate_field_schema(user, field_slug, fields_schema, admin_schema, language_context, schema_type, **kwargs)
         schema.many = self.many
+        schema.header_bg_color = self.header_bg_color
         if self.table_view and not self.read_only:
             raise FieldError(f'InlineField "{field_slug}" with table_view must be read_only')
         if self.table_view:

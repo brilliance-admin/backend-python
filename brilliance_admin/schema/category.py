@@ -74,6 +74,7 @@ class FieldSchemaData(DataclassBase):
 
     inline_field_schema: FieldsSchemaData | None = None
     table_view: bool | None = None
+    header_bg_color: str | None = None
 
 
 @dataclass

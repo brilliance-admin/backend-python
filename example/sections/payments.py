@@ -330,6 +330,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     )
     status_history = schema.InlineField(
         label='Statuses History',
+        header_bg_color='blue-lighten-4',
         many=True,
         table_schema=StatusHistoryFieldsSchema(),
     )

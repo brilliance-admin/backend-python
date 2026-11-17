@@ -296,7 +296,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
                 title='Errors',
                 description='Errors container',
                 icon='mdi-alert-circle-outline',
-                header_bg_color='red-lighten-3',
+                header_bg_color='error-background',
                 fields=[
                     'errors',
                     'provider_errors',

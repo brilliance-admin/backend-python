@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import json
 import traceback
 import uuid
 from html import escape
@@ -24,7 +25,7 @@ logger = get_logger()
 
 PAYMENT_ERRORS = [
     {
-        'code': 'INVALID_CUSTOMER_DATA',
+        'code': 'INVALID_CUSTOMER_DATA_INVALID_CUSTOMER_DATA',
         'description': {
             'details': [
                 {
@@ -51,12 +52,52 @@ PROVIDER_ERRORS = [
     },
 ]
 
-ROUTING_ERRORS = [
+REPORT_ERRORS = [
     {
         'code': 'ROUTING_NOT_FOUND',
+        'provider': 'new_provider',
         'description': 'No active routing rule matched this payment.',
+        'reasons': ['No eligible provider was found.'],
     },
 ]
+
+class ErrorRowSchema(schema.FieldsSchema):
+    code = schema.StringField(
+        label='Code',
+        header={'width': '250px', 'minWidth': '250px', 'maxWidth': '250px'},
+    )
+    provider = schema.StringField(
+        label='Provider',
+        header={'width': '150px', 'minWidth': '150px', 'maxWidth': '150px'},
+    )
+    description = schema.StringField(label='Description', header={'minWidth': '400px'})
+    reason = schema.StringField(label='Reason', header={'minWidth': '400px'})
+
+    fields = ['code', 'provider', 'description', 'reason']
+
+
+def error_rows(errors):
+    if not errors:
+        return []
+    if isinstance(errors, str):
+        return [{'code': '', 'description': errors, 'provider': '', 'reason': ''}]
+    if isinstance(errors, dict):
+        errors = [errors]
+
+    rows = []
+    for error in errors:
+        description = error.get('description', '')
+        if not isinstance(description, str):
+            description = json.dumps(description, ensure_ascii=False)
+        for reason in error.get('reasons') or ['']:
+            rows.append({
+                'code': error.get('code', ''),
+                'description': description,
+                'provider': error.get('provider', ''),
+                'reason': reason,
+            })
+    return rows
+
 
 class PaymentFiltersSchema(schema.FieldsSchema):
     amount = schema.IntegerField(label=_('amount'), range=True)
@@ -240,15 +281,8 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     whitelist_ips = schema.ArrayField(label=_('whitelist_ips'), help_text=_('whitelist_ips__help_text'))
     # image = schema.ImageField(label=_('image'))
     gateway_settings = schema.JSONField(help_text='help text', read_only=True)
-    errors = schema.JSONField(label='Errors', read_only=True)
-    provider_errors = schema.JSONField(label='Provider errors', read_only=True)
-    routing_errors = schema.JSONField(label='Routing errors', read_only=True)
     created_at = schema.DateTimeField(label=_('created_at'), read_only=True)
     update_at = schema.DateTimeField(label=_('update_at'), read_only=True)
-
-    extra_kwargs = {
-        "errors": {"max_height": 500},
-    }
 
     formset = schema.FormSet(
         fields=[
@@ -292,17 +326,9 @@ class PaymentFieldsSchema(schema.FieldsSchema):
                     'whitelist_ips',
                 ],
             ),
-            schema.FormSet(
-                title='Errors',
-                description='Errors container',
-                icon='mdi-alert-circle-outline',
-                header_bg_color='error-background',
-                fields=[
-                    'errors',
-                    'provider_errors',
-                    'routing_errors',
-                ],
-            ),
+            'errors_table',
+            'provider_errors_table',
+            'report_errors_table',
             'status_history',
             'fee_transfers',
             'callback_requests',
@@ -310,6 +336,44 @@ class PaymentFieldsSchema(schema.FieldsSchema):
             'disputes',
         ]
     )
+
+    @schema.function_field(
+        type=schema.InlineField(
+            label='Errors',
+            header_bg_color='error-background',
+            many=True,
+            read_only=True,
+            table_view=True,
+            table_schema=ErrorRowSchema(list_display=['code', 'description']),
+        ),
+    )
+    async def errors_table(self, record, **kwargs):
+        return error_rows(record['errors'])
+
+    @schema.function_field(
+        type=schema.InlineField(
+            label='Provider errors',
+            header_bg_color='error-background',
+            many=True,
+            read_only=True,
+            table_view=True,
+            table_schema=ErrorRowSchema(list_display=['code', 'description']),
+        ),
+    )
+    async def provider_errors_table(self, record, **kwargs):
+        return error_rows(record['provider_errors'])
+
+    @schema.function_field(
+        type=schema.InlineField(
+            label='Report errors',
+            many=True,
+            read_only=True,
+            table_view=True,
+            table_schema=ErrorRowSchema(list_display=['provider', 'description', 'reason']),
+        ),
+    )
+    async def report_errors_table(self, record, **kwargs):
+        return error_rows(record['report_errors'])
 
     @schema.function_field(label=_('registry_checked'), type=schema.BooleanField)
     async def get_provider_registry(self, record, user, **kwargs):
@@ -330,7 +394,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     )
     status_history = schema.InlineField(
         label='Statuses History',
-        header_bg_color='blue-lighten-4',
+        header_bg_color='light-blue-background',
         many=True,
         table_schema=StatusHistoryFieldsSchema(),
     )
@@ -565,7 +629,7 @@ class PaymentsAdmin(schema.CategoryTable):
             'gateway_settings': ['first', 'second'],
             'errors': PAYMENT_ERRORS,
             'provider_errors': PROVIDER_ERRORS,
-            'routing_errors': ROUTING_ERRORS,
+            'report_errors': REPORT_ERRORS,
             'fee_transfers': FEE_TRANSFERS,
             'callback_requests': CALLBACK_REQUESTS,
             'provider_callbacks': PROVIDER_CALLBACKS,

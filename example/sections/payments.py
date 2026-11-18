@@ -353,6 +353,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     @schema.function_field(
         type=schema.InlineField(
             label='Provider errors',
+            help_text='For internal use only. Not shown to merchants.',
             header_bg_color='error-background',
             many=True,
             read_only=True,
@@ -394,6 +395,7 @@ class PaymentFieldsSchema(schema.FieldsSchema):
     )
     status_history = schema.InlineField(
         label='Statuses History',
+        help_text='Payment status changes and the time of each update.',
         header_bg_color='light-blue-background',
         many=True,
         table_schema=StatusHistoryFieldsSchema(),
